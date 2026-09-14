@@ -3,8 +3,9 @@
  * Helpers compartilhados para Route Handlers — autenticação e respostas padrão.
  */
 import { NextResponse } from 'next/server'
-import { headers } from 'next/headers'
+import { headers, cookies } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
+import { createServerClient } from '@supabase/ssr'
 
 export type AuthOk = {
   ok: true
@@ -16,6 +17,34 @@ export type AuthFail = { ok: false; response: NextResponse }
 export type AuthResult = AuthOk | AuthFail
 
 /**
+ * Cria um cliente Supabase com Bearer token no header global.
+ * Necessário para chamadas server-to-server onde as políticas RLS
+ * usam current_tenant_id() → auth.jwt() ->> 'tenant_id'.
+ * Sem isso, auth.jwt() retorna null no PostgREST e as rows ficam bloqueadas.
+ */
+function createAuthenticatedClient(token: string) {
+  const cookieStore = cookies()
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      global: {
+        headers: { Authorization: `Bearer ${token}` },
+      },
+      cookies: {
+        getAll() { return cookieStore.getAll() },
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options))
+          } catch {}
+        },
+      },
+    }
+  )
+}
+
+/**
  * Verifica sessão e retorna userId + tenantId.
  * Suporta dois modos de autenticação:
  *   1. Bearer token no header Authorization (chamadas server-to-server de api.server.ts)
@@ -23,12 +52,17 @@ export type AuthResult = AuthOk | AuthFail
  * Retorna 401/404 se falhar.
  */
 export async function requireSession(): Promise<AuthResult> {
-  const supabase = createClient()
-
   // Detecta Bearer token (chamadas server→server via api.server.ts)
   const headersList = headers()
   const authHeader = headersList.get('authorization')
   const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : undefined
+
+  // Para server-to-server: cria cliente com JWT no header global
+  //   → PostgREST recebe o JWT → auth.jwt() funciona → RLS libera as rows
+  // Para browser: usa cliente baseado em cookies (comportamento padrão)
+  const supabase = bearerToken
+    ? createAuthenticatedClient(bearerToken)
+    : createClient()
 
   // getUser(jwt?) valida via Supabase Auth:
   //   - com jwt → valida o token diretamente (ignora cookies)
@@ -44,7 +78,12 @@ export async function requireSession(): Promise<AuthResult> {
     return { ok: false, response: NextResponse.json({ error: 'Tenant não encontrado' }, { status: 404 }) }
   }
 
-  return { ok: true, userId: user.id, tenantId, supabase }
+  return {
+    ok: true,
+    userId:   user.id,
+    tenantId,
+    supabase: supabase as ReturnType<typeof createClient>,
+  }
 }
 
 /** Verifica CRON_SECRET no header x-cron-secret (chamado pelos cron endpoints). */
