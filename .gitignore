@@ -36,3 +36,9 @@ next-env.d.ts
 # IDEs
 .vscode/
 .idea/
+
+# Arquivos locais do Claude
+Claude outputs/
+
+# Arquivos temporários do Supabase
+supabase/.temp/
