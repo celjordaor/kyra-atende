@@ -6,14 +6,18 @@ import type { Booking } from '@/components/organisms'
 
 interface RawBooking {
   id: string
+  client_id: string
   client_name: string
   client_phone?: string | null
   client_email?: string | null
   service_id?: string | null
+  professional_id?: string | null
   start_at: string
   end_at: string
   status: string
+  notes?: string | null
   services?: { name: string; price?: number } | null
+  professionals?: { id: string; name: string } | null
 }
 
 type ServiceRow = { id: string; name: string; price: number }
@@ -41,16 +45,20 @@ export default async function AgendaPage() {
 
   const bookings: Booking[] = (rawBookings ?? [])
     .map((b) => ({
-      id:          b.id,
-      clientName:  b.client_name,
-      clientPhone: b.client_phone  ?? undefined,
-      clientEmail: b.client_email  ?? undefined,
-      serviceId:   b.service_id   ?? undefined,
-      service:     b.services?.name ?? 'Serviço',
-      price:       b.services?.price,
-      startAt:     b.start_at,
-      endAt:       b.end_at,
-      status:      b.status as Booking['status'],
+      id:             b.id,
+      clientId:       b.client_id,
+      clientName:     b.client_name,
+      clientPhone:    b.client_phone    ?? undefined,
+      clientEmail:    b.client_email    ?? undefined,
+      serviceId:      b.service_id      ?? undefined,
+      professionalId: b.professional_id ?? undefined,
+      professional:   b.professionals?.name ?? undefined,
+      service:        b.services?.name ?? 'Serviço',
+      price:          b.services?.price,
+      notes:          b.notes           ?? undefined,
+      startAt:        b.start_at,
+      endAt:          b.end_at,
+      status:         b.status as Booking['status'],
     }))
 
   return <AgendaClient bookings={bookings} services={services ?? []} />
