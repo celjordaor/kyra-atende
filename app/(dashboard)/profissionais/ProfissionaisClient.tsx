@@ -3,28 +3,9 @@
 import { useState, useCallback } from 'react'
 import { DataTable, Modal } from '@/components/organisms'
 import { Avatar, Button, StatusBadge, FormField } from '@/components/atoms'
-import { GuidedTour } from '@/components/molecules'
 import { api, ApiError } from '@/lib/api'
 import type { Column, RowAction } from '@/components/organisms'
 
-// ─── Tour ─────────────────────────────────────────────────────────────────────
-
-const PROFISSIONAIS_TOUR = [
-  {
-    title: 'Gerenciamento de profissionais 👩‍⚕️',
-    body:  'Cadastre e gerencie todos os profissionais da sua equipe. Cada profissional pode ser ativado ou desativado a qualquer momento.',
-  },
-  {
-    title: 'Adicionar profissional',
-    body:  'Clique em "+ Novo profissional" para cadastrar um membro da equipe. Apenas o nome é obrigatório — e-mail e telefone são opcionais.',
-    target: '#btn-novo-prof',
-  },
-  {
-    title: 'Ações rápidas',
-    body:  'Use os botões à direita de cada linha para editar os dados ou ativar/desativar o profissional sem precisar abrí-lo.',
-    target: '#prof-table',
-  },
-]
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
 
@@ -213,8 +194,6 @@ export function ProfissionaisClient({ rows: initialRows }: Props) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-
-      <GuidedTour tourKey="profissionais" steps={PROFISSIONAIS_TOUR} />
 
       {/* Header */}
       <div id="prof-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>

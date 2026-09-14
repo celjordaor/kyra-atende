@@ -6,7 +6,6 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts'
 import { StatTile } from '@/components/molecules/StatTile'
-import { GuidedTour } from '@/components/molecules'
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
 
@@ -28,25 +27,6 @@ interface Props {
   topClients:      TopClient[]
 }
 
-// ─── Tour ────────────────────────────────────────────────────────────────────
-
-const BI_TOUR = [
-  {
-    title: 'BI Dashboard — visão estratégica 🔭',
-    body:  'Análise dos últimos 12 meses: receita acumulada, clientes únicos, LTV médio e heatmap de horários mais movimentados.',
-    target: '#bi-header',
-  },
-  {
-    title: 'KPIs de 12 meses',
-    body:  'Acompanhe o crescimento do negócio com métricas anuais: receita total, agendamentos, clientes únicos e LTV por cliente.',
-    target: '#bi-kpis',
-  },
-  {
-    title: 'Top clientes e heatmap',
-    body:  'Identifique seus clientes mais valiosos e descubra os horários de pico para otimizar sua agenda e sua equipe.',
-    target: '#bi-top-clients',
-  },
-]
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -176,8 +156,6 @@ export default function BiDashboardClient({
 
   return (
     <>
-      <GuidedTour tourKey="bi" steps={BI_TOUR} />
-
       {/* Cabeçalho */}
       <div id="bi-header" style={{ marginBottom: 28 }}>
         <h1 style={{ fontSize: 22, fontWeight: 600, color: 'var(--ink)', margin: '0 0 4px', letterSpacing: '-0.3px' }}>

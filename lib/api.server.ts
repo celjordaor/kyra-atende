@@ -3,12 +3,16 @@
  * Cliente HTTP autenticado para uso em Server Components e Route Handlers.
  * Obtém o token via Supabase SSR (cookies) — não depende do browser.
  *
- * Após migração para Next.js API Routes, a URL base é o próprio Next.js.
+ * BASE_URL usa NEXT_PUBLIC_SITE_URL (ex.: https://www.kyraatende.com.br) em produção.
+ * Em dev cai para http://localhost:3000.
+ * NUNCA use NEXT_PUBLIC_API_URL aqui — essa variável causa CORS no browser.
  */
 
 import { createClient } from '@/lib/supabase/server'
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000'
+const BASE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL ??
+  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
 
 export async function apiServer<T>(
   method: string,

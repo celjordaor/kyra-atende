@@ -7,7 +7,6 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from 'recharts'
 import { StatTile } from '@/components/molecules/StatTile'
-import { GuidedTour } from '@/components/molecules'
 
 // ─── Tipos ──────────────────────────────────────────────────────────────────
 
@@ -32,23 +31,6 @@ interface Props {
   serviceData:      ServicePoint[]
   statusData:       StatusPoint[]
 }
-
-// ─── Tour ───────────────────────────────────────────────────────────────────
-
-const RELATORIOS_TOUR = [
-  {
-    title: 'Relatórios do seu negócio 📊',
-    body:  'Acompanhe a evolução da receita, agendamentos e desempenho dos profissionais ao longo do mês.',
-  },
-  {
-    title: 'KPIs principais',
-    body:  'Os 4 cards no topo mostram: receita total, agendamentos, ticket médio e taxa de retorno — todos comparados ao mês anterior.',
-  },
-  {
-    title: 'Gráficos de desempenho',
-    body:  'Analise a receita semanal, agendamentos por profissional e os serviços mais realizados para tomar decisões estratégicas.',
-  },
-]
 
 
 // ─── Formatadores ────────────────────────────────────────────────────────────
@@ -149,8 +131,6 @@ export default function RelatoriosClient({
 
   return (
     <>
-
-      <GuidedTour tourKey="relatorios" steps={RELATORIOS_TOUR} />
 
       {/* Cabeçalho */}
       <div id="kyra-relatorios-header" style={{ marginBottom: 28 }}>

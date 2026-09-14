@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect }     from 'next/navigation'
-import { StatTile, GuidedTour } from '@/components/molecules'
+import { StatTile } from '@/components/molecules'
 import { DashboardBookingsSection } from './DashboardBookingsSection'
 import type { Booking } from '@/components/organisms'
 import type { NewClient, ServiceRevenue } from './DashboardBookingsSection'
@@ -197,27 +197,8 @@ export default async function DashboardPage() {
   const greeting = now.getHours() < 12 ? 'Bom dia' : now.getHours() < 18 ? 'Boa tarde' : 'Boa noite'
   const dateLabel = now.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })
 
-  const DASHBOARD_TOUR = [
-    {
-      title: 'Bem-vindo ao seu painel! 👋',
-      body:  'Aqui você acompanha em tempo real o que está acontecendo no seu negócio: agendamentos, receita e clientes — tudo num só lugar.',
-    },
-    {
-      target: '#stat-tiles',
-      title:  'Tiles de receita',
-      body:   'Veja a receita de hoje e do mês atual, calculada sobre agendamentos confirmados e concluídos.',
-    },
-    {
-      target: '#dashboard-content',
-      title:  'Agenda de hoje',
-      body:   'Acompanhe todos os agendamentos do dia, confirme pendentes e marque serviços como concluídos.',
-    },
-  ]
-
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
-
-      <GuidedTour tourKey="dashboard" steps={DASHBOARD_TOUR} />
 
       {/* ── Cabeçalho: saudação + receita ── */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' }}>

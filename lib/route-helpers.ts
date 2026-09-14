@@ -3,6 +3,7 @@
  * Helpers compartilhados para Route Handlers — autenticação e respostas padrão.
  */
 import { NextResponse } from 'next/server'
+import { headers } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
 
 export type AuthOk = {
@@ -14,10 +15,25 @@ export type AuthOk = {
 export type AuthFail = { ok: false; response: NextResponse }
 export type AuthResult = AuthOk | AuthFail
 
-/** Verifica sessão e retorna userId + tenantId. Retorna 401/404 se falhar. */
+/**
+ * Verifica sessão e retorna userId + tenantId.
+ * Suporta dois modos de autenticação:
+ *   1. Bearer token no header Authorization (chamadas server-to-server de api.server.ts)
+ *   2. Cookies de sessão Supabase (chamadas diretas do browser)
+ * Retorna 401/404 se falhar.
+ */
 export async function requireSession(): Promise<AuthResult> {
   const supabase = createClient()
-  const { data: { user }, error } = await supabase.auth.getUser()
+
+  // Detecta Bearer token (chamadas server→server via api.server.ts)
+  const headersList = headers()
+  const authHeader = headersList.get('authorization')
+  const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : undefined
+
+  // getUser(jwt?) valida via Supabase Auth:
+  //   - com jwt → valida o token diretamente (ignora cookies)
+  //   - sem jwt → lê a sessão dos cookies da requisição atual
+  const { data: { user }, error } = await supabase.auth.getUser(bearerToken)
 
   if (error || !user) {
     return { ok: false, response: NextResponse.json({ error: 'Não autorizado' }, { status: 401 }) }

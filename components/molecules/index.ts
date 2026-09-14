@@ -9,5 +9,3 @@ export type { UsageBarProps, UsageBarColor } from './UsageBar'
 export { SearchBar }   from './SearchBar'
 export type { SearchBarProps } from './SearchBar'
 
-export { GuidedTour }  from './GuidedTour'
-export type { GuidedTourProps, GuidedTourHandle, TourStep } from './GuidedTour'

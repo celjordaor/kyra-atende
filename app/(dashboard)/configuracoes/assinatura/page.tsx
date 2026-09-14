@@ -2,33 +2,11 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { UsageBar } from '@/components/molecules/UsageBar'
 import { StatusBadge } from '@/components/atoms/StatusBadge'
-import { GuidedTour } from '@/components/molecules/GuidedTour'
 import Link from 'next/link'
 import { AssinaturaUpgradeButton } from './AssinaturaUpgradeButton'
 import type { Plan } from '@/components/organisms/PlanModal'
 
 export const metadata = { title: 'Assinatura — Kyra Atende' }
-
-// ── Tipos locais para os resultados das queries ──────────────────────────────
-type TenantRow = {
-  id: string
-  name: string | null
-  plan: string | null
-  plan_status: string | null
-  trial_ends_at: string | null
-}
-
-type UsageRow = {
-  key: string
-  value: number
-}
-
-type SubRow = {
-  billing_cycle: string | null
-  current_period_start: string | null
-  current_period_end: string | null
-  status: string | null
-}
 
 const PLAN_LABELS: Record<string, string> = {
   essencial:  'Kyra Essencial',
@@ -64,16 +42,14 @@ export default async function AssinaturaPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  // Buscar dados do tenant — cast para evitar inferência 'never' sem tipos gerados
-  const { data: tenantRaw } = await supabase
+  const tenantRes = await supabase
     .from('tenants')
     .select('id, name, plan, plan_status, trial_ends_at')
     .eq('owner_id', user.id)
     .single()
 
-  const tenant = tenantRaw as TenantRow | null
-  if (!tenant) redirect('/login')
-
+  if (!tenantRes.data) redirect('/login')
+  const tenant = tenantRes.data
   const plan   = tenant.plan ?? 'essencial'
   const limits = PLAN_LIMITS[plan] ?? PLAN_LIMITS.essencial
 
@@ -90,14 +66,14 @@ export default async function AssinaturaPage() {
   ])
 
   const usage: Record<string, number> = {}
-  for (const row of (usageRes.data ?? []) as UsageRow[]) {
+  for (const row of usageRes.data ?? []) {
     usage[row.key] = row.value
   }
 
   const aiUsed = usage['ai_chat_tokens_used'] ?? 0
   const waUsed = usage['whatsapp_messages_sent'] ?? 0
 
-  const sub      = subRes.data as SubRow | null
+  const sub      = subRes.data
   const nextPlan = NEXT_PLAN[plan]
   const isTrial  = tenant.plan_status === 'trial'
   const trialDays = tenant.trial_ends_at
@@ -106,13 +82,6 @@ export default async function AssinaturaPage() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-      <GuidedTour
-        tourKey="assinatura-v1"
-        steps={[
-          { target: '#assinatura-header', title: 'Sua Assinatura', body: 'Veja seu plano atual, uso e opções de upgrade.', placement: 'bottom' },
-        ]}
-      />
-
       {/* Navegação de abas de configurações */}
       <nav style={{ display: 'flex', gap: 4, borderBottom: '1px solid var(--border)', paddingBottom: 0 }}>
         {[
@@ -153,7 +122,7 @@ export default async function AssinaturaPage() {
               {isTrial
                 ? `Trial gratuito — ${trialDays} dias restantes`
                 : sub
-                  ? `Ciclo: ${({ monthly: 'Mensal', quarterly: 'Trimestral', semiannual: 'Semestral', annual: 'Anual' } as any)[sub.billing_cycle ?? ''] ?? sub.billing_cycle}`
+                  ? `Ciclo: ${({ monthly: 'Mensal', quarterly: 'Trimestral', semiannual: 'Semestral', annual: 'Anual' } as any)[sub.billing_cycle] ?? sub.billing_cycle}`
                   : 'Assinatura ativa'}
             </p>
           </div>
