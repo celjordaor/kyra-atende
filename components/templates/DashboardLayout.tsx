@@ -313,17 +313,16 @@ function UserDropdown({ userName, userEmail, userAvatarUrl, onSignOut }: UserDro
 
             {/* Actions */}
             <div style={{ padding: '6px' }}>
-              <div
-                title="Em breve"
-                style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '9px 12px', borderRadius: 'var(--r-md)', fontSize: '14px', color: 'var(--subtle)', cursor: 'not-allowed', userSelect: 'none' }}
+              <Link
+                href="/perfil"
+                onClick={() => setOpen(false)}
+                style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '9px 12px', borderRadius: 'var(--r-md)', fontSize: '14px', color: 'var(--ink-soft)', textDecoration: 'none', transition: 'background 150ms' }}
+                onMouseEnter={e => (e.currentTarget.style.background = 'var(--surface)')}
+                onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
               >
-                <span style={{ color: 'var(--subtle)', display: 'flex' }}><IconUserEdit /></span>
+                <span style={{ color: 'var(--muted)', display: 'flex' }}><IconUserEdit /></span>
                 Editar perfil
-                <span style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
-                  <span style={{ fontSize: '10px', fontWeight: 600, letterSpacing: '0.3px' }}>Em breve</span>
-                </span>
-              </div>
+              </Link>
 
               <Button
                 variant="ghost"
