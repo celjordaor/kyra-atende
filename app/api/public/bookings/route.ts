@@ -2,12 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import webpush from 'web-push'
 
-webpush.setVapidDetails(
-  process.env.VAPID_EMAIL ?? 'mailto:suporte@kyraatende.com.br',
-  process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? '',
-  process.env.VAPID_PRIVATE_KEY ?? '',
-)
-
 function adminClient() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -151,6 +145,13 @@ async function sendPushToTenant(
   booking: { client_name: string; start_at: string; services: any },
 ) {
   try {
+    // Configuração VAPID dentro da função para evitar erro no build
+    webpush.setVapidDetails(
+      process.env.VAPID_EMAIL ?? 'mailto:suporte@kyraatende.com.br',
+      process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? '',
+      process.env.VAPID_PRIVATE_KEY ?? '',
+    )
+
     const { data: subs } = await supabase
       .from('push_subscriptions')
       .select('endpoint, p256dh, auth')
