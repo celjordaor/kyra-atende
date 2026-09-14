@@ -33,7 +33,12 @@ export default async function ClientesPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const rows = await apiGet<ClientRow[]>('/clients') ?? []
+  let rows: ClientRow[] = []
+  try {
+    rows = await apiGet<ClientRow[]>('/clients') ?? []
+  } catch {
+    // Backend offline ou erro de auth — renderiza vazio
+  }
 
   return <ClientesClient rows={rows} />
 }
