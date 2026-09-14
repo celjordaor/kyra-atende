@@ -16,40 +16,16 @@ export interface TenantRow {
 }
 
 export default async function EmpresasPage() {
-  let adminError: string | null = null
-  let admin: any
-
-  try {
-    admin = createAdminClient()
-  } catch (e: any) {
-    adminError = e.message
-  }
-
-  if (adminError || !admin) {
-    return (
-      <div style={{ padding: 32 }}>
-        <h2 style={{ color: 'red' }}>Erro ao criar cliente admin</h2>
-        <pre style={{ background: '#fee', padding: 16, borderRadius: 8 }}>{adminError}</pre>
-        <p>Verifique se SUPABASE_SERVICE_ROLE_KEY está configurado no Vercel.</p>
-      </div>
-    )
-  }
+  const admin = createAdminClient()
 
   const { data: tenants, error: tenantsError } = await admin
     .from('tenants')
-    .select('id, name, slug, plan, plan_status, trial_ends, created_at, owner_id')
+    .select('id, name, slug, plan, plan_status, trial_ends_at, created_at, owner_id')
     .order('created_at', { ascending: false })
     .limit(200)
 
   if (tenantsError) {
-    return (
-      <div style={{ padding: 32 }}>
-        <h2 style={{ color: 'red' }}>Erro na query de tenants</h2>
-        <pre style={{ background: '#fee', padding: 16, borderRadius: 8 }}>
-          {JSON.stringify(tenantsError, null, 2)}
-        </pre>
-      </div>
-    )
+    console.error('[EmpresasPage] tenants query error:', tenantsError)
   }
 
   const tenantList = (tenants ?? []).filter((t: any) => t?.id && t?.name)
@@ -83,26 +59,12 @@ export default async function EmpresasPage() {
       slug:        t.slug        as string,
       plan:        t.plan        as string,
       plan_status: t.plan_status as string,
-      trial_ends:  (t.trial_ends ?? null) as string | null,
+      trial_ends:  (t.trial_ends_at ?? null) as string | null,
       created_at:  t.created_at  as string,
       owner_name:  profile?.name  ?? null,
       owner_email: profile?.email ?? null,
     }
   })
-
-  // Debug temporário — remover após confirmar funcionamento
-  if (rows.length === 0) {
-    return (
-      <div style={{ padding: 32 }}>
-        <h2 style={{ color: 'orange' }}>Query executou mas retornou 0 resultados</h2>
-        <p>Total de tenants brutos: {(tenants ?? []).length}</p>
-        <p>Após filtro (id + name): {tenantList.length}</p>
-        <pre style={{ background: '#fff3cd', padding: 16, borderRadius: 8 }}>
-          {JSON.stringify(tenants?.slice(0, 3), null, 2)}
-        </pre>
-      </div>
-    )
-  }
 
   return <EmpresasClient rows={rows} />
 }
