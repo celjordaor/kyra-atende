@@ -22,6 +22,9 @@ export default async function ConfiguracoesPage() {
   const profile = profileRes.data
   const sub     = subRes.data
 
+  const appUrl     = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, '') ?? 'https://www.kyraatende.com.br'
+  const bookingUrl = tenant.slug ? `${appUrl}/agendar/${tenant.slug}` : null
+
   const planLabels: Record<string, string> = {
     essencial: 'Kyra Essencial',
     cresce:    'Kyra Cresce',
@@ -53,6 +56,7 @@ export default async function ConfiguracoesPage() {
           tenantId={tenant.id}
           profileName={profile?.name ?? ''}
           userId={user.id}
+          bookingUrl={bookingUrl}
         />
       </section>
 

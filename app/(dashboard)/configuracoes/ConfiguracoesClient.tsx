@@ -12,6 +12,7 @@ interface Props {
   tenantId:     string
   profileName:  string
   userId:       string
+  bookingUrl:   string | null
 }
 
 const tabStyle = (active: boolean): React.CSSProperties => ({
@@ -28,7 +29,7 @@ const tabStyle = (active: boolean): React.CSSProperties => ({
 })
 
 export default function ConfiguracoesClient({
-  initialName, initialSlug, tenantId, profileName, userId,
+  initialName, initialSlug, tenantId, profileName, userId, bookingUrl,
 }: Props) {
   const router = useRouter()
 
@@ -37,6 +38,7 @@ export default function ConfiguracoesClient({
   const [saving,      setSaving]      = useState(false)
   const [saved,       setSaved]       = useState(false)
   const [error,       setError]       = useState<string | null>(null)
+  const [copied,      setCopied]      = useState(false)
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault()
@@ -134,6 +136,57 @@ export default function ConfiguracoesClient({
           </Button>
         </div>
       </form>
+
+      {/* ── Link de agendamento ─────────────────────────────────── */}
+      {bookingUrl && (
+        <div style={{
+          borderTop: '1px solid var(--border)',
+          paddingTop: '24px',
+          display: 'flex', flexDirection: 'column', gap: '12px',
+        }}>
+          <div>
+            <h3 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--ink)', margin: '0 0 4px' }}>
+              Link de agendamento
+            </h3>
+            <p style={{ fontSize: '13px', color: 'var(--muted)', margin: 0, lineHeight: 1.5 }}>
+              Compartilhe este link com seus clientes para que eles agendem diretamente na sua agenda.
+            </p>
+          </div>
+
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: '10px',
+            background: 'var(--surface)', border: '1px solid var(--border)',
+            borderRadius: 'var(--r-md)', padding: '10px 14px',
+          }}>
+            <a
+              href={bookingUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ flex: 1, fontSize: '13px', color: 'var(--brand)', wordBreak: 'break-all', textDecoration: 'none' }}
+            >
+              {bookingUrl}
+            </a>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={async () => {
+                await navigator.clipboard.writeText(bookingUrl).catch(() => {})
+                setCopied(true)
+                setTimeout(() => setCopied(false), 2500)
+              }}
+              style={{ flexShrink: 0 }}
+            >
+              {copied ? '✓ Copiado' : 'Copiar'}
+            </Button>
+          </div>
+
+          <div>
+            <Button variant="secondary" size="sm" onClick={() => window.open(bookingUrl, '_blank')}>
+              Abrir página →
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

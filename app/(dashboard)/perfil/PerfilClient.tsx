@@ -16,7 +16,6 @@ interface Props {
   name:       string
   role:       string
   tenantName: string
-  bookingUrl: string | null
 }
 
 /* ─── Section wrapper ─────────────────────────────────────── */
@@ -71,7 +70,7 @@ const ROLE_LABELS: Record<string, string> = {
 }
 
 /* ═══════════════════════════════════════════════════════════ */
-export default function PerfilClient({ email, name: initialName, role, tenantName, bookingUrl }: Props) {
+export default function PerfilClient({ email, name: initialName, role, tenantName }: Props) {
   const router = useRouter()
 
   // ── Dados pessoais ──────────────────────────────────────────
@@ -117,15 +116,6 @@ export default function PerfilClient({ email, name: initialName, role, tenantNam
     }
     setPwdLoading(false)
   }, [pwd, pwdConfirm])
-
-  // ── Link de agendamento — copiar ────────────────────────────
-  const [copied, setCopied] = useState(false)
-  const handleCopy = useCallback(async () => {
-    if (!bookingUrl) return
-    await navigator.clipboard.writeText(bookingUrl).catch(() => {})
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2500)
-  }, [bookingUrl])
 
   // ── Sessão — sair de todos os dispositivos ──────────────────
   const [signOutLoading, setSignOutLoading] = useState(false)
@@ -185,44 +175,7 @@ export default function PerfilClient({ email, name: initialName, role, tenantNam
         </div>
       </Section>
 
-      {/* ── 2. Link público de agendamento ── */}
-      {bookingUrl && (
-        <Section title="Link de agendamento">
-          <p style={{ fontSize: '13px', color: 'var(--muted)', margin: '0 0 14px', lineHeight: 1.5 }}>
-            Compartilhe este link com seus clientes para que eles agendem diretamente na sua agenda.
-          </p>
-
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: '10px',
-            background: 'var(--surface)', border: '1px solid var(--border)',
-            borderRadius: 'var(--r-md)', padding: '10px 14px',
-          }}>
-            <a
-              href={bookingUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ flex: 1, fontSize: '13px', color: 'var(--brand)', wordBreak: 'break-all', textDecoration: 'none' }}
-            >
-              {bookingUrl}
-            </a>
-            <Button variant="ghost" size="sm" onClick={handleCopy} style={{ flexShrink: 0 }}>
-              {copied ? '✓ Copiado' : 'Copiar'}
-            </Button>
-          </div>
-
-          <div style={{ marginTop: '12px', display: 'flex', gap: '10px' }}>
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => window.open(bookingUrl, '_blank')}
-            >
-              Abrir página →
-            </Button>
-          </div>
-        </Section>
-      )}
-
-      {/* ── 3. Segurança ── */}
+      {/* ── 2. Segurança ── */}
       <Section title="Segurança">
         <p style={{ fontSize: '13px', color: 'var(--muted)', margin: '0 0 16px', lineHeight: 1.5 }}>
           Defina uma nova senha para a sua conta. Use pelo menos 6 caracteres.

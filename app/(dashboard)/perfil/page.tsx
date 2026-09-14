@@ -20,16 +20,12 @@ export default async function PerfilPage() {
   const profile = profileRes.data
   const tenant  = tenantRes.data
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, '') ?? 'https://www.kyraatende.com.br'
-  const bookingUrl = tenant ? `${appUrl}/agendar/${tenant.slug}` : null
-
   return (
     <PerfilClient
       email={user.email ?? ''}
       name={profile?.name ?? ''}
       role={profile?.role ?? 'admin'}
       tenantName={tenant?.name ?? ''}
-      bookingUrl={bookingUrl}
     />
   )
 }
