@@ -96,7 +96,7 @@ export interface PlanModalProps {
   onSave?: (newPlan: Plan) => void
 }
 
-export function PlanModal({ open, onClose, currentPlan, mode = 'upgrade', onSave }: PlanModalProps) {
+export function PlanModal({ open, onClose, currentPlan, mode = 'upgrade' }: PlanModalProps) {
   const [period,   setPeriod]   = useState<Period>('monthly')
   const [selected, setSelected] = useState<Plan>(currentPlan)
   const [loading,  setLoading]  = useState(false)
@@ -120,8 +120,6 @@ export function PlanModal({ open, onClose, currentPlan, mode = 'upgrade', onSave
       setLoading(false)
     }
   }
-
-  const selectedPlanData = PLANS.find(p => p.key === selected)!
 
   return (
     <Modal

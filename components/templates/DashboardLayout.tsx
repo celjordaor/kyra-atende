@@ -281,8 +281,6 @@ function UserDropdown({ userName, userEmail, userAvatarUrl, onSignOut }: UserDro
     return () => document.removeEventListener('mousedown', handleOutside)
   }, [open])
 
-  const initials = userName?.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase() ?? 'U'
-
   return (
     <>
       <div ref={ref} style={{ position: 'relative' }}>

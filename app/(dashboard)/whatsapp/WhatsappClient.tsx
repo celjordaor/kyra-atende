@@ -39,7 +39,7 @@ function formatPhone(n: string) {
   return n
 }
 
-export default function WhatsappClient({ hasWhatsapp, messages, monthlyUsed = 0, monthlyLimit, initialConnection: _conn }: Props) {
+export default function WhatsappClient({ hasWhatsapp, messages, monthlyUsed = 0, monthlyLimit }: Props) {
   const showUsage = typeof monthlyLimit === 'number' && monthlyLimit > 0
   if (!hasWhatsapp) {
     return (

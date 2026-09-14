@@ -17,7 +17,6 @@
 
 import React, {
   useCallback,
-  useEffect,
   useId,
   useRef,
   useState,
@@ -136,7 +135,7 @@ function applyMask(raw: string, type: FormFieldType): string {
 
 // ── Validações ──────────────────────────────────────────────
 
-function validateCpf(digits: string): boolean {
+export function validateCpf(digits: string): boolean {
   if (digits.length !== 11 || /^(\d)\1+$/.test(digits)) return false
   let sum = 0
   for (let i = 0; i < 9; i++) sum += parseInt(digits[i]) * (10 - i)
@@ -150,7 +149,7 @@ function validateCpf(digits: string): boolean {
   return r === parseInt(digits[10])
 }
 
-function validateCnpj(digits: string): boolean {
+export function validateCnpj(digits: string): boolean {
   if (digits.length !== 14 || /^(\d)\1+$/.test(digits)) return false
   const calc = (d: string, len: number) => {
     let sum = 0, pos = len - 7

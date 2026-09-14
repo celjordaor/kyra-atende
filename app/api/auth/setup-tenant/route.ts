@@ -22,7 +22,7 @@ function toSlug(name: string, suffix: string): string {
 
 export async function POST(request: NextRequest) {
   try {
-    const { userId, email, name, company, phone } = await request.json()
+    const { userId, email, name, company } = await request.json()
 
     if (!userId || !email || !name || !company) {
       return NextResponse.json({ error: 'Dados incompletos.' }, { status: 400 })

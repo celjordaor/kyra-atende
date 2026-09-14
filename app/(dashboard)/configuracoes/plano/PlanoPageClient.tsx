@@ -150,7 +150,7 @@ export default function PlanoPageClient({ currentPlan, planStatus, trialEndsAt, 
         {/* Sem subscription — em trial ou expirado */}
         {!subscription && !isTrial && (
           <p style={{ fontSize: 13, color: 'var(--muted)', margin: 0 }}>
-            Nenhuma assinatura ativa. Clique em "Fazer upgrade" para assinar um plano.
+            Nenhuma assinatura ativa. Clique em &quot;Fazer upgrade&quot; para assinar um plano.
           </p>
         )}
       </div>

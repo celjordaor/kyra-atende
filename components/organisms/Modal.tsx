@@ -13,7 +13,6 @@ import React, {
   useRef,
 } from 'react'
 import { createPortal } from 'react-dom'
-import { Button } from '../atoms/Button'
 
 export type ModalSize = 'sm' | 'md' | 'lg' | 'xl'
 

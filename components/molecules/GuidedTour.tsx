@@ -24,8 +24,9 @@ import React, {
 } from 'react'
 
 export interface TourStep {
-  /** Seletor CSS do elemento alvo (ex.: "#stat-tiles", ".booking-table") */
-  target:     string
+  /** Seletor CSS do elemento alvo (ex.: "#stat-tiles", ".booking-table").
+   *  Se omitido, o tooltip aparece centralizado na tela. */
+  target?:    string
   title:      string
   body:       string
   placement?: 'top' | 'bottom' | 'left' | 'right'
@@ -69,11 +70,10 @@ const TIP_H = 160  // estimativa
 const OFFSET = 12
 
 function calcPosition(rect: DOMRect, placement: TourStep['placement'] = 'bottom'): TooltipPos {
-  const { top, left, bottom, right, width, height } = rect
+  const { top, left, right, width, height } = rect
   const scrollY = window.scrollY
   const scrollX = window.scrollX
   const vw = window.innerWidth
-  const vh = window.innerHeight
 
   let t = 0, l = 0, arrowSide: TooltipPos['arrowSide'] = 'top'
 
@@ -145,6 +145,16 @@ export const GuidedTour = forwardRef<GuidedTourHandle, GuidedTourProps>(
       if (!active) return
       const step = steps[stepIdx]
       if (!step) return
+      if (!step.target) {
+        // Sem alvo definido: centraliza o tooltip na tela
+        setRect(null)
+        setPos({
+          top:       window.scrollY + Math.max(80, window.innerHeight / 4),
+          left:      window.scrollX + window.innerWidth / 2 - TIP_W / 2,
+          arrowSide: 'top',
+        })
+        return
+      }
       const el = document.querySelector(step.target)
       if (!el) { setPos(null); return }
       const rect = el.getBoundingClientRect()
