@@ -1,4 +1,4 @@
-import { createAdminClient } from '@/lib/supabase/admin'
+﻿import { createAdminClient } from '@/lib/supabase/admin'
 import EmpresasClient from './EmpresasClient'
 
 export const metadata = { title: 'Empresas — SuperAdmin Kyra' }
@@ -18,7 +18,6 @@ export interface TenantRow {
 export default async function EmpresasPage() {
   const admin = createAdminClient()
 
-  // 1. Busca todos os tenants sem join (evita dependência de FK no PostgREST)
   const { data: tenants, error: tenantsError } = await admin
     .from('tenants')
     .select('id, name, slug, plan, plan_status, trial_ends, created_at, owner_id')
@@ -31,7 +30,6 @@ export default async function EmpresasPage() {
 
   const tenantList = (tenants ?? []).filter((t: any) => t?.id && t?.name)
 
-  // 2. Busca os profiles dos owners em uma segunda query
   const ownerIds = tenantList
     .map((t: any) => t.owner_id)
     .filter(Boolean) as string[]
@@ -61,7 +59,7 @@ export default async function EmpresasPage() {
       slug:        t.slug        as string,
       plan:        t.plan        as string,
       plan_status: t.plan_status as string,
-      trial_ends:  (t.trial_ends ?? t.trial_ends_at ?? null) as string | null,
+      trial_ends:  (t.trial_ends ?? null) as string | null,
       created_at:  t.created_at  as string,
       owner_name:  profile?.name  ?? null,
       owner_email: profile?.email ?? null,
