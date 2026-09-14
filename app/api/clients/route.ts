@@ -14,7 +14,11 @@ export async function GET() {
 
   const { data, error } = await supabase
     .from('clients')
-    .select('id, tenant_id, name, email, phone, status, source, notes, created_at')
+    .select(`
+      id, tenant_id, name, email, phone, status, source, notes, created_at,
+      cpf, birth_date, gender, nationality, profession,
+      cep, logradouro, numero, complemento, bairro, estado, cidade
+    `)
     .eq('tenant_id', tenantId)
     .order('name', { ascending: true })
 
@@ -29,13 +33,28 @@ export async function POST(request: NextRequest) {
   const { tenantId, supabase } = session
 
   const body = await request.json()
-  const { name, email, phone, lead_status, source, notes } = body as {
+  const {
+    name, email, phone, source, notes,
+    cpf, birth_date, gender, nationality, profession,
+    cep, logradouro, numero, complemento, bairro, estado, cidade,
+  } = body as {
     name:         string
     email?:       string | null
     phone?:       string | null
-    lead_status?: string | null
     source?:      string | null
     notes?:       string | null
+    cpf?:         string | null
+    birth_date?:  string | null
+    gender?:      string | null
+    nationality?: string | null
+    profession?:  string | null
+    cep?:         string | null
+    logradouro?:  string | null
+    numero?:      string | null
+    complemento?: string | null
+    bairro?:      string | null
+    estado?:      string | null
+    cidade?:      string | null
   }
 
   if (!name || name.length < 2) {
@@ -47,11 +66,22 @@ export async function POST(request: NextRequest) {
     .insert({
       tenant_id:   tenantId,
       name,
-      email:       email ?? null,
-      phone:       phone ?? null,
-      lead_status: lead_status ?? null,
-      source:      source ?? null,
-      notes:       notes ?? null,
+      email:       email       ?? null,
+      phone:       phone       ?? null,
+      source:      source      ?? null,
+      notes:       notes       ?? null,
+      cpf:         cpf         ?? null,
+      birth_date:  birth_date  ?? null,
+      gender:      gender      ?? null,
+      nationality: nationality ?? null,
+      profession:  profession  ?? null,
+      cep:         cep         ?? null,
+      logradouro:  logradouro  ?? null,
+      numero:      numero      ?? null,
+      complemento: complemento ?? null,
+      bairro:      bairro      ?? null,
+      estado:      estado      ?? null,
+      cidade:      cidade      ?? null,
     })
     .select()
     .single()
