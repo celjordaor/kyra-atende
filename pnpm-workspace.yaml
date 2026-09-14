@@ -1,3 +1,2 @@
-allowBuilds:
-  core-js-pure: true
-  unrs-resolver: true
+packages:
+  - '.'
