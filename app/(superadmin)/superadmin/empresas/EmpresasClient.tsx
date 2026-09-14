@@ -214,8 +214,8 @@ export default function EmpresasClient({ rows: initialRows }: { rows: TenantRow[
       </div>
 
       <DataTable
-        columns={COLUMNS}
-        rows={filtered}
+        columns={COLUMNS as any}
+        rows={filtered as any}
         emptyMessage="Nenhuma empresa encontrada."
       />
 

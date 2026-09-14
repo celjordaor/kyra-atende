@@ -106,8 +106,8 @@ export async function POST(request: NextRequest) {
   void dispatchPush(tenantId, 'booking_created', {
     bookingId:    data.id,
     scheduledAt:  data.scheduled_at,
-    clientName:   (data.clients as { name: string } | null)?.name ?? '',
-    professional: (data.professionals as { name: string } | null)?.name ?? '',
+    clientName:   (data.clients as unknown as { name: string } | null)?.name ?? '',
+    professional: (data.professionals as unknown as { name: string } | null)?.name ?? '',
   })
 
   return NextResponse.json(data, { status: 201 })

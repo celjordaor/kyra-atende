@@ -91,8 +91,8 @@ export function Avatar({ name, src, size = 'md', className = '' }: AvatarProps) 
           fontWeight:      600,
           fontFamily:      'var(--font-ui)',
         }}
-        aria-label={name}
-        title={name}
+        aria-label={name ?? undefined}
+        title={name ?? undefined}
       >
         {initials(name)}
       </span>
@@ -103,8 +103,8 @@ export function Avatar({ name, src, size = 'md', className = '' }: AvatarProps) 
     // eslint-disable-next-line @next/next/no-img-element
     <img
       src={src}
-      alt={name}
-      title={name}
+      alt={name ?? undefined}
+      title={name ?? undefined}
       width={dim}
       height={dim}
       className={className}

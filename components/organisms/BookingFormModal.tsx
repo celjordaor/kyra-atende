@@ -27,6 +27,7 @@ export type BookingToEdit = {
   startAt:       string
   endAt?:        string
   notes?:        string
+  status?:       string
 }
 
 /** Objeto retornado pelo onSaved */

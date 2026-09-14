@@ -49,9 +49,9 @@ export async function GET(request: NextRequest) {
 
   let sent = 0
   for (const booking of bookings ?? []) {
-    const client       = booking.clients as { name: string; phone?: string } | null
-    const professional = booking.professionals as { name: string } | null
-    const service      = booking.services as { name: string } | null
+    const client       = booking.clients as unknown as { name: string; phone?: string } | null
+    const professional = booking.professionals as unknown as { name: string } | null
+    const service      = booking.services as unknown as { name: string } | null
     const phone        = client?.phone
 
     if (!phone) continue
@@ -64,7 +64,7 @@ export async function GET(request: NextRequest) {
       `👤 Profissional: ${professional?.name ?? '-'}\n\n` +
       `Caso precise remarcar ou cancelar, entre em contato conosco.`
 
-    void sendMessage(booking.tenant_id, phone, message)
+    void sendMessage({ to: phone, body: message, tenantId: booking.tenant_id })
     sent++
   }
 

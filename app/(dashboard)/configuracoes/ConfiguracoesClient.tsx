@@ -44,11 +44,12 @@ export default function ConfiguracoesClient({
     setError(null)
     setSaved(false)
 
-    const supabase = createClient()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const db = createClient() as any
 
     const [tenantRes, profileRes] = await Promise.all([
-      supabase.from('tenants').update({ name: companyName }).eq('id', tenantId),
-      supabase.from('profiles').update({ name: myName }).eq('id', userId),
+      db.from('tenants').update({ name: companyName }).eq('id', tenantId),
+      db.from('profiles').update({ name: myName }).eq('id', userId),
     ])
 
     if (tenantRes.error || profileRes.error) {

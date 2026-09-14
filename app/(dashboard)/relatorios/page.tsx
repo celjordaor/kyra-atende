@@ -136,7 +136,7 @@ export default async function RelatoriosPage() {
   const prevTicket   = prevCount > 0 ? prevRevenue / prevCount : 0
 
   const prevPhones   = new Set((returningRes.data ?? []).map((b: any) => b.client_phone).filter(Boolean))
-  const curPhones    = [...new Set((allPhonesRes.data ?? []).map((b: any) => b.client_phone).filter(Boolean))]
+  const curPhones    = Array.from(new Set((allPhonesRes.data ?? []).map((b: any) => b.client_phone).filter(Boolean)))
   const returning    = curPhones.filter(p => prevPhones.has(p)).length
   const returnRate   = curPhones.length > 0 ? Math.round((returning / curPhones.length) * 100) : 0
 
@@ -148,7 +148,7 @@ export default async function RelatoriosPage() {
     .in('status', ['confirmed', 'completed'])
     .lt('start_at', prev.start)
   const prevBeforePhones = new Set((prevBeforeRes.data ?? []).map((b: any) => b.client_phone).filter(Boolean))
-  const prevReturning    = [...prevPhonesMonth].filter(p => prevBeforePhones.has(p)).length
+  const prevReturning    = Array.from(prevPhonesMonth).filter(p => prevBeforePhones.has(p)).length
   const prevReturnRate   = prevPhonesMonth.size > 0 ? Math.round((prevReturning / prevPhonesMonth.size) * 100) : 0
 
   // ── Gráfico 1: Receita semanal ──────────────────────────

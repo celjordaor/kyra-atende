@@ -16,7 +16,7 @@ export { Modal } from './Modal'
 export type { ModalProps } from './Modal'
 
 export { PlanModal } from './PlanModal'
-export type { PlanModalProps, PlanInfo } from './PlanModal'
+export type { PlanModalProps } from './PlanModal'
 
 export { SwRegister } from './SwRegister'
 

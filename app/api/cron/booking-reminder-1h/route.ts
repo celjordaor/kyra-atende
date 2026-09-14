@@ -41,9 +41,9 @@ export async function GET(request: NextRequest) {
     void dispatchPush(booking.tenant_id, 'booking_reminder_1h', {
       bookingId:    booking.id,
       scheduledAt:  booking.scheduled_at,
-      clientName:   (booking.clients as { name: string } | null)?.name ?? '',
-      professional: (booking.professionals as { name: string } | null)?.name ?? '',
-      service:      (booking.services as { name: string } | null)?.name ?? '',
+      clientName:   (booking.clients as unknown as { name: string } | null)?.name ?? '',
+      professional: (booking.professionals as unknown as { name: string } | null)?.name ?? '',
+      service:      (booking.services as unknown as { name: string } | null)?.name ?? '',
     })
     sent++
   }

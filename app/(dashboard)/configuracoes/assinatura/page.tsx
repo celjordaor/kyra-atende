@@ -9,6 +9,27 @@ import type { Plan } from '@/components/organisms/PlanModal'
 
 export const metadata = { title: 'Assinatura — Kyra Atende' }
 
+// ── Tipos locais para os resultados das queries ──────────────────────────────
+type TenantRow = {
+  id: string
+  name: string | null
+  plan: string | null
+  plan_status: string | null
+  trial_ends_at: string | null
+}
+
+type UsageRow = {
+  key: string
+  value: number
+}
+
+type SubRow = {
+  billing_cycle: string | null
+  current_period_start: string | null
+  current_period_end: string | null
+  status: string | null
+}
+
 const PLAN_LABELS: Record<string, string> = {
   essencial:  'Kyra Essencial',
   cresce:     'Kyra Cresce',
@@ -43,14 +64,16 @@ export default async function AssinaturaPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const tenantRes = await supabase
+  // Buscar dados do tenant — cast para evitar inferência 'never' sem tipos gerados
+  const { data: tenantRaw } = await supabase
     .from('tenants')
     .select('id, name, plan, plan_status, trial_ends_at')
     .eq('owner_id', user.id)
     .single()
 
-  if (!tenantRes.data) redirect('/login')
-  const tenant = tenantRes.data
+  const tenant = tenantRaw as TenantRow | null
+  if (!tenant) redirect('/login')
+
   const plan   = tenant.plan ?? 'essencial'
   const limits = PLAN_LIMITS[plan] ?? PLAN_LIMITS.essencial
 
@@ -67,14 +90,14 @@ export default async function AssinaturaPage() {
   ])
 
   const usage: Record<string, number> = {}
-  for (const row of usageRes.data ?? []) {
+  for (const row of (usageRes.data ?? []) as UsageRow[]) {
     usage[row.key] = row.value
   }
 
   const aiUsed = usage['ai_chat_tokens_used'] ?? 0
   const waUsed = usage['whatsapp_messages_sent'] ?? 0
 
-  const sub      = subRes.data
+  const sub      = subRes.data as SubRow | null
   const nextPlan = NEXT_PLAN[plan]
   const isTrial  = tenant.plan_status === 'trial'
   const trialDays = tenant.trial_ends_at
@@ -130,7 +153,7 @@ export default async function AssinaturaPage() {
               {isTrial
                 ? `Trial gratuito — ${trialDays} dias restantes`
                 : sub
-                  ? `Ciclo: ${({ monthly: 'Mensal', quarterly: 'Trimestral', semiannual: 'Semestral', annual: 'Anual' } as any)[sub.billing_cycle] ?? sub.billing_cycle}`
+                  ? `Ciclo: ${({ monthly: 'Mensal', quarterly: 'Trimestral', semiannual: 'Semestral', annual: 'Anual' } as any)[sub.billing_cycle ?? ''] ?? sub.billing_cycle}`
                   : 'Assinatura ativa'}
             </p>
           </div>

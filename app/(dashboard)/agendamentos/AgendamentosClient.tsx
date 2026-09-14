@@ -934,6 +934,8 @@ export default function AgendamentosClient({ initialBookings, professionals, ser
           discount:        raw.discount       ?? 0,
           payment_method:  raw.payment_method ?? null,
           paid_at:         raw.paid_at        ?? null,
+          notes:           raw.notes ?? form.notes ?? null,
+          client_status:   raw.client_status ?? null,
         }
         setBookings(bs => [created, ...bs])
       }

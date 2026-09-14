@@ -22,6 +22,7 @@ export type EntitlementKey =
   | 'has_whatsapp'
   | 'whatsapp_monthly_limit'
   | 'ai_chat_monthly_limit'
+  | 'monthly_bookings'
   | 'has_ai_scheduling'
   | 'has_advanced_reports'
   | 'has_bi_dashboard'
@@ -45,6 +46,7 @@ const PLAN_ENTITLEMENTS: Record<Plan, Record<EntitlementKey, EntitlementValue>> 
     has_whatsapp:         false,
     whatsapp_monthly_limit: 0,
     ai_chat_monthly_limit:  50,
+    monthly_bookings:       100,
     has_ai_scheduling:    false,
     has_advanced_reports: false,
     has_bi_dashboard:     false,
@@ -63,6 +65,7 @@ const PLAN_ENTITLEMENTS: Record<Plan, Record<EntitlementKey, EntitlementValue>> 
     has_whatsapp:         false,
     whatsapp_monthly_limit: 0,
     ai_chat_monthly_limit:  200,
+    monthly_bookings:       'unlimited',
     has_ai_scheduling:    false,
     has_advanced_reports: true,
     has_bi_dashboard:     false,
@@ -81,6 +84,7 @@ const PLAN_ENTITLEMENTS: Record<Plan, Record<EntitlementKey, EntitlementValue>> 
     has_whatsapp:         true,
     whatsapp_monthly_limit: 500,
     ai_chat_monthly_limit: 'unlimited',
+    monthly_bookings:       'unlimited',
     has_ai_scheduling:    true,
     has_advanced_reports: true,
     has_bi_dashboard:     true,
@@ -99,6 +103,7 @@ const PLAN_ENTITLEMENTS: Record<Plan, Record<EntitlementKey, EntitlementValue>> 
     has_whatsapp:         true,
     whatsapp_monthly_limit: 2000,
     ai_chat_monthly_limit: 'unlimited',
+    monthly_bookings:       'unlimited',
     has_ai_scheduling:    true,
     has_advanced_reports: true,
     has_bi_dashboard:     true,

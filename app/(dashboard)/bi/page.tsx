@@ -17,6 +17,31 @@ function monthLabel(offsetFromNow: number) {
   return d.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' })
 }
 
+// ── Tipos locais para os resultados das queries ──────────────────────────────
+type BookingRow = {
+  start_at: string
+  price_charged: number | null
+  discount: number | null
+  client_phone: string | null
+  services: { name: string } | null
+}
+
+type ClientRow = {
+  start_at: string
+  client_phone: string | null
+}
+
+type HeatmapRow = {
+  start_at: string
+}
+
+type TopRawRow = {
+  client_name: string | null
+  client_phone: string | null
+  price_charged: number | null
+  discount: number | null
+}
+
 export default async function BiDashboardPage() {
   const supabase = createClient()
 
@@ -33,7 +58,8 @@ export default async function BiDashboardPage() {
     .eq('id', tenantId)
     .single()
 
-  const plan = (tenantPlan?.plan ?? 'essencial') as string
+  const typedTenantPlan = tenantPlan as { plan?: string | null } | null
+  const plan = typedTenantPlan?.plan ?? 'essencial'
   const hasBiDashboard = ['expande', 'enterprise'].includes(plan)
 
   if (!hasBiDashboard) {
@@ -115,73 +141,135 @@ export default async function BiDashboardPage() {
       .lte('start_at', range12.end),
   ])
 
-  const bookings12 = bookings12Res.data ?? []
-  const clients12  = clientsRes.data ?? []
-  const heatmap    = heatmapRes.data ?? []
-  const topRaw     = topClientsRes.data ?? []
+  const bookings12 = (bookings12Res.data ?? []) as unknown as BookingRow[]
+  const clients12  = (clientsRes.data ?? []) as ClientRow[]
+  const heatmap    = (heatmapRes.data ?? []) as HeatmapRow[]
+  const topRaw     = (topClientsRes.data ?? []) as TopRawRow[]
 
   // ── Receita mensal (12 meses) ─────────────────────────────────────
   const monthRevMap: Record<string, number> = {}
   for (let i = 11; i >= 0; i--) {
     monthRevMap[monthLabel(i)] = 0
   }
+
   for (const b of bookings12) {
     const d   = new Date(b.start_at)
     const lbl = d.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' })
+
     if (lbl in monthRevMap) {
       monthRevMap[lbl] = (monthRevMap[lbl] ?? 0) + ((b.price_charged ?? 0) - (b.discount ?? 0))
     }
   }
-  const monthlyRevenue = Object.entries(monthRevMap).map(([mes, receita]) => ({ mes, receita }))
+
+  const monthlyRevenue = Object.entries(monthRevMap).map(([mes, receita]) => ({
+    mes,
+    receita,
+  }))
 
   // ── Clientes únicos por mês ────────────────────────────────────────
   const monthCliMap: Record<string, Set<string>> = {}
+
   for (let i = 11; i >= 0; i--) {
     monthCliMap[monthLabel(i)] = new Set()
   }
+
   for (const b of clients12) {
     if (!b.client_phone) continue
+
     const d   = new Date(b.start_at)
     const lbl = d.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' })
-    if (lbl in monthCliMap) monthCliMap[lbl].add(b.client_phone)
+
+    if (lbl in monthCliMap) {
+      monthCliMap[lbl].add(b.client_phone)
+    }
   }
-  const monthlyClients = Object.entries(monthCliMap).map(([mes, s]) => ({ mes, clientes: s.size }))
+
+  const monthlyClients = Object.entries(monthCliMap).map(([mes, s]) => ({
+    mes,
+    clientes: s.size,
+  }))
 
   // ── Heatmap dia × hora ─────────────────────────────────────────────
   // Grid 7 dias × 12 faixas de 2h (0-2, 2-4... 22-24)
   const DAYS  = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
   const SLOTS = ['00h', '02h', '04h', '06h', '08h', '10h', '12h', '14h', '16h', '18h', '20h', '22h']
+
   const heatGrid: Record<string, number> = {}
-  for (const day of DAYS)  for (const slot of SLOTS) heatGrid[`${day}|${slot}`] = 0
+
+  for (const day of DAYS) {
+    for (const slot of SLOTS) {
+      heatGrid[`${day}|${slot}`] = 0
+    }
+  }
+
   for (const b of heatmap) {
     const d    = new Date(b.start_at)
     const day  = DAYS[d.getDay()]
     const slot = SLOTS[Math.floor(d.getHours() / 2)]
-    if (day && slot) heatGrid[`${day}|${slot}`]++
+
+    if (day && slot) {
+      heatGrid[`${day}|${slot}`]++
+    }
   }
+
   const heatmapData = DAYS.flatMap(day =>
-    SLOTS.map(slot => ({ day, slot, value: heatGrid[`${day}|${slot}`] ?? 0 }))
+    SLOTS.map(slot => ({
+      day,
+      slot,
+      value: heatGrid[`${day}|${slot}`] ?? 0,
+    }))
   )
 
   // ── Top 10 clientes por receita ────────────────────────────────────
-  const clientRevMap: Record<string, { name: string; receita: number; visitas: number }> = {}
+  const clientRevMap: Record<string, {
+    name: string
+    receita: number
+    visitas: number
+  }> = {}
+
   for (const b of topRaw) {
     const phone = b.client_phone ?? b.client_name ?? 'Desconhecido'
-    if (!clientRevMap[phone]) clientRevMap[phone] = { name: b.client_name ?? phone, receita: 0, visitas: 0 }
-    clientRevMap[phone].receita  += (b.price_charged ?? 0) - (b.discount ?? 0)
-    clientRevMap[phone].visitas  += 1
+
+    if (!clientRevMap[phone]) {
+      clientRevMap[phone] = {
+        name: b.client_name ?? phone,
+        receita: 0,
+        visitas: 0,
+      }
+    }
+
+    clientRevMap[phone].receita += (b.price_charged ?? 0) - (b.discount ?? 0)
+    clientRevMap[phone].visitas += 1
   }
+
   const topClients = Object.values(clientRevMap)
     .sort((a, b) => b.receita - a.receita)
     .slice(0, 10)
-    .map(c => ({ ...c, ltv: c.receita, ticketMedio: c.visitas > 0 ? Math.round(c.receita / c.visitas) : 0 }))
+    .map(c => ({
+      ...c,
+      ltv: c.receita,
+      ticketMedio: c.visitas > 0
+        ? Math.round(c.receita / c.visitas)
+        : 0,
+    }))
 
   // ── KPIs globais ───────────────────────────────────────────────────
-  const totalRevenue12  = bookings12.reduce((s, b) => s + ((b.price_charged ?? 0) - (b.discount ?? 0)), 0)
+  const totalRevenue12 = bookings12.reduce(
+    (s, b) => s + ((b.price_charged ?? 0) - (b.discount ?? 0)),
+    0
+  )
+
   const totalBookings12 = bookings12.length
-  const uniqueClients12 = new Set(clients12.map(b => b.client_phone).filter(Boolean)).size
-  const avgLtv          = topClients.length > 0
-    ? Math.round(topClients.reduce((s, c) => s + c.ltv, 0) / topClients.length) : 0
+
+  const uniqueClients12 = new Set(
+    clients12.map(b => b.client_phone).filter(Boolean)
+  ).size
+
+  const avgLtv = topClients.length > 0
+    ? Math.round(
+        topClients.reduce((s, c) => s + c.ltv, 0) / topClients.length
+      )
+    : 0
 
   return (
     <BiDashboardClient

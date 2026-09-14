@@ -35,8 +35,8 @@ export async function POST(
   void dispatchPush(tenantId, 'booking_cancelled', {
     bookingId:    data.id,
     scheduledAt:  data.scheduled_at,
-    clientName:   (data.clients as { name: string } | null)?.name ?? '',
-    professional: (data.professionals as { name: string } | null)?.name ?? '',
+    clientName:   (data.clients as unknown as { name: string } | null)?.name ?? '',
+    professional: (data.professionals as unknown as { name: string } | null)?.name ?? '',
   })
 
   return NextResponse.json(data)

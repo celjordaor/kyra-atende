@@ -34,6 +34,7 @@ const BI_TOUR = [
   {
     title: 'BI Dashboard — visão estratégica 🔭',
     body:  'Análise dos últimos 12 meses: receita acumulada, clientes únicos, LTV médio e heatmap de horários mais movimentados.',
+    target: '#bi-header',
   },
   {
     title: 'KPIs de 12 meses',
@@ -43,9 +44,9 @@ const BI_TOUR = [
   {
     title: 'Top clientes e heatmap',
     body:  'Identifique seus clientes mais valiosos e descubra os horários de pico para otimizar sua agenda e sua equipe.',
+    target: '#bi-top-clients',
   },
 ]
-
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -109,7 +110,7 @@ function Heatmap({ data, days, slots }: { data: HeatCell[]; days: string[]; slot
     const intensity = Math.min(v / maxVal, 1)
     if (intensity < 0.25) return 'var(--brand-faint)'
     if (intensity < 0.50) return 'var(--brand-dim)'
-    if (intensity < 0.75) return '#93C5FD'   // blue-300 — exceção aceita por Recharts/dataviz
+    if (intensity < 0.75) return '#93C5FD'
     return 'var(--brand)'
   }
 
@@ -148,6 +149,7 @@ function Heatmap({ data, days, slots }: { data: HeatCell[]; days: string[]; slot
           </>
         ))}
       </div>
+
       {/* Legenda */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '12px', justifyContent: 'flex-end' }}>
         <span style={{ fontSize: '11px', color: 'var(--muted)' }}>Menos</span>
@@ -174,11 +176,10 @@ export default function BiDashboardClient({
 
   return (
     <>
-
       <GuidedTour tourKey="bi" steps={BI_TOUR} />
 
       {/* Cabeçalho */}
-      <div style={{ marginBottom: 28 }}>
+      <div id="bi-header" style={{ marginBottom: 28 }}>
         <h1 style={{ fontSize: 22, fontWeight: 600, color: 'var(--ink)', margin: '0 0 4px', letterSpacing: '-0.3px' }}>
           BI Dashboard
         </h1>

@@ -54,9 +54,9 @@ export async function dispatchPush(
   const payload = JSON.stringify({
     event,
     data,
-    title: data.title ?? 'Kyra Atende',
-    body:  data.body  ?? '',
-    url:   data.url   ?? '/dashboard',
+    title: (data.title as string | undefined) ?? 'Kyra Atende',
+    body:  (data.body  as string | undefined) ?? '',
+    url:   (data.url   as string | undefined) ?? '/dashboard',
   } satisfies PushPayload)
 
   const expiredIds: string[] = []
