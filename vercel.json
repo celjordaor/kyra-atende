@@ -1,32 +1,5 @@
 {
-  "crons": [
-    {
-      "path": "/api/cron/expire-trials",
-      "schedule": "0 3 * * *"
-    },
-    {
-      "path": "/api/cron/suspend-overdue",
-      "schedule": "0 4 * * *"
-    },
-    {
-      "path": "/api/cron/reset-counters",
-      "schedule": "0 0 1 * *"
-    },
-    {
-      "path": "/api/cron/booking-reminder-1h",
-      "schedule": "* * * * *"
-    },
-    {
-      "path": "/api/cron/booking-reminder-24h",
-      "schedule": "0 * * * *"
-    },
-    {
-      "path": "/api/cron/whatsapp-reminder-24h",
-      "schedule": "0 * * * *"
-    },
-    {
-      "path": "/api/cron/trial-warning",
-      "schedule": "0 10 * * *"
-    }
-  ]
+  "installCommand": "pnpm install --frozen-lockfile",
+  "buildCommand": "pnpm build",
+  "framework": "nextjs"
 }
