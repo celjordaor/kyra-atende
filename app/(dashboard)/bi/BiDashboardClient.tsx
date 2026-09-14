@@ -6,6 +6,7 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts'
 import { StatTile } from '@/components/molecules/StatTile'
+import GuidedTour from '@/components/molecules/GuidedTour'
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
 
@@ -156,6 +157,42 @@ export default function BiDashboardClient({
 
   return (
     <>
+      <GuidedTour
+        tourKey="bi"
+        steps={[
+          {
+            target:    '#bi-header',
+            title:     'BI Dashboard',
+            body:      'Análise estratégica dos últimos 12 meses do seu negócio. Use esses dados para tomar decisões baseadas em fatos.',
+            placement: 'bottom',
+          },
+          {
+            target:    '#bi-kpis',
+            title:     'KPIs estratégicos',
+            body:      'Receita total, número de agendamentos, clientes únicos e LTV médio dos seus top 10 clientes — todos calculados para os últimos 12 meses.',
+            placement: 'bottom',
+          },
+          {
+            target:    '#bi-trends',
+            title:     'Tendências mensais',
+            body:      'Acompanhe a evolução de receita e crescimento de clientes mês a mês para identificar sazonalidade e oportunidades.',
+            placement: 'top',
+          },
+          {
+            target:    '#bi-heatmap',
+            title:     'Heatmap de agendamentos',
+            body:      'Descubra quais dias e horários concentram mais atendimentos. Use para otimizar escala de profissionais e política de preços.',
+            placement: 'top',
+          },
+          {
+            target:    '#bi-top-clients',
+            title:     'Top clientes por receita',
+            body:      'Os 10 clientes que mais geraram receita no período, com ticket médio e LTV calculados. Ótimos candidatos para programas de fidelidade.',
+            placement: 'top',
+          },
+        ]}
+      />
+
       {/* Cabeçalho */}
       <div id="bi-header" style={{ marginBottom: 28 }}>
         <h1 style={{ fontSize: 22, fontWeight: 600, color: 'var(--ink)', margin: '0 0 4px', letterSpacing: '-0.3px' }}>

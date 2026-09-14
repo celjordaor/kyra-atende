@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
     .from('bookings')
     .select(`
       id, tenant_id, client_id, professional_id, service_id,
-      client_name, client_phone,
+      client_name, client_phone, client_email,
       start_at, end_at,
       status, notes, created_at,
       professionals(id, name),
@@ -82,10 +82,10 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  // Busca nome e telefone do cliente para preencher os campos snapshot
+  // Busca nome, telefone e e-mail do cliente para preencher os campos snapshot
   const { data: clientData } = await supabase
     .from('clients')
-    .select('name, phone')
+    .select('name, phone, email')
     .eq('id', client_id)
     .single()
 
@@ -100,12 +100,13 @@ export async function POST(request: NextRequest) {
       end_at,
       client_name:  clientData?.name  ?? '',
       client_phone: clientData?.phone ?? null,
+      client_email: clientData?.email ?? null,
       notes:  notes ?? null,
       status: 'confirmed',
     })
     .select(`
       id, tenant_id, client_id, professional_id, service_id,
-      client_name, client_phone,
+      client_name, client_phone, client_email,
       start_at, end_at,
       status, notes, created_at,
       professionals(id, name),

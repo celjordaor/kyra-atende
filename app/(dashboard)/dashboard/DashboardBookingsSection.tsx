@@ -11,6 +11,7 @@ import { api }              from '@/lib/api'
 import type { Booking }     from '@/components/organisms'
 import { CompleteModal }    from '@/components/organisms'
 import type { CompleteModalBooking } from '@/components/organisms'
+import GuidedTour from '@/components/molecules/GuidedTour'
 
 export interface NewClient {
   id:         string
@@ -477,6 +478,24 @@ export function DashboardBookingsSection({ todayBookings, pendingBookings, newCl
         )
         setCompleteModalId(null)
       }}
+    />
+
+    <GuidedTour
+      tourKey="dashboard"
+      steps={[
+        {
+          target:    '#stat-tiles',
+          title:     'Indicadores do dia',
+          body:      'Acompanhe seus principais números: agendamentos de hoje e do mês, pendentes de confirmação, clientes e receita.',
+          placement: 'bottom',
+        },
+        {
+          target:    '#dashboard-content',
+          title:     'Agenda de hoje',
+          body:      'Veja todos os agendamentos do dia. Confirme, conclua ou cancele com um clique — as mudanças são refletidas em tempo real.',
+          placement: 'top',
+        },
+      ]}
     />
     </>
   )

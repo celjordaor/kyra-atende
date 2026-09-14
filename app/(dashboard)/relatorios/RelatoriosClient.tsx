@@ -7,6 +7,7 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from 'recharts'
 import { StatTile } from '@/components/molecules/StatTile'
+import GuidedTour from '@/components/molecules/GuidedTour'
 
 // ─── Tipos ──────────────────────────────────────────────────────────────────
 
@@ -131,6 +132,23 @@ export default function RelatoriosClient({
 
   return (
     <>
+      <GuidedTour
+        tourKey="relatorios"
+        steps={[
+          {
+            target:    '#kyra-relatorios-header',
+            title:     'Relatórios do mês',
+            body:      'Acompanhe o desempenho do seu negócio com dados atualizados do mês atual. As métricas são comparadas com o mês anterior.',
+            placement: 'bottom',
+          },
+          {
+            target:    '#kyra-relatorios-charts',
+            title:     'Gráficos e análises',
+            body:      'Visualize receita semanal, agendamentos por profissional, serviços mais vendidos e distribuição por status — tudo em um só lugar.',
+            placement: 'top',
+          },
+        ]}
+      />
 
       {/* Cabeçalho */}
       <div id="kyra-relatorios-header" style={{ marginBottom: 28 }}>

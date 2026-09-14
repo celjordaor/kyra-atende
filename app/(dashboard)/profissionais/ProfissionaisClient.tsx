@@ -5,6 +5,7 @@ import { DataTable, Modal } from '@/components/organisms'
 import { Avatar, Button, StatusBadge, FormField } from '@/components/atoms'
 import { api, ApiError } from '@/lib/api'
 import type { Column, RowAction } from '@/components/organisms'
+import GuidedTour from '@/components/molecules/GuidedTour'
 
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
@@ -227,6 +228,30 @@ export function ProfissionaisClient({ rows: initialRows }: Props) {
           pagination={{ page: 1, pageSize: 20, total: rows.length }}
         />
       </div>
+
+      <GuidedTour
+        tourKey="profissionais"
+        steps={[
+          {
+            target:    '#prof-header',
+            title:     'Gestão de profissionais',
+            body:      'Aqui você cadastra e gerencia todos os profissionais do seu negócio. Cada um pode ter serviços e agendamentos independentes.',
+            placement: 'bottom',
+          },
+          {
+            target:    '#btn-novo-prof',
+            title:     'Adicionar profissional',
+            body:      'Clique em "+ Novo profissional" para cadastrar. Informe nome, e-mail e telefone — apenas o nome é obrigatório.',
+            placement: 'bottom',
+          },
+          {
+            target:    '#prof-table',
+            title:     'Lista de profissionais',
+            body:      'Edite dados ou ative/desative profissionais diretamente pela tabela. Profissionais inativos não aparecem na agenda de agendamentos.',
+            placement: 'top',
+          },
+        ]}
+      />
 
       {/* Modal */}
       <Modal
