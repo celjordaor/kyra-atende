@@ -23,16 +23,18 @@ export async function GET(request: NextRequest) {
     .from('bookings')
     .select(`
       id, tenant_id, client_id, professional_id, service_id,
-      scheduled_at, status, notes, created_at,
-      clients(id, name, phone),
+      client_name, client_phone,
+      start_at, end_at,
+      status, notes, created_at,
       professionals(id, name),
-      services(id, name, duration_minutes, price)
+      services(id, name, duration_minutes, price),
+      clients(id, status, source)
     `)
     .eq('tenant_id', tenantId)
-    .order('scheduled_at', { ascending: true })
+    .order('start_at', { ascending: true })
 
-  if (dateFrom) query = query.gte('scheduled_at', dateFrom)
-  if (dateTo)   query = query.lte('scheduled_at', dateTo)
+  if (dateFrom) query = query.gte('start_at', dateFrom)
+  if (dateTo)   query = query.lte('start_at', dateTo)
   if (status)   query = query.eq('status', status)
 
   const { data, error } = await query
@@ -65,38 +67,51 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json()
-  const { client_id, professional_id, service_id, scheduled_at, notes } = body as {
-    client_id: string
-    professional_id: string
-    service_id: string
-    scheduled_at: string
-    notes?: string | null
+  const { client_id, professional_id, service_id, start_at, end_at, notes } = body as {
+    client_id:       string
+    professional_id: string | null
+    service_id:      string
+    start_at:        string
+    end_at:          string
+    notes?:          string | null
   }
 
-  if (!client_id || !professional_id || !service_id || !scheduled_at) {
+  if (!client_id || !service_id || !start_at || !end_at) {
     return NextResponse.json(
-      { error: 'client_id, professional_id, service_id e scheduled_at são obrigatórios.' },
+      { error: 'client_id, service_id, start_at e end_at são obrigatórios.' },
       { status: 400 },
     )
   }
+
+  // Busca nome e telefone do cliente para preencher os campos snapshot
+  const { data: clientData } = await supabase
+    .from('clients')
+    .select('name, phone')
+    .eq('id', client_id)
+    .single()
 
   const { data, error } = await supabase
     .from('bookings')
     .insert({
       tenant_id:       tenantId,
       client_id,
-      professional_id,
+      professional_id: professional_id ?? null,
       service_id,
-      scheduled_at,
+      start_at,
+      end_at,
+      client_name:  clientData?.name  ?? '',
+      client_phone: clientData?.phone ?? null,
       notes:  notes ?? null,
       status: 'confirmed',
     })
     .select(`
       id, tenant_id, client_id, professional_id, service_id,
-      scheduled_at, status, notes, created_at,
-      clients(id, name, phone),
+      client_name, client_phone,
+      start_at, end_at,
+      status, notes, created_at,
       professionals(id, name),
-      services(id, name, duration_minutes, price)
+      services(id, name, duration_minutes, price),
+      clients(id, status, source)
     `)
     .single()
 
@@ -105,8 +120,8 @@ export async function POST(request: NextRequest) {
   // Dispara push em background
   void dispatchPush(tenantId, 'booking_created', {
     bookingId:    data.id,
-    scheduledAt:  data.scheduled_at,
-    clientName:   (data.clients as unknown as { name: string } | null)?.name ?? '',
+    scheduledAt:  data.start_at,
+    clientName:   data.client_name ?? '',
     professional: (data.professionals as unknown as { name: string } | null)?.name ?? '',
   })
 
