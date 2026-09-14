@@ -13,15 +13,15 @@ export default async function DashboardGroupLayout({
 
   if (!user) redirect('/login')
 
-  // Verifica role no JWT app_metadata — mesma fonte que o backend usa
-  // (app_metadata.role é setado pelo Supabase Auth admin, disponível sem query extra)
-  if (user.app_metadata?.role === 'superadmin') redirect('/superadmin')
-
-  // Carrega perfil e tenant em paralelo (só para usuários não-superadmin)
+  // Carrega perfil (com role) e tenant em paralelo
+  // O cliente regular tem acesso via RLS (auth.uid() = id)
   const [profileRes, tenantRes] = await Promise.all([
-    supabase.from('profiles').select('name, avatar_url').eq('id', user.id).single(),
+    supabase.from('profiles').select('name, avatar_url, role').eq('id', user.id).single(),
     supabase.from('tenants').select('name, logo_url').eq('owner_id', user.id).single(),
   ])
+
+  // Superadmin não usa o dashboard regular
+  if (profileRes.data?.role === 'superadmin') redirect('/superadmin')
 
   const userName   = profileRes.data?.name      ?? user.email ?? 'Usuário'
   const userEmail  = user.email ?? undefined
