@@ -133,10 +133,16 @@ export async function POST(
   })
 
   if (!resendRes.ok) {
-    const detail = await resendRes.text().catch(() => '')
-    console.error('[send-booking-link] Resend error:', resendRes.status, detail)
+    let resendBody: unknown
+    try { resendBody = await resendRes.json() } catch { resendBody = await resendRes.text().catch(() => '') }
+    console.error('[send-booking-link] Resend error:', resendRes.status, resendBody)
+    // Inclui detalhe do Resend na resposta para diagnóstico
     return NextResponse.json(
-      { error: 'Falha ao enviar e-mail. Tente novamente.' },
+      {
+        error: 'Falha ao enviar e-mail via Resend.',
+        resendStatus: resendRes.status,
+        resendDetail: resendBody,
+      },
       { status: 502 },
     )
   }
