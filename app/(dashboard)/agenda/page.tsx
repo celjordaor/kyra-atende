@@ -32,7 +32,7 @@ export default async function AgendaPage() {
 
   try {
     ;[rawBookings, services] = await Promise.all([
-      apiGet<RawBooking[]>(`/bookings?from=${from.toISOString()}&to=${to.toISOString()}`),
+      apiGet<RawBooking[]>(`/bookings?dateFrom=${from.toISOString()}&dateTo=${to.toISOString()}`),
       apiGet<ServiceRow[]>('/services'),
     ])
   } catch (err) {

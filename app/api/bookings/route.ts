@@ -27,8 +27,7 @@ export async function GET(request: NextRequest) {
       start_at, end_at,
       status, notes, created_at,
       professionals(id, name),
-      services(id, name, duration_minutes, price),
-      clients(id, status, source)
+      services(id, name, duration_minutes, price)
     `)
     .eq('tenant_id', tenantId)
     .order('start_at', { ascending: true })
@@ -110,8 +109,7 @@ export async function POST(request: NextRequest) {
       start_at, end_at,
       status, notes, created_at,
       professionals(id, name),
-      services(id, name, duration_minutes, price),
-      clients(id, status, source)
+      services(id, name, duration_minutes, price)
     `)
     .single()
 
