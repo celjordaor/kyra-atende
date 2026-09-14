@@ -2,13 +2,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import webpush from 'web-push'
 
-webpush.setVapidDetails(
-  'mailto:suporte@kyraatende.com.br',
-  process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
-  process.env.VAPID_PRIVATE_KEY!
-)
-
 export async function POST(request: NextRequest) {
+  // Configuração VAPID dentro do handler para evitar erro no build
+  webpush.setVapidDetails(
+    'mailto:suporte@kyraatende.com.br',
+    process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
+    process.env.VAPID_PRIVATE_KEY!
+  )
+
   try {
     const supabase = await createClient()
     const { data: { user }, error: authError } = await supabase.auth.getUser()

@@ -2,13 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import webpush from 'web-push'
 
-// Configuração VAPID (chaves do servidor)
-webpush.setVapidDetails(
-  process.env.VAPID_EMAIL ?? 'mailto:suporte@kyraatende.com.br',
-  process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? '',
-  process.env.VAPID_PRIVATE_KEY ?? '',
-)
-
 // Cliente Supabase com service_role para leitura sem RLS
 function adminClient() {
   return createClient(
@@ -26,6 +19,14 @@ function formatDateTime(iso: string): string {
 }
 
 export async function POST(request: NextRequest) {
+  // Configuração VAPID dentro do handler para evitar erro no build
+  // quando as variáveis de ambiente ainda não estão disponíveis
+  webpush.setVapidDetails(
+    process.env.VAPID_SUBJECT ?? 'mailto:suporte@kyraatende.com.br',
+    process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? '',
+    process.env.VAPID_PRIVATE_KEY ?? '',
+  )
+
   try {
     const { tenantId, clientName, serviceName, startAt } = await request.json() as {
       tenantId:    string
