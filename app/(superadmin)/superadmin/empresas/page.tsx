@@ -18,33 +18,55 @@ export interface TenantRow {
 export default async function EmpresasPage() {
   const admin = createAdminClient()
 
-  const { data: tenants } = await admin
+  // 1. Busca todos os tenants sem join (evita dependência de FK no PostgREST)
+  const { data: tenants, error: tenantsError } = await admin
     .from('tenants')
-    .select(`
-      id, name, slug, plan, plan_status, trial_ends, created_at,
-      profiles!owner_id(name, email)
-    `)
+    .select('id, name, slug, plan, plan_status, trial_ends, created_at, owner_id')
     .order('created_at', { ascending: false })
     .limit(200)
 
-  const rows: TenantRow[] = (tenants ?? [])
-    .filter((t: any) => t != null && t.id && t.name)   // descarta entradas nulas
-    .map((t: any) => {
-      // profiles pode ser array (1-N via FK) ou objeto (1-1) dependendo do schema
-      const profileArr = Array.isArray(t.profiles) ? t.profiles : (t.profiles ? [t.profiles] : [])
-      const profile    = profileArr[0] ?? null
-      return {
-        id:          t.id          as string,
-        name:        t.name        as string,
-        slug:        t.slug        as string,
-        plan:        t.plan        as string,
-        plan_status: t.plan_status as string,
-        trial_ends:  (t.trial_ends ?? t.trial_ends_at) as string | null,
-        created_at:  t.created_at  as string,
-        owner_name:  profile?.name  ?? null,
-        owner_email: profile?.email ?? null,
-      }
-    })
+  if (tenantsError) {
+    console.error('[EmpresasPage] tenants query error:', tenantsError)
+  }
+
+  const tenantList = (tenants ?? []).filter((t: any) => t?.id && t?.name)
+
+  // 2. Busca os profiles dos owners em uma segunda query
+  const ownerIds = tenantList
+    .map((t: any) => t.owner_id)
+    .filter(Boolean) as string[]
+
+  let profileMap: Record<string, { name: string | null; email: string | null }> = {}
+
+  if (ownerIds.length > 0) {
+    const { data: profiles, error: profilesError } = await admin
+      .from('profiles')
+      .select('id, name, email')
+      .in('id', ownerIds)
+
+    if (profilesError) {
+      console.error('[EmpresasPage] profiles query error:', profilesError)
+    }
+
+    profileMap = Object.fromEntries(
+      (profiles ?? []).map((p: any) => [p.id, { name: p.name ?? null, email: p.email ?? null }])
+    )
+  }
+
+  const rows: TenantRow[] = tenantList.map((t: any) => {
+    const profile = profileMap[t.owner_id] ?? null
+    return {
+      id:          t.id          as string,
+      name:        t.name        as string,
+      slug:        t.slug        as string,
+      plan:        t.plan        as string,
+      plan_status: t.plan_status as string,
+      trial_ends:  (t.trial_ends ?? t.trial_ends_at ?? null) as string | null,
+      created_at:  t.created_at  as string,
+      owner_name:  profile?.name  ?? null,
+      owner_email: profile?.email ?? null,
+    }
+  })
 
   return <EmpresasClient rows={rows} />
 }
