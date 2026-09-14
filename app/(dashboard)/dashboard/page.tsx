@@ -57,7 +57,6 @@ export default async function DashboardPage() {
     monthRes,
     pendingRes,
     confirmedMonthRes,
-    clientsRes,
     revenueTodayRes,
     revenueMonthRes,
     bookingsTodayRes,
@@ -90,10 +89,6 @@ export default async function DashboardPage() {
       .eq('tenant_id', tenantId)
       .gte('start_at', thisMonth.start).lte('start_at', thisMonth.end)
       .in('status', ['confirmed', 'completed']),
-
-    // Total de clientes
-    supabase.from('clients').select('id', { count: 'exact', head: true })
-      .eq('tenant_id', tenantId),
 
     // Receita hoje (serviços confirmados/concluídos)
     supabase.from('bookings')
@@ -142,7 +137,6 @@ export default async function DashboardPage() {
   const countToday    = todayRes.count    ?? 0
   const countMonth    = monthRes.count    ?? 0
   const countPending  = pendingRes.count  ?? 0
-  const countClients  = clientsRes.count  ?? 0
   const countConfirmed = confirmedMonthRes.count ?? 0
 
   const revenueToday = (revenueTodayRes.data ?? [])
@@ -200,40 +194,33 @@ export default async function DashboardPage() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
 
-      {/* ── Cabeçalho: saudação + receita ── */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' }}>
-        <div>
-          <h1 style={{ fontSize: '22px', fontWeight: 600, color: 'var(--ink)', margin: '0 0 4px' }}>
-            {greeting}, {tenantName} 👋
-          </h1>
-          <p style={{ fontSize: '14px', color: 'var(--muted)', margin: 0, textTransform: 'capitalize' }}>
-            {dateLabel}
-            {countPending > 0 && (
-              <>
-                {' · '}
-                <span style={{ color: 'var(--orange)', fontWeight: 500 }}>
-                  {countPending} agendamento{countPending !== 1 ? 's' : ''} pendente{countPending !== 1 ? 's' : ''} aguardando confirmação
-                </span>
-              </>
-            )}
-          </p>
-        </div>
-
-        {/* Tiles de receita */}
-        <div style={{ display: 'flex', gap: '12px', flexShrink: 0 }}>
-          <StatTile label="Receita hoje"     value={fmtBRL(revenueToday)}  icon="dollar" color="green" formatNumber={false} />
-          <StatTile label="Receita este mês" value={fmtBRL(revenueMonth)}  icon="dollar" color="blue"  formatNumber={false} />
-        </div>
+      {/* ── Cabeçalho: saudação ── */}
+      <div>
+        <h1 style={{ fontSize: '22px', fontWeight: 600, color: 'var(--ink)', margin: '0 0 4px' }}>
+          {greeting}, {tenantName} 👋
+        </h1>
+        <p style={{ fontSize: '14px', color: 'var(--muted)', margin: 0, textTransform: 'capitalize' }}>
+          {dateLabel}
+          {countPending > 0 && (
+            <>
+              {' · '}
+              <span style={{ color: 'var(--orange)', fontWeight: 500 }}>
+                {countPending} agendamento{countPending !== 1 ? 's' : ''} pendente{countPending !== 1 ? 's' : ''} aguardando confirmação
+              </span>
+            </>
+          )}
+        </p>
       </div>
 
-      {/* ── KPI tiles (6) ── */}
-      <div id="stat-tiles" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '14px' }}>
-        <StatTile label="Agendamentos hoje"      value={countToday}    icon="calendar" color="blue"   />
-        <StatTile label="Agendamentos este mês"  value={countMonth}    icon="chart"    color="green"  />
-        <StatTile label="Pendentes confirmação"  value={countPending}  icon="clock"    color="orange" />
-        <StatTile label="Total de clientes"      value={countClients}  icon="users"    color="blue"   />
-        <StatTile label="Ticket médio"           value={fmtBRL(ticketMedio)}   icon="dollar" color="green"  formatNumber={false} />
-        <StatTile label="Taxa de confirmação"    value={taxaConfirmacao}       icon="check"  color="blue"   suffix="%" />
+      {/* ── KPI tiles (7) — linha única ── */}
+      <div id="stat-tiles" style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: '10px' }}>
+        <StatTile label="Agendamentos hoje"     value={countToday}              icon="calendar" color="blue"   compact />
+        <StatTile label="Agendamentos mês"      value={countMonth}              icon="chart"    color="green"  compact />
+        <StatTile label="Pendentes"             value={countPending}            icon="clock"    color="orange" compact />
+        <StatTile label="Ticket médio"          value={fmtBRL(ticketMedio)}     icon="dollar"   color="green"  formatNumber={false} compact />
+        <StatTile label="Receita hoje"          value={fmtBRL(revenueToday)}    icon="dollar"   color="green"  formatNumber={false} compact />
+        <StatTile label="Receita este mês"      value={fmtBRL(revenueMonth)}    icon="dollar"   color="blue"   formatNumber={false} compact />
+        <StatTile label="Taxa de confirmação"   value={taxaConfirmacao}         icon="check"    color="blue"   suffix="%" compact />
       </div>
 
       {/* ── Seção principal (agenda + pendentes) ── */}
