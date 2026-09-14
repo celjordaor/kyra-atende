@@ -22,7 +22,7 @@ export default async function EmpresasPage() {
     .from('tenants')
     .select(`
       id, name, slug, plan, plan_status, trial_ends, created_at,
-      profiles!profiles_tenant_id_fkey(name, email)
+      profiles!owner_id(name, email)
     `)
     .order('created_at', { ascending: false })
     .limit(200)

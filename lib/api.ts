@@ -1,6 +1,6 @@
 /**
  * lib/api.ts
- * Cliente HTTP autenticado para o backend NestJS (localhost:3001 em dev).
+ * Cliente HTTP autenticado — chama as Next.js API Routes do próprio app.
  * Injeta automaticamente o Bearer token do Supabase em cada requisição.
  *
  * Uso:
@@ -11,7 +11,8 @@
 
 import { createClient } from '@/lib/supabase/client'
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001'
+// Em produção usa same-origin (vazio). Em dev pode sobrescrever com NEXT_PUBLIC_API_URL.
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? ''
 
 async function getToken(): Promise<string | null> {
   const supabase = createClient()
