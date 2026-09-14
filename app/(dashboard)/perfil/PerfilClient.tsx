@@ -6,14 +6,12 @@
 import { useState, useCallback } from 'react'
 import { useRouter }             from 'next/navigation'
 import { createClient }          from '@/lib/supabase/client'
-import { Avatar }                from '@/components/atoms'
-import { Button }                from '@/components/atoms'
-import { FormField }             from '@/components/atoms'
-import { StatusBadge }           from '@/components/atoms'
-import { api }                   from '@/lib/api'
+import { Avatar }    from '@/components/atoms'
+import { Button }    from '@/components/atoms'
+import { FormField } from '@/components/atoms'
+import { api }       from '@/lib/api'
 
 interface Props {
-  userId:     string
   email:      string
   name:       string
   role:       string
@@ -73,7 +71,7 @@ const ROLE_LABELS: Record<string, string> = {
 }
 
 /* ═══════════════════════════════════════════════════════════ */
-export default function PerfilClient({ userId, email, name: initialName, role, tenantName, bookingUrl }: Props) {
+export default function PerfilClient({ email, name: initialName, role, tenantName, bookingUrl }: Props) {
   const router = useRouter()
 
   // ── Dados pessoais ──────────────────────────────────────────
@@ -162,7 +160,7 @@ export default function PerfilClient({ userId, email, name: initialName, role, t
         />
         <InfoRow
           label="Função"
-          value={<StatusBadge status={role as any} label={ROLE_LABELS[role] ?? role} />}
+          value={<span style={{ fontSize: '14px', color: 'var(--ink)', fontWeight: 500 }}>{ROLE_LABELS[role] ?? role}</span>}
         />
         <InfoRow label="Empresa" value={tenantName} />
 
@@ -214,7 +212,7 @@ export default function PerfilClient({ userId, email, name: initialName, role, t
 
           <div style={{ marginTop: '12px', display: 'flex', gap: '10px' }}>
             <Button
-              variant="outline"
+              variant="secondary"
               size="sm"
               onClick={() => window.open(bookingUrl, '_blank')}
             >

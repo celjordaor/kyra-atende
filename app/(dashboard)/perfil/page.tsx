@@ -25,7 +25,6 @@ export default async function PerfilPage() {
 
   return (
     <PerfilClient
-      userId={user.id}
       email={user.email ?? ''}
       name={profile?.name ?? ''}
       role={profile?.role ?? 'admin'}
