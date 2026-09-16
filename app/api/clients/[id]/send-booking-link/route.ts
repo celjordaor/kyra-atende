@@ -28,12 +28,12 @@ export async function POST(
     .single()
 
   if (clientError || !client) {
-    return NextResponse.json({ error: 'Cliente não encontrado.' }, { status: 404 })
+    return NextResponse.json({ message: 'Cliente não encontrado.' }, { status: 404 })
   }
 
   if (!client.email) {
     return NextResponse.json(
-      { error: 'Cliente não possui e-mail cadastrado.' },
+      { message: 'Cliente não possui e-mail cadastrado.' },
       { status: 422 },
     )
   }
@@ -47,7 +47,7 @@ export async function POST(
     .single()
 
   if (tenantError || !tenant) {
-    return NextResponse.json({ error: 'Tenant não encontrado.' }, { status: 500 })
+    return NextResponse.json({ message: 'Tenant não encontrado.' }, { status: 500 })
   }
 
   const appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? 'https://www.kyraatende.com.br').replace(/\/$/, '')
@@ -59,7 +59,7 @@ export async function POST(
 
   if (!resendKey) {
     console.error('[send-booking-link] RESEND_API_KEY não configurada')
-    return NextResponse.json({ error: 'Serviço de e-mail não configurado.' }, { status: 500 })
+    return NextResponse.json({ message: 'Serviço de e-mail não configurado no servidor.' }, { status: 500 })
   }
 
   const firstName = client.name.split(' ')[0]
@@ -118,31 +118,43 @@ export async function POST(
 </body>
 </html>`
 
-  const resendRes = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${resendKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      from:    mailFrom,
-      to:      [client.email],
-      subject: `Agende seu horário com ${tenant.name}`,
-      html,
-    }),
-  })
+  const resendCtrl = new AbortController()
+  const resendTimeout = setTimeout(() => resendCtrl.abort(), 8000)
+  let resendRes: Response
+  try {
+    resendRes = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      signal: resendCtrl.signal,
+      headers: {
+        'Authorization': `Bearer ${resendKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from:    mailFrom,
+        to:      [client.email],
+        subject: `Agende seu horário com ${tenant.name}`,
+        html,
+      }),
+    })
+  } catch (fetchErr: unknown) {
+    clearTimeout(resendTimeout)
+    const msg = fetchErr instanceof Error ? fetchErr.message : String(fetchErr)
+    console.error('[send-booking-link] fetch to Resend failed:', msg)
+    return NextResponse.json({ message: `Erro de rede ao contatar Resend: ${msg}` }, { status: 502 })
+  }
+  clearTimeout(resendTimeout)
 
   if (!resendRes.ok) {
     let resendBody: unknown
     try { resendBody = await resendRes.json() } catch { resendBody = await resendRes.text().catch(() => '') }
     console.error('[send-booking-link] Resend error:', resendRes.status, resendBody)
     // Inclui detalhe do Resend na resposta para diagnóstico
+    const detail = typeof resendBody === 'object' && resendBody !== null
+      ? ((resendBody as Record<string,unknown>).message ?? (resendBody as Record<string,unknown>).name ?? JSON.stringify(resendBody))
+      : String(resendBody)
+    console.error('[send-booking-link] Resend detail:', detail)
     return NextResponse.json(
-      {
-        error: 'Falha ao enviar e-mail via Resend.',
-        resendStatus: resendRes.status,
-        resendDetail: resendBody,
-      },
+      { message: `Resend ${resendRes.status}: ${detail}` },
       { status: 502 },
     )
   }

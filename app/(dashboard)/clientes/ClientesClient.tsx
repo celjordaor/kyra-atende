@@ -214,18 +214,22 @@ const BADGE_BASE: React.CSSProperties = {
 type EmailState = 'idle' | 'loading' | 'sent' | 'error'
 
 function SendEmailBadge({ clientId, hasEmail }: { clientId: string; hasEmail: boolean }) {
-  const [state, setState] = useState<EmailState>('idle')
+  const [state,    setState]    = useState<EmailState>('idle')
+  const [errorMsg, setErrorMsg] = useState<string>('')
 
   const handleClick = useCallback(async () => {
     if (!hasEmail || state === 'loading' || state === 'sent') return
     setState('loading')
+    setErrorMsg('')
     try {
       await api.post(`/clients/${clientId}/send-booking-link`, {})
       setState('sent')
       setTimeout(() => setState('idle'), 3000)
-    } catch {
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Erro desconhecido'
+      setErrorMsg(msg)
       setState('error')
-      setTimeout(() => setState('idle'), 2500)
+      setTimeout(() => { setState('idle'); setErrorMsg('') }, 5000)
     }
   }, [clientId, hasEmail, state])
 
@@ -243,7 +247,7 @@ function SendEmailBadge({ clientId, hasEmail }: { clientId: string; hasEmail: bo
   const title = !hasEmail
     ? 'Cliente sem e-mail cadastrado'
     : state === 'sent'    ? 'Link de agendamento enviado!'
-    : state === 'error'   ? 'Erro ao enviar — clique para tentar novamente'
+    : state === 'error'   ? (errorMsg || 'Erro ao enviar — clique para tentar novamente')
     : 'Enviar link de agendamento por e-mail'
 
   return (
