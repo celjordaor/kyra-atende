@@ -123,8 +123,8 @@ export default function WhatsappClient({
     try {
       const res  = await fetch('/api/whatsapp/connect', { method: 'POST' })
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error ?? 'Erro ao conectar')
-      const raw = data.qr as string | undefined
+      if (!res.ok) throw new Error(data.message ?? data.error ?? 'Erro ao conectar')
+      const raw = (data.qrcode ?? data.qr) as string | undefined
       if (raw) setQrSrc(raw.startsWith('data:') ? raw : `data:image/png;base64,${raw}`)
       setConn(prev => ({ ...prev, status: 'connecting', connected: false }))
     } catch (e: unknown) {
@@ -133,7 +133,19 @@ export default function WhatsappClient({
     }
   }, [])
 
-  /* ── Disconnect — FIX: uses DELETE, not POST ─────────── */
+  /* ── Cancel connection attempt ────────────────────────── */
+  const handleCancel = useCallback(() => {
+    setConnecting(false)
+    setQrSrc(null)
+    // Reset badge immediately — don't wait for poll
+    setConn(prev => ({ ...prev, status: 'close', connected: false }))
+    // Pause polling 8 s so server "connecting" state doesn't revert badge
+    pausePollUntil.current = Date.now() + 8_000
+    // Clean up Evolution API instance in background (fire-and-forget)
+    fetch('/api/whatsapp/disconnect', { method: 'DELETE' }).catch(() => {})
+  }, [])
+
+    /* ── Disconnect — FIX: uses DELETE, not POST ─────────── */
   const handleDisconnect = useCallback(async () => {
     if (!confirm('Deseja desconectar o WhatsApp?')) return
     setDisconnecting(true)
@@ -212,7 +224,9 @@ export default function WhatsappClient({
           <p style={{ fontSize: 14, color: 'var(--muted)', margin: 0 }}>
             {conn.status === 'open' && conn.phone
               ? `Conectado: ${formatPhone(conn.phone)}`
-              : `Últimas ${initialMessages.length} mensagens`}
+              : initialMessages.length === 1
+                ? 'Última 1 mensagem'
+                : `Últimas ${initialMessages.length} mensagens`}
           </p>
         </div>
 
@@ -292,7 +306,7 @@ export default function WhatsappClient({
             Aguardando leitura <span style={{ animation: 'waPulse 1.5s ease-in-out infinite', display: 'inline-block' }}>•••</span>
           </p>
           <div style={{ marginTop: 16 }}>
-            <Button variant="ghost" size="sm" onClick={() => { setConnecting(false); setQrSrc(null) }}>
+            <Button variant="ghost" size="sm" onClick={handleCancel}>
               Cancelar
             </Button>
           </div>
