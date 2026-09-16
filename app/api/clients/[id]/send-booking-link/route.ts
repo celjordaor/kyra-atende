@@ -22,7 +22,7 @@ export async function POST(
   // ── 1. Busca cliente (valida que pertence ao tenant) ─────────────────────────
   const { data: client, error: clientError } = await supabase
     .from('clients')
-    .select('id, name, email')
+    .select('id, name, email, phone')
     .eq('id', clientId)
     .eq('tenant_id', tenantId)
     .single()
