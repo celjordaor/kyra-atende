@@ -4,10 +4,11 @@ import { PublicBookingLayout } from '@/components/templates'
 import BookingFlow from './BookingFlow'
 
 interface PageProps {
-  params: { slug: string }
+  params:      { slug: string }
+  searchParams: { nome?: string; email?: string; tel?: string }
 }
 
-export default async function PublicBookingPage({ params }: PageProps) {
+export default async function PublicBookingPage({ params, searchParams }: PageProps) {
   const supabase = createClient()
 
   // Busca o tenant pelo slug
@@ -36,6 +37,13 @@ export default async function PublicBookingPage({ params }: PageProps) {
       .order('name', { ascending: true }),
   ])
 
+  // Dados pré-preenchidos vindos do link enviado por e-mail (da tela de clientes)
+  const prefill = {
+    nome:  searchParams.nome  ?? '',
+    email: searchParams.email ?? '',
+    tel:   searchParams.tel   ?? '',
+  }
+
   return (
     <PublicBookingLayout
       companySlug={tenant.slug}
@@ -46,6 +54,7 @@ export default async function PublicBookingPage({ params }: PageProps) {
         tenantId={tenant.id}
         services={services ?? []}
         professionals={professionals ?? []}
+        prefill={prefill}
       />
     </PublicBookingLayout>
   )

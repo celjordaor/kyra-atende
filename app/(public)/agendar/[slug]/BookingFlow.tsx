@@ -24,10 +24,17 @@ interface TakenSlot {
   end:   string
 }
 
+interface Prefill {
+  nome?:  string
+  email?: string
+  tel?:   string
+}
+
 interface Props {
   tenantId:      string
   services:      Service[]
   professionals: Professional[]
+  prefill?:      Prefill
 }
 
 type Step = 'service' | 'professional' | 'datetime' | 'confirm' | 'success'
@@ -330,7 +337,7 @@ function DataRow({ icon, label, value }: { icon: string; label: string; value: s
 
 // ─── BookingFlow ──────────────────────────────────────────────────────────────
 
-export default function BookingFlow({ tenantId, services, professionals }: Props) {
+export default function BookingFlow({ tenantId, services, professionals, prefill }: Props) {
   const hasMultipleProfs = professionals.length > 1
 
   const [step,          setStep]          = useState<Step>('service')
@@ -345,9 +352,9 @@ export default function BookingFlow({ tenantId, services, professionals }: Props
     return d
   })
   const [selectedSlot,  setSelectedSlot]  = useState<string | null>(null)
-  const [clientName,    setClientName]    = useState('')
-  const [clientPhone,   setClientPhone]   = useState('')
-  const [clientEmail,   setClientEmail]   = useState('')
+  const [clientName,    setClientName]    = useState(prefill?.nome  ?? '')
+  const [clientPhone,   setClientPhone]   = useState(prefill?.tel   ?? '')
+  const [clientEmail,   setClientEmail]   = useState(prefill?.email ?? '')
   const [notes,         setNotes]         = useState('')
   const [loading,       setLoading]       = useState(false)
   const [error,         setError]         = useState<string | null>(null)

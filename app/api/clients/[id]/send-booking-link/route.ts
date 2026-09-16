@@ -51,7 +51,12 @@ export async function POST(
   }
 
   const appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? 'https://www.kyraatende.com.br').replace(/\/$/, '')
-  const bookingUrl = `${appUrl}/agendar/${tenant.slug}`
+  // Monta URL com dados do cliente pre-preenchidos no formulario
+  const qs = new URLSearchParams()
+  qs.set('nome',  client.name)
+  if (client.email) qs.set('email', client.email)
+  if (client.phone) qs.set('tel',   client.phone)
+  const bookingUrl = `${appUrl}/agendar/${tenant.slug}?${qs.toString()}`
 
   // ── 3. Envia e-mail via Resend ───────────────────────────────────────────────
   const resendKey = process.env.RESEND_API_KEY
