@@ -40,7 +40,7 @@ function NavBar() {
       </nav>
       <div style={{ display:'flex', alignItems:'center', gap:'12px' }}>
         <a href="/login" style={{ fontSize:'14px', color:'var(--ink-soft)', textDecoration:'none', fontWeight:500 }}>Entrar</a>
-        <a href="/cadastro" style={{ padding:'8px 18px', borderRadius:'var(--r)', background:'var(--brand)', color:'var(--white)', fontSize:'14px', fontWeight:600, textDecoration:'none' }}>Teste grátis</a>
+        <span title="Em breve" style={{ padding:'8px 18px', borderRadius:'var(--r)', background:'#e5e7eb', color:'#9ca3af', fontSize:'14px', fontWeight:600, cursor:'not-allowed', userSelect:'none', display:'inline-block' }}>Teste grátis</span>
       </div>
       <style>{`@media (max-width:640px) { .kyra-nav-lp { display:none !important; } }`}</style>
     </header>
@@ -67,8 +67,8 @@ function Hero() {
         Agenda online, WhatsApp automático e IA que agenda por você. Para salões, clínicas, barbearias e spas que querem crescer sem complicar.
       </p>
       <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:'12px', flexWrap:'wrap' }}>
-        <a href="/cadastro" style={{ padding:'14px 32px', borderRadius:'var(--r)', background:'var(--brand)', color:'var(--white)', fontSize:'16px', fontWeight:600, textDecoration:'none', boxShadow:'0 4px 14px rgba(30,110,245,0.35)' }}>Começar grátis agora</a>
-        <a href="/agendar/demo" style={{ padding:'14px 28px', borderRadius:'var(--r)', background:'var(--surface-2)', color:'var(--ink)', fontSize:'16px', fontWeight:500, textDecoration:'none', border:'1px solid var(--border)' }}>Ver demo →</a>
+        <span title="Em breve" style={{ padding:'14px 32px', borderRadius:'var(--r)', background:'#e5e7eb', color:'#9ca3af', fontSize:'16px', fontWeight:600, cursor:'not-allowed', userSelect:'none', display:'inline-block' }}>Começar grátis agora</span>
+        <span title="Em breve" style={{ padding:'14px 28px', borderRadius:'var(--r)', background:'#f9fafb', color:'#9ca3af', fontSize:'16px', fontWeight:500, cursor:'not-allowed', userSelect:'none', display:'inline-block', border:'1px solid #e5e7eb' }}>Ver demo →</span>
       </div>
       <p style={{ marginTop:'28px', fontSize:'13px', color:'var(--muted)' }}>Mais de <strong style={{ color:'var(--ink)' }}>2.400 empresas</strong> já usam a Kyra Atende</p>
       <div style={{ marginTop:'56px', background:'var(--surface-2)', border:'1px solid var(--border)', borderRadius:'var(--r-lg)', boxShadow:'0 24px 64px rgba(0,0,0,0.08)', overflow:'hidden', maxWidth:'880px', marginInline:'auto' }}>
@@ -159,7 +159,7 @@ function Pricing() {
                 </li>
               ))}
             </ul>
-            <a href="/cadastro" style={{ display:'block', textAlign:'center', padding:'12px', borderRadius:'var(--r)', background: plan.highlight ? 'var(--white)' : 'var(--brand)', color: plan.highlight ? 'var(--brand)' : 'var(--white)', fontSize:'14px', fontWeight:600, textDecoration:'none' }}>{plan.cta}</a>
+            <span title="Em breve" style={{ display:'block', textAlign:'center', padding:'12px', borderRadius:'var(--r)', background:'#e5e7eb', color:'#9ca3af', fontSize:'14px', fontWeight:600, cursor:'not-allowed', userSelect:'none' }}>Em breve</span>
           </div>
         ))}
       </div>
@@ -193,9 +193,9 @@ function FinalCTA() {
     <section style={{ padding:'80px max(24px, calc((100vw - 1120px) / 2))', background:'linear-gradient(135deg, var(--brand) 0%, var(--brand-active) 100%)', textAlign:'center' }}>
       <h2 style={{ fontSize:'clamp(26px, 3.5vw, 40px)', fontWeight:700, color:'var(--white)', margin:'0 0 16px', letterSpacing:'-0.5px' }}>Pronto para reduzir faltas e lotar sua agenda?</h2>
       <p style={{ fontSize:'17px', color:'rgba(255,255,255,0.8)', margin:'0 0 36px' }}>14 dias grátis. Configure em 5 minutos. Cancele quando quiser.</p>
-      <a href="/cadastro" style={{ display:'inline-block', padding:'16px 40px', borderRadius:'var(--r)', background:'var(--white)', color:'var(--brand)', fontSize:'16px', fontWeight:700, textDecoration:'none', boxShadow:'0 4px 20px rgba(0,0,0,0.15)' }}>
+      <span title="Em breve" style={{ display:'inline-block', padding:'16px 40px', borderRadius:'var(--r)', background:'rgba(255,255,255,0.35)', color:'rgba(255,255,255,0.5)', fontSize:'16px', fontWeight:700, cursor:'not-allowed', userSelect:'none' }}>
         Criar minha conta grátis →
-      </a>
+      </span>
     </section>
   )
 }
@@ -205,7 +205,7 @@ function Footer() {
     { label:'Privacidade', href:'/politica-de-privacidade' },
     { label:'Termos', href:'/termos' },
     { label:'Entrar', href:'/login' },
-    { label:'Criar conta', href:'/cadastro' },
+    { label:'Criar conta', href:'#' },
   ]
   return (
     <footer style={{ padding:'32px max(24px, calc((100vw - 1120px) / 2))', background:'var(--ink)', display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:'16px', fontSize:'13px', color:'rgba(255,255,255,0.6)' }}>
