@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { UsageBar } from '@/components/molecules'
-import { Button } from '@/components/atoms'
+import { Button, Alert } from '@/components/atoms'
 
 /* ─── Types ──────────────────────────────────────────────── */
 interface WaMessage {
@@ -18,7 +18,7 @@ interface WaConnection {
   connected: boolean
   status:    string   // 'open' | 'connecting' | 'close' | 'not_configured' | 'not_available'
   phone?:    string
-  qr?:       string   // base64 QR code returned by connect
+  qr?:       string
 }
 
 interface Props {
@@ -43,14 +43,14 @@ function formatPhone(n: string) {
   return n
 }
 
-/* ─── Status badge ───────────────────────────────────────── */
-function StatusBadge({ status }: { status: string }) {
+/* ─── Connection status badge ────────────────────────────── */
+function ConnBadge({ status }: { status: string }) {
   const map: Record<string, { label: string; color: string; bg: string }> = {
-    open:           { label: 'Conectado',    color: '#16a34a', bg: '#dcfce7' },
-    connecting:     { label: 'Conectando…',  color: '#d97706', bg: '#fef3c7' },
-    close:          { label: 'Desconectado', color: '#dc2626', bg: '#fee2e2' },
+    open:           { label: 'Conectado',       color: '#16a34a', bg: '#dcfce7' },
+    connecting:     { label: 'Conectando…',     color: '#d97706', bg: '#fef3c7' },
+    close:          { label: 'Desconectado',    color: '#dc2626', bg: '#fee2e2' },
     not_configured: { label: 'Não configurado', color: '#6b7280', bg: '#f3f4f6' },
-    not_available:  { label: 'Indisponível', color: '#6b7280', bg: '#f3f4f6' },
+    not_available:  { label: 'Indisponível',    color: '#6b7280', bg: '#f3f4f6' },
   }
   const s = map[status] ?? map.not_available
   return (
@@ -61,9 +61,8 @@ function StatusBadge({ status }: { status: string }) {
       padding: '3px 10px', borderRadius: 99,
     }}>
       <span style={{
-        width: 7, height: 7, borderRadius: '50%',
-        background: s.color,
-        ...(status === 'connecting' ? { animation: 'pulse 1.5s ease-in-out infinite' } : {}),
+        width: 7, height: 7, borderRadius: '50%', background: s.color,
+        ...(status === 'connecting' ? { animation: 'waPulse 1.5s ease-in-out infinite' } : {}),
       }} />
       {s.label}
     </span>
@@ -80,25 +79,28 @@ export default function WhatsappClient({
 }: Props) {
   const showUsage = typeof monthlyLimit === 'number' && monthlyLimit > 0
 
-  // ── Connection state ──────────────────────────────────────
-  const [conn,       setConn]       = useState<WaConnection>(
+  /* ── Connection state ─────────────────────────────────── */
+  const [conn,          setConn]          = useState<WaConnection>(
     initialConnection ?? { connected: false, status: 'not_configured' }
   )
-  const [qrSrc,      setQrSrc]      = useState<string | null>(null)
-  const [connecting, setConnecting] = useState(false)
+  const [qrSrc,         setQrSrc]         = useState<string | null>(null)
+  const [connecting,    setConnecting]    = useState(false)
   const [disconnecting, setDisconnecting] = useState(false)
-  const [connError,  setConnError]  = useState<string | null>(null)
-  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const [connError,     setConnError]     = useState<string | null>(null)
 
-  // ── Poll status ───────────────────────────────────────────
+  // After a manual disconnect we pause polling briefly so it doesn't override
+  const pausePollUntil = useRef<number>(0)
+  const pollRef        = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  /* ── Poll status ──────────────────────────────────────── */
   const fetchStatus = useCallback(async () => {
+    if (Date.now() < pausePollUntil.current) return
     try {
       const res  = await fetch('/api/whatsapp/status')
       if (!res.ok) return
       const data = await res.json()
       const c: WaConnection = data.connection ?? { connected: false, status: 'close' }
       setConn(c)
-      // Stop QR display once connected
       if (c.status === 'open') {
         setQrSrc(null)
         setConnecting(false)
@@ -106,27 +108,24 @@ export default function WhatsappClient({
     } catch { /* silent */ }
   }, [])
 
-  // Poll every 15 s normally; every 4 s while waiting for QR scan
   useEffect(() => {
     const interval = connecting ? 4000 : 15000
     pollRef.current = setInterval(fetchStatus, interval)
     return () => { if (pollRef.current) clearInterval(pollRef.current) }
   }, [fetchStatus, connecting])
 
-  // ── Connect ───────────────────────────────────────────────
+  /* ── Connect ──────────────────────────────────────────── */
   const handleConnect = useCallback(async () => {
     setConnecting(true)
     setConnError(null)
     setQrSrc(null)
+    pausePollUntil.current = 0   // resume polling now
     try {
       const res  = await fetch('/api/whatsapp/connect', { method: 'POST' })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error ?? 'Erro ao conectar')
-      // API returns { qr: 'data:image/png;base64,...' } or { qr: '<base64>' }
       const raw = data.qr as string | undefined
-      if (raw) {
-        setQrSrc(raw.startsWith('data:') ? raw : `data:image/png;base64,${raw}`)
-      }
+      if (raw) setQrSrc(raw.startsWith('data:') ? raw : `data:image/png;base64,${raw}`)
       setConn(prev => ({ ...prev, status: 'connecting', connected: false }))
     } catch (e: unknown) {
       setConnError(e instanceof Error ? e.message : 'Erro ao gerar QR Code')
@@ -134,27 +133,34 @@ export default function WhatsappClient({
     }
   }, [])
 
-  // ── Disconnect ────────────────────────────────────────────
+  /* ── Disconnect — FIX: uses DELETE, not POST ─────────── */
   const handleDisconnect = useCallback(async () => {
     if (!confirm('Deseja desconectar o WhatsApp?')) return
     setDisconnecting(true)
+    setConnError(null)
     try {
-      await fetch('/api/whatsapp/disconnect', { method: 'POST' })
+      const res = await fetch('/api/whatsapp/disconnect', { method: 'DELETE' })
+      if (!res.ok && res.status !== 204) {
+        const body = await res.json().catch(() => ({}))
+        throw new Error((body as { error?: string }).error ?? `Erro HTTP ${res.status}`)
+      }
+      // Success — update state and pause polling for 10 s
       setConn({ connected: false, status: 'close' })
       setQrSrc(null)
       setConnecting(false)
-    } catch {
-      setConnError('Erro ao desconectar. Tente novamente.')
+      pausePollUntil.current = Date.now() + 10_000
+    } catch (e: unknown) {
+      setConnError(e instanceof Error ? e.message : 'Erro ao desconectar. Tente novamente.')
     } finally {
       setDisconnecting(false)
     }
   }, [])
 
-  // ── Upgrade wall ──────────────────────────────────────────
+  /* ── Upgrade wall ─────────────────────────────────────── */
   if (!hasWhatsapp) {
     return (
       <>
-        <div id="wa-header" style={{ marginBottom: 28 }}>
+        <div style={{ marginBottom: 28 }}>
           <h1 style={{ fontSize: 22, fontWeight: 600, color: 'var(--ink)', margin: '0 0 4px' }}>WhatsApp</h1>
           <p style={{ fontSize: 14, color: 'var(--muted)', margin: 0 }}>Atendimento automático via WhatsApp</p>
         </div>
@@ -189,20 +195,18 @@ export default function WhatsappClient({
     )
   }
 
-  // ── Is session dropped? (was connected before, now closed) ─
   const sessionDropped = !conn.connected && conn.status === 'close' && !connecting
 
   return (
     <>
-      <style>{`
-        @keyframes pulse {
-          0%, 100% { opacity: 1; }
-          50%       { opacity: 0.4; }
-        }
-      `}</style>
+      <style>{`@keyframes waPulse { 0%,100%{opacity:1} 50%{opacity:.4} }`}</style>
 
       {/* ── Header ── */}
-      <div id="wa-header" style={{ marginBottom: 24, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+      <div style={{
+        marginBottom: 24,
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        flexWrap: 'wrap', gap: 12,
+      }}>
         <div>
           <h1 style={{ fontSize: 22, fontWeight: 600, color: 'var(--ink)', margin: '0 0 4px' }}>WhatsApp</h1>
           <p style={{ fontSize: 14, color: 'var(--muted)', margin: 0 }}>
@@ -213,7 +217,7 @@ export default function WhatsappClient({
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <StatusBadge status={conn.status} />
+          <ConnBadge status={conn.status} />
           {conn.status === 'open' ? (
             <Button variant="danger" size="sm" onClick={handleDisconnect} disabled={disconnecting}>
               {disconnecting ? 'Desconectando…' : 'Desconectar'}
@@ -226,36 +230,29 @@ export default function WhatsappClient({
         </div>
       </div>
 
-      {/* ── Session dropped alert ── */}
-      {sessionDropped && !qrSrc && (
-        <div style={{
-          background: '#fff7ed', border: '1px solid #fed7aa',
-          borderRadius: 'var(--r-lg)', padding: '16px 20px',
-          marginBottom: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
-            </svg>
-            <span style={{ fontSize: 14, color: '#92400e', fontWeight: 500 }}>
-              A sessão do WhatsApp foi encerrada. Reconecte para continuar o atendimento.
-            </span>
-          </div>
-          <Button variant="primary" size="sm" onClick={handleConnect}>
-            Reconectar agora
-          </Button>
-        </div>
+      {/* ── Alerts ── */}
+      {connError && (
+        <Alert
+          variant="error"
+          style={{ marginBottom: 16 }}
+          onClose={() => setConnError(null)}
+        >
+          {connError}
+        </Alert>
       )}
 
-      {/* ── Error ── */}
-      {connError && (
-        <div style={{
-          background: '#fef2f2', border: '1px solid #fecaca',
-          borderRadius: 'var(--r)', padding: '12px 16px', marginBottom: 16,
-          fontSize: 13, color: '#dc2626',
-        }}>
-          {connError}
-        </div>
+      {sessionDropped && !qrSrc && (
+        <Alert
+          variant="warning"
+          style={{ marginBottom: 20 }}
+          action={
+            <Button variant="primary" size="sm" onClick={handleConnect}>
+              Reconectar agora
+            </Button>
+          }
+        >
+          A sessão do WhatsApp foi encerrada. Reconecte para continuar o atendimento.
+        </Alert>
       )}
 
       {/* ── QR Code panel ── */}
@@ -269,7 +266,7 @@ export default function WhatsappClient({
             Escanear QR Code
           </h2>
           <p style={{ fontSize: 13, color: 'var(--muted)', margin: '0 0 20px', lineHeight: 1.6 }}>
-            Abra o WhatsApp no celular → <strong>Dispositivos conectados</strong> → <strong>Conectar dispositivo</strong> → escaneie o código abaixo.
+            Abra o WhatsApp → <strong>Dispositivos conectados</strong> → <strong>Conectar dispositivo</strong> → escaneie o código abaixo.
           </p>
 
           {qrSrc ? (
@@ -292,8 +289,7 @@ export default function WhatsappClient({
           )}
 
           <p style={{ fontSize: 12, color: 'var(--muted)', marginTop: 16 }}>
-            Aguardando leitura{' '}
-            <span style={{ display: 'inline-block', animation: 'pulse 1.5s ease-in-out infinite' }}>•••</span>
+            Aguardando leitura <span style={{ animation: 'waPulse 1.5s ease-in-out infinite', display: 'inline-block' }}>•••</span>
           </p>
           <div style={{ marginTop: 16 }}>
             <Button variant="ghost" size="sm" onClick={() => { setConnecting(false); setQrSrc(null) }}>
@@ -352,9 +348,7 @@ export default function WhatsappClient({
                   <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink)' }}>
                     {msg.direction === 'inbound' ? formatPhone(msg.from_number) : formatPhone(msg.to_number)}
                   </span>
-                  <span style={{ fontSize: 12, color: 'var(--muted)' }}>
-                    {fmtTime(msg.created_at)}
-                  </span>
+                  <span style={{ fontSize: 12, color: 'var(--muted)' }}>{fmtTime(msg.created_at)}</span>
                 </div>
                 <p style={{ fontSize: 14, color: 'var(--ink-body)', margin: 0, wordBreak: 'break-word' }}>
                   {msg.body}

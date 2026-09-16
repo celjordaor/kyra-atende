@@ -15,3 +15,6 @@ export type { AvatarProps, AvatarSize } from './Avatar'
 
 export { Toggle }       from './Toggle'
 export type { ToggleProps } from './Toggle'
+
+export { Alert }        from './Alert'
+export type { AlertProps, AlertVariant } from './Alert'
