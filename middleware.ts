@@ -1,95 +1,75 @@
 /**
  * middleware.ts
- * Protege rotas autenticadas e redireciona sessões inválidas.
- * Usa @supabase/ssr para atualizar o token automaticamente a cada request.
+ * Roteamento de autenticação — sem chamadas de rede.
  *
- * Rotas de API (/api/*) gerenciam autenticação internamente via requireSession().
- * Apenas rotas públicas especiais de API são listadas aqui para clareza.
+ * Verifica apenas a presença do cookie de sessão do Supabase (leitura local,
+ * zero latência). A validação real do JWT ocorre em requireSession() dentro
+ * de cada route handler e em cada Server Component protegido.
+ *
+ * Rotas de API (/api/*) são totalmente ignoradas aqui — gerenciam auth internamente.
  */
-import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-// Rotas que não precisam de autenticação
-const PUBLIC_PATHS = [
+// Rotas exatas que não precisam de sessão
+const PUBLIC_PATHS = new Set([
   '/',
   '/login',
   '/cadastro',
   '/recuperar-senha',
-]
+])
 
-// Prefixos públicos (regex)
+// Prefixos que não precisam de sessão
 const PUBLIC_PREFIXES = [
-  '/agendar/',        // /agendar/[slug] — agendamento público
+  '/agendar/',
   '/politica',
   '/_next/',
   '/favicon',
   '/icons/',
   '/sw.js',
   '/manifest',
-  '/api/',            // Rotas de API gerenciam autenticação internamente
+  '/api/',
 ]
 
 function isPublicPath(pathname: string): boolean {
-  if (PUBLIC_PATHS.includes(pathname)) return true
-  return PUBLIC_PREFIXES.some(prefix => pathname.startsWith(prefix))
+  if (PUBLIC_PATHS.has(pathname)) return true
+  return PUBLIC_PREFIXES.some(p => pathname.startsWith(p))
 }
 
-export async function middleware(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({ request })
-
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll()
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value),
-          )
-          supabaseResponse = NextResponse.next({ request })
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options),
-          )
-        },
-      },
-    },
+/**
+ * Detecta sessão ativa verificando o cookie do Supabase SSR.
+ * Não faz nenhuma chamada de rede — lê só o cookie.
+ */
+function hasSession(request: NextRequest): boolean {
+  return request.cookies.getAll().some(
+    c => c.name.includes('-auth-token') && c.value.length > 10,
   )
+}
 
-  // Atualiza a sessão (importante: não remover)
-  // getSession() lê o JWT do cookie localmente — sem chamada de rede, evita timeout no Edge
-  const { data: { session } } = await supabase.auth.getSession()
-  const user = session?.user ?? null
-
+export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
+  const loggedIn = hasSession(request)
 
-  // Rota pública ou API — segue em frente
   if (isPublicPath(pathname)) {
-    // Se já está autenticado e tenta acessar auth, redireciona ao dashboard
-    if (user && ['/login', '/cadastro', '/recuperar-senha'].includes(pathname)) {
+    // Usuário já autenticado tentando acessar telas de auth → dashboard
+    if (loggedIn && (pathname === '/login' || pathname === '/cadastro' || pathname === '/recuperar-senha')) {
       return NextResponse.redirect(new URL('/dashboard', request.url))
     }
-    return supabaseResponse
+    return NextResponse.next()
   }
 
   // Rota protegida sem sessão → login
-  if (!user) {
+  if (!loggedIn) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     url.searchParams.set('next', pathname)
     return NextResponse.redirect(url)
   }
 
-  return supabaseResponse
+  return NextResponse.next()
 }
 
 export const config = {
   matcher: [
-    /*
-     * Aplica middleware em todas as rotas exceto arquivos estáticos do Next.
-     */
     '/((?!_next/static|_next/image|favicon.ico).*)',
   ],
 }
