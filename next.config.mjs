@@ -1,7 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // ── Type-check e lint: rodam no editor/IDE, não no deploy ─────────────────
-  // Sem isso o Next roda `tsc --noEmit` em cada build → +60–90 s no Vercel
   typescript: {
     ignoreBuildErrors: true,
   },
@@ -17,6 +16,8 @@ const nextConfig = {
       '@supabase/supabase-js',
       '@anthropic-ai/sdk',
     ],
+    // Pacotes pesados do servidor não precisam ser bundlados em cada Lambda
+    serverComponentsExternalPackages: ['web-push', '@anthropic-ai/sdk'],
   },
 
   // ── Reduz tamanho do bundle excluindo binários nativos desnecessários ──────
