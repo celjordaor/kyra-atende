@@ -16,8 +16,8 @@ const nextConfig = {
       '@supabase/supabase-js',
       '@anthropic-ai/sdk',
     ],
-    // Pacotes pesados do servidor não precisam ser bundlados em cada Lambda
-    serverComponentsExternalPackages: ['web-push', '@anthropic-ai/sdk'],
+    // web-push tem código nativo — não bundlar em cada Lambda reduz o tracing
+    serverComponentsExternalPackages: ['web-push'],
   },
 
   // ── Reduz tamanho do bundle excluindo binários nativos desnecessários ──────
