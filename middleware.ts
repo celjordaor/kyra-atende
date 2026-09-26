@@ -49,11 +49,10 @@ export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   const loggedIn = hasSession(request)
 
+  // Rotas públicas sempre passam — sem redirect de "já logado"
+  // (não dá pra saber se o cookie está válido sem chamada de rede;
+  //  um cookie expirado causaria loop: /login → /dashboard → /login)
   if (isPublicPath(pathname)) {
-    // Usuário já autenticado tentando acessar telas de auth → dashboard
-    if (loggedIn && (pathname === '/login' || pathname === '/cadastro' || pathname === '/recuperar-senha')) {
-      return NextResponse.redirect(new URL('/dashboard', request.url))
-    }
     return NextResponse.next()
   }
 
