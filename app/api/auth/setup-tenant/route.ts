@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
         owner_id:    userId,
         plan:        'cresce',
         plan_status: 'trial',
-        trial_ends:  trialEnd,
+        trial_ends_at:  trialEnd,
       })
       .select('id')
       .single()
@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
         plan:                  'cresce',
         status:                'trial',
         billing_cycle:         'monthly',
-        trial_ends:            trialEnd,
+        trial_ends_at:            trialEnd,
         current_period_start:  new Date().toISOString(),
         current_period_end:    trialEnd,
       })
