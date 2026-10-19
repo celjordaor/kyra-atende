@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import webpush from 'web-push'
+import { dispatchPush } from '@/lib/push'
 
 function adminClient() {
   return createClient(
@@ -197,7 +197,12 @@ export async function POST(request: NextRequest) {
     }
 
     // ── Push ao tenant (fire-and-forget) ────────────────────────────────────
-    void sendPushToTenant(supabase, tenant_id, booking)
+    const serviceName = (booking.services as { name?: string } | null)?.name ?? 'Serviço'
+    void dispatchPush(tenant_id, 'booking_created', {
+      title: '🗓️ Novo agendamento',
+      body: `${booking.client_name} · ${serviceName} · ${formatDateTime(booking.start_at)}`,
+      url: '/agendamentos',
+    })
 
     return NextResponse.json({ id: booking.id }, { status: 201 })
   } catch (err) {
@@ -206,49 +211,3 @@ export async function POST(request: NextRequest) {
   }
 }
 
-async function sendPushToTenant(
-  supabase: ReturnType<typeof adminClient>,
-  tenantId: string,
-  booking: { client_name: string; start_at: string; services: any },
-) {
-  try {
-    // Configuração VAPID dentro da função para evitar erro no build
-    webpush.setVapidDetails(
-      process.env.VAPID_EMAIL ?? 'mailto:suporte@kyraatende.com.br',
-      process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? '',
-      process.env.VAPID_PRIVATE_KEY ?? '',
-    )
-
-    const { data: subs } = await supabase
-      .from('push_subscriptions')
-      .select('endpoint, p256dh, auth')
-      .eq('tenant_id', tenantId)
-
-    if (!subs?.length) return
-
-    const serviceName = (booking.services as any)?.name ?? 'Serviço'
-    const payload = JSON.stringify({
-      title: '🗓️ Novo agendamento',
-      body:  `${booking.client_name} · ${serviceName} · ${formatDateTime(booking.start_at)}`,
-      url:   '/agendamentos',
-    })
-
-    await Promise.allSettled(
-      subs.map(sub =>
-        webpush.sendNotification(
-          { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
-          payload,
-        ).catch(async (err: any) => {
-          if (err.statusCode === 410) {
-            await supabase
-              .from('push_subscriptions')
-              .delete()
-              .eq('endpoint', sub.endpoint)
-          }
-        }),
-      ),
-    )
-  } catch {
-    // Push é best-effort — não bloqueia a resposta
-  }
-}
