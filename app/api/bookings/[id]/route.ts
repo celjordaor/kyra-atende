@@ -97,10 +97,27 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     .single()
 
   if (error) {
-    if (error.code === 'PGRST116') {
-      return NextResponse.json({ message: 'Agendamento não encontrado.' }, { status: 404 })
+    if (error.code === '23P01') {
+      return NextResponse.json(
+        { message: 'O profissional já possui outro agendamento nesse horário.' },
+        { status: 409 },
+      )
     }
-    return NextResponse.json({ message: error.message }, { status: 500 })
+    if (error.code === 'PGRST116') {
+      const { data: existing, error: lookupError } = await supabase
+        .from('bookings')
+        .select('status')
+        .eq('id', params.id)
+        .eq('tenant_id', tenantId)
+        .maybeSingle()
+      if (lookupError) return NextResponse.json({ message: 'Erro ao consultar agendamento.' }, { status: 500 })
+      return NextResponse.json(
+        { message: existing ? 'Agendamentos encerrados não podem ser editados.' : 'Agendamento não encontrado.' },
+        { status: existing ? 409 : 404 },
+      )
+    }
+    console.error('[bookings/update] falha ao editar', { tenantId, code: error.code })
+    return NextResponse.json({ message: 'Não foi possível atualizar o agendamento.' }, { status: 500 })
   }
 
   return NextResponse.json(data)
