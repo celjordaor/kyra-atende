@@ -1,7 +1,7 @@
 /**
  * app/api/bookings/[id]/route.ts
  * PUT    /api/bookings/:id — edita agendamento (datas, serviço, profissional, notas, status)
- * DELETE /api/bookings/:id — exclui agendamento
+ * DELETE /api/bookings/:id — cancela logicamente sem apagar o histórico
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { requireSession } from '@/lib/route-helpers'
@@ -106,20 +106,48 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
   return NextResponse.json(data)
 }
 
-/* ── DELETE ──────────────────────────────────────────────────────────────── */
+/* ── DELETE (cancelamento lógico, preserva histórico) ─────────────────────── */
 export async function DELETE(_request: NextRequest, { params }: RouteParams) {
   const session = await requireSession()
   if (!session.ok) return session.response
 
   const { tenantId, supabase } = session
 
-  const { error } = await supabase
+  // Não apagar evidências financeiras/operacionais. A transição é
+  // condicionada no banco para evitar corrida com /complete e /cancel.
+  const { data, error } = await supabase
     .from('bookings')
-    .delete()
+    .update({ status: 'cancelled' })
     .eq('id', params.id)
     .eq('tenant_id', tenantId)
+    .in('status', ['pending', 'confirmed'])
+    .select('id')
+    .maybeSingle()
 
-  if (error) return NextResponse.json({ message: error.message }, { status: 500 })
+  if (error) return NextResponse.json(
+    { message: 'Não foi possível remover o agendamento da agenda.' },
+    { status: 500 },
+  )
+  if (!data) {
+    const { data: existing, error: lookupError } = await supabase
+      .from('bookings')
+      .select('status')
+      .eq('id', params.id)
+      .eq('tenant_id', tenantId)
+      .maybeSingle()
+    if (lookupError) return NextResponse.json(
+      { message: 'Não foi possível consultar o agendamento.' },
+      { status: 500 },
+    )
+    if (!existing) return NextResponse.json(
+      { message: 'Agendamento não encontrado.' },
+      { status: 404 },
+    )
+    return NextResponse.json(
+      { message: 'Agendamentos concluídos ou já cancelados são preservados no histórico.' },
+      { status: 409 },
+    )
+  }
 
   return new NextResponse(null, { status: 204 })
 }
