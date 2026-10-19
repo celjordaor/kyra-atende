@@ -40,7 +40,11 @@ export interface ConnectionStatus {
  * Processa webhook da Evolution API. O endpoint HTTP aguarda a execução.
  */
 export async function handleWebhook(payload: EvolutionWebhookPayload): Promise<void> {
-  if (payload.event !== 'messages.upsert') return
+  // A Evolution publica nomes em formatos diferentes entre versões:
+  // "messages.upsert" no payload v2 e "MESSAGES_UPSERT" em outros emissores.
+  // Normalizar sem ampliar a lista de eventos efetivamente processados.
+  const event = payload.event.toLowerCase().replace(/_/g, '.')
+  if (event !== 'messages.upsert') return
   if (payload.data?.key?.fromMe) return
 
   const tenantId  = payload.instance
