@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
   if (!apiKey) return NextResponse.json({ error: 'Asaas não configurado' }, { status: 503 })
 
   const baseUrl = process.env.ASAAS_SANDBOX !== 'false'
-    ? 'https://sandbox.asaas.com/api/v3'
+    ? 'https://api-sandbox.asaas.com/v3'
     : 'https://api.asaas.com/v3'
 
   try {
