@@ -480,3 +480,14 @@ Autorização recebida para utilizar contas de teste existentes. Ensaios executa
 - Teste SQL executado em `BEGIN ... ROLLBACK` com role service_role e ator Superadmin de teste: evento de auditoria foi registrado na transação (`audit_rows_in_transaction=1`). Transação revertida, sem alterações persistentes. Isso é evidência de integração RPC e banco, não teste HTTP final.
 - Novo CI TypeScript e ESLint existe na branch main, mas os checks consultados do commit `03134e8b` indicaram apenas estado Vercel pending; **não há confirmação de aprovação do workflow GitHub Actions**.
 - Pendentes de encerramento AUD-01: validação do deploy com novo RPC, chamadas HTTP reais por perfis e tenants, criação de eventos auditáveis para templates de e-mail, verificação de CI concluído e teste integrado das restrições de escrita/leitura dos logs. A auditoria administrativa **não** está integralmente homologada.
+
+
+## AUD-01 — Auditoria transacional de templates (19/10/2026)
+
+- Migration aplicada no Supabase `20261019235648_aud01_transactional_email_template_audit`, versionada em `supabase/migrations/20261019235648_aud01_transactional_email_template_audit.sql` (commit `8fd804ea`).
+- Foram criadas as RPCs `audit_save_email_template` e `audit_delete_email_template`, `SECURITY DEFINER` com `search_path` fixado e verificação de role `service_role` e papel `superadmin` no banco. Ambas executam mutação e INSERT em `admin_audit_events` na mesma transação, sem registrar HTML/assunto sensível em texto aberto nos eventos.
+- `PATCH` e `DELETE /api/superadmin/email-templates/[key]` agora chamam as RPCs sob a autorização já existente (commit `48dfa2d4`). O status omitido é preservado na atualização, inclusive no conflito de criação por chave, e a criação nova utiliza `is_active=true` por padrão.
+- Teste SQL de regressão sob `BEGIN/ROLLBACK`: criação com `false`, atualização de HTML/assunto omitindo status e exclusão. Assertivas SQL confirmaram status mantido e **3 eventos** registrados na transação. Consulta posterior confirmou **0 eventos de teste persistidos**.
+- Privilégios reconfirmados: `authenticated` não possui EXECUTE nas duas RPCs; `service_role` possui. RLS e ACL da tabela de auditoria permanecem protegidos conforme migration anterior.
+- Verificação de deploy: commit da integração `48dfa2d4` estava `BUILDING` na última consulta; ainda não homologado por HTTP. Resultado do workflow CI segue não confirmado. Não afirmar encerramento total AUD-01 sem testes HTTP com sessões legítimas, CI aprovado e smoke test do build publicado.
+- Não foram alterados templates reais ou registros de clientes durante os testes; artefatos foram criados e revertidos transacionalmente.
