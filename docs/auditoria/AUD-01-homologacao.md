@@ -20,3 +20,18 @@
 10. Revisar planos vigentes e renovação: pagamento só ativa via fatura confirmada; suspensões por atraso não ocorrem automaticamente neste patch. A regra de início/fim de período e comunicação ao cliente requer aprovação funcional.
 
 **Status:** alterações somente na branch `security/aud-01-hardening`. Não fazer merge/deploy automático.
+
+## Situação de produção — 19/10/2026
+- Projeto confirmado: `zrszytzlovthyezozqhj`; Vercel: `prj_JIxzGtz8u4yvbvSc3GJJLEhbrf4c`.
+- Migrations remotas aplicadas pelo Supabase (versões geradas pelo servidor, diferentes dos nomes locais):
+  - `20261019025856`: `aud01_restrict_privileged_rpc_profile_updates_public_policies` (GitHub `20261018000100`).
+  - `20261019030717`: `aud01_restrict_tenant_billing_and_owner_updates` (GitHub `20261019000200`).
+  - `20261019031431`: `aud01_billing_events_append_only_backend` (GitHub `20261019000400`).
+  - `aud01_booking_overlap_and_whatsapp_message_dedup` (GitHub `20261019000100`).
+  - `aud01_atomic_idempotent_signup` (GitHub `20261019000300`).
+  - `aud01_asaas_verified_payment_reconciliation` (GitHub `20261019000500`).
+- Verificado: exclusion constraint de bookings, índice unique de mensagens, RPC de cadastro restrita ao service_role, RPC Asaas restrita ao service_role.
+- Vercel: preview no commit `2c91881` READY. **Não foi promovido para produção.**
+- Pré-flight Vercel: existem `ASAAS_API_KEY` e `SUPABASE_SERVICE_ROLE_KEY`; NÃO existem `ASAAS_WEBHOOK_AUTH_TOKEN` nem `EVOLUTION_WEBHOOK_SECRET`. Integrações externas ainda precisam ser sincronizadas; não fazer merge/produção antes disso.
+- As novas migrations já existem no banco remoto. **Não reexecutar DDL automaticamente pelo nome de arquivo do GitHub.** Conciliar com o histórico remoto para evitar tentativas de criação duplicada.
+- Pendente: testes E2E de cadastro, pagamento Asaas Sandbox, callback Evolution real e testes tenant A/B; TypeScript, lint e concorrência; validação funcional da página pública de agendamento.
