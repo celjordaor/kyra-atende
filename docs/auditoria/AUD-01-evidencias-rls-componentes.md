@@ -60,3 +60,12 @@ Commits recentes no `main` exigem verificação READY antes de considerá-los at
 - Auditoria dos perfis: 3 administradores com claims coerentes; superadmin da plataforma sem claim de tenant; uma conta Auth ainda não provisionada. O superadmin usa autorização própria nas rotas administrativas.
 - Teste SQL transacional com JWT simulado para o próprio administrador: leitura do perfil retornou **1 linha**, sem alteração de dados.
 - A validação da nova API em sessão real e o comportamento de usuários com claim antiga ainda exigem teste E2E.
+
+## Auditoria de autenticação — ajustes posteriores
+
+- Rota `/auth/callback` liberada no middleware para fluxo de confirmação por e-mail sem cookie.
+- Dashboard consulta `tenants.id = user.app_metadata.tenant_id`, permitindo que membros não proprietários visualizem a empresa.
+- Recuperação de senha: `resetPasswordForEmail` redireciona por `/auth/callback?next=/nova-senha`; middleware permite `/nova-senha`, cuja tela consulta `auth.getUser()` depois do callback PKCE. Elimina dependência exclusiva de `PASSWORD_RECOVERY` que pode não chegar à página já montada.
+- Login e callback rejeitam parâmetro `next` externo, com barras duplas, contrabarras ou caracteres de controle.
+- **Evidência**: arquivos inspecionados e mudanças versionadas no `main`; testes de navegação reais com links Supabase ainda pendentes.
+- **Atenção**: não utilizar teste de recuperação com senha real sem uma conta dedicada de testes.
