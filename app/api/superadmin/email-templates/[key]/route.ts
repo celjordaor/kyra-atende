@@ -11,10 +11,10 @@ import { createAdminClient } from '@/lib/supabase/admin'
 type Params = { params: { key: string } }
 
 // ── Verifica se o usuário é superadmin ──────────────────────────────────────
-async function assertSuperAdmin(): Promise<string | null> {
+async function assertSuperAdmin(): Promise<401 | 403 | null> {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return null
+  if (!user) return 401
 
   const { data: profile } = await supabase
     .from('profiles')
@@ -22,15 +22,15 @@ async function assertSuperAdmin(): Promise<string | null> {
     .eq('id', user.id)
     .single()
 
-  if (profile?.role !== 'superadmin') return null
-  return user.id
+  if (profile?.role !== 'superadmin') return 403
+  return null
 }
 
 // ── PATCH — salvar template ─────────────────────────────────────────────────
 export async function PATCH(req: NextRequest, { params }: Params) {
-  const userId = await assertSuperAdmin()
-  if (!userId) {
-    return NextResponse.json({ message: 'Não autorizado' }, { status: 401 })
+  const authError = await assertSuperAdmin()
+  if (authError) {
+    return NextResponse.json({ message: authError === 401 ? 'Não autorizado' : 'Acesso restrito' }, { status: authError })
   }
 
   let body: { subject?: string; html?: string; isActive?: boolean }
@@ -60,7 +60,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
         name:       params.key,
         subject:    body.subject,
         body_html:  body.html,
-        is_active:  body.isActive ?? true,
+        ...(body.isActive !== undefined ? { is_active: body.isActive } : {}),
         updated_at: new Date().toISOString(),
       },
       { onConflict: 'name' }
@@ -76,9 +76,9 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 
 // ── DELETE — resetar para padrão ────────────────────────────────────────────
 export async function DELETE(_req: NextRequest, { params }: Params) {
-  const userId = await assertSuperAdmin()
-  if (!userId) {
-    return NextResponse.json({ message: 'Não autorizado' }, { status: 401 })
+  const authError = await assertSuperAdmin()
+  if (authError) {
+    return NextResponse.json({ message: authError === 401 ? 'Não autorizado' : 'Acesso restrito' }, { status: authError })
   }
 
   if (!/^[a-z0-9][a-z0-9_-]{0,99}$/.test(params.key)) {
