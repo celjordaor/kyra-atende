@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { notFound } from 'next/navigation'
 import { PublicBookingLayout } from '@/components/templates'
 import BookingFlow from './BookingFlow'
@@ -9,7 +9,7 @@ interface PageProps {
 }
 
 export default async function PublicBookingPage({ params, searchParams }: PageProps) {
-  const supabase = createClient()
+  const supabase = createAdminClient()
 
   // Busca o tenant pelo slug
   const { data: tenant, error } = await supabase
@@ -51,7 +51,7 @@ export default async function PublicBookingPage({ params, searchParams }: PagePr
       companyLogoUrl={tenant.logo_url ?? undefined}
     >
       <BookingFlow
-        tenantId={tenant.id}
+        tenantSlug={tenant.slug}
         services={services ?? []}
         professionals={professionals ?? []}
         prefill={prefill}
