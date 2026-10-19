@@ -41,7 +41,17 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     return NextResponse.json({ error: 'Campos inválidos' }, { status: 400 })
   }
 
-  const { data, error } = await admin.from('tenants').update(changes).eq('id',id).select('id,plan,plan_status,trial_ends_at').maybeSingle()
+  // Uma única transação no banco atualiza a empresa e grava a auditoria.
+  const { data, error } = await admin.rpc('audit_update_tenant_status', {
+    p_actor: user.id,
+    p_tenant: id,
+    p_status: status ?? null,
+    p_plan: plan ?? null,
+    p_expires_at: expires_at ?? null,
+    p_set_status: status !== undefined,
+    p_set_plan: plan !== undefined,
+    p_set_expires: expires_at !== undefined,
+  })
   if (error) {
     console.error('[superadmin/tenant/status] falha na atualização', { code: error.code })
     return NextResponse.json({ error: 'Falha na atualização' }, { status: 500 })
