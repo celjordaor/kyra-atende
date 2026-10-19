@@ -420,3 +420,11 @@ Autorização recebida para utilizar contas de teste existentes. Ensaios executa
 - **Achado de consistência HTTP:** a rota devolve 401 tanto para ausência de sessão quanto para usuário autenticado sem papel superadmin. Diferenciar 403 para perfil não autorizado melhora clareza de contrato, mas não implica bypass de autorização.
 - **Pendente alto:** controle de trilha de auditoria das alterações realizadas por superadmin; não confundir `auth.audit_log_entries` com log de operações do negócio.
 - **Ação desta rodada:** inspeção estática e consolidação de achados, sem escrever em banco, alterar templates existentes ou tentar autenticação real por credenciais de terceiros. Próxima correção deve verificar impacto no frontend e ser validada com teste de PATCH mantendo `is_active=false`.
+
+
+## AUD-01 — Correção de estado de templates e códigos HTTP (19/10/2026)
+
+- Commit `326ccff2` ajustou `PATCH/DELETE app/api/superadmin/email-templates/[key]/route.ts`: verificação de papel agora diferencia ausência de sessão (HTTP 401) e perfil autenticado não-superadmin (HTTP 403).
+- UPSERT de template agora inclui `is_active` somente se `body.isActive !== undefined`. Evita o antigo `is_active: body.isActive ?? true` que reativava templates em atualizações de assunto/HTML com campo omitido. O banco confirma `email_templates.is_active DEFAULT true NOT NULL` para criação sem status explícito.
+- Inspeção estática do arquivo após commit confirmou a nova lógica; nenhum registro de template foi alterado manualmente. O efeito em conflito de UPSERT deve ser coberto por teste integrado com template previamente desativado, inclusive quando `isActive=false` explícito.
+- Vercel apontava o deploy do commit `326ccff2` como `QUEUED`; build/produção e testes HTTP permanecem pendentes. Trilha administrativa, sanitização de HTML e rate limiting ainda não estão homologados.
