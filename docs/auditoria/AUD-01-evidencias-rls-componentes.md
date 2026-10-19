@@ -361,3 +361,13 @@ Autorização recebida para utilizar contas de teste existentes. Ensaios executa
 - Sob a identidade simulada do tenant A, tentativa `UPDATE public.clients SET name=name WHERE id=<cliente existente do tenant B>` retornou **0 linhas atualizadas**. Tentativa `DELETE FROM public.bookings WHERE id=<agendamento existente do tenant B>` retornou **0 linhas excluídas**. Ambas executadas em transação com rollback; nenhuma alteração persistida. IDs-alvo omitidos deste resumo.
 - Evidência positiva de isolamento RLS em SELECT, UPDATE e DELETE para os cenários específicos acima, com sessão de banco simulada. Não classificar como homologação total: faltam INSERT cruzado, troca de `tenant_id`, fluxos com `service_role`, autenticação real/refresh de JWT, testes HTTP e operações concorrentes.
 - Recomendação de continuação: desenvolver suíte automatizada de autorização com contas de teste e fixtures descartáveis, validar rotas com sessão real e checar que o superadmin não permita acesso transversal inadvertido fora das operações explícitas.
+
+
+## AUD-01 — Testes INSERT e troca de tenant_id (19/10/2026)
+
+- Autorização de uso das contas de teste existentes mantida. Simulação em sessão SQL do `authenticated` com `request.jwt.claims` da identidade do tenant A, transações `BEGIN` e encerramento `ROLLBACK`, sem emissão de JWT verdadeiro ou chamada HTTP.
+- **INSERT cruzado em clients**: tentativa de inserir cliente com `tenant_id` do tenant B foi rejeitada pelo PostgreSQL com SQLSTATE `42501`: `new row violates row-level security policy for table "clients"`. Sem registro criado.
+- **UPDATE de tenant_id em clients**: tentativa de migrar cliente existente do tenant A para tenant B foi igualmente rejeitada com SQLSTATE `42501`. A instrução falhou e não persistiu alterações.
+- **Controle positivo de INSERT próprio**: cliente descartável com `tenant_id` do tenant A foi aceito (`inserted=1`) dentro da transação, seguida por rollback; nenhum dado de teste permaneceu.
+- Isso amplia a cobertura já documentada de SELECT, UPDATE e DELETE cruzados: as regras de `USING` e `WITH CHECK` se comportaram como esperado nos casos verificados.
+- Limitações: testes feitos na camada de banco com claims simuladas; ainda não abrangem autenticação real via HTTP, API com service_role, atualização/expiração de JWT, todos os perfis, nem todas as tabelas. Não afirmar homologação E2E ou ausência geral de vulnerabilidades.
