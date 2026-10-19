@@ -444,3 +444,16 @@ Autorização recebida para utilizar contas de teste existentes. Ensaios executa
 - Commit `cde70f5b`: quando a tentativa de INSERT retorna PostgreSQL `23505` (conflito de unicidade), a rota tenta UPDATE por `name`, usando exclusivamente `templateValues` — portanto, sem atualizar `is_active` quando o campo foi omitido. Se a linha desapareceu novamente, retorna HTTP 409 com mensagem de conflito. Preservados os retornos 401/403 e o log mínimo de erro.
 - Validação estática após commit confirmou o fallback condicional. **Não houve teste HTTP de concorrência ou prova de linearizabilidade**; outras corridas (`DELETE` simultâneo, edições concorrentes de conteúdo) permanecem. Para atomicidade forte futura, considerar RPC privilegiada em transação única com contrato de atualização parcial e audit trail.
 - Deploy ainda necessita confirmação de READY e teste integrado. Nenhum template persistido foi modificado nesta rodada.
+
+
+## AUD-01 — Rodada consolidada: backend, concorrência, privilégios e releases (19/10/2026)
+
+**Verificações realizadas:**
+- Código `GET /api/bookings` relido: não devolve mais `error.message` bruto; resposta de erro genérica com logging do código interno.
+- Revalidação no banco: `authenticated` não pode alterar `public.profiles.role` nem `public.profiles.tenant_id` por UPDATE de coluna. Proteção comprovada em privilégios; testes HTTP reais continuam pendentes.
+- Inspeção dos templates existentes: oito chaves listadas na consulta de inventário, todas ativas naquele instante; nenhum template foi alterado pela auditoria.
+- `app/api/superadmin/email-templates/[key]/route.ts`: commit `19bc7f51` fez o UPDATE de template existente solicitar o ID gravado e devolver HTTP 409 se a linha não existir mais (corrida DELETE entre SELECT e UPDATE). Confirmação estática do código após commit. Fallback anterior para INSERT concorrente `23505` preservado. **Não declarar comportamento concorrente homologado sem teste HTTP real**.
+- Na inspeção anterior de Vercel, `326ccff2` estava READY, mas `d5b13c33` BUILDING e `cde70f5b`/demais deploys posteriores ainda QUEUED. O status de publicação dos últimos commits depende de verificação separada.
+- A operação de template continua sujeita a corrida de conteúdo (última gravação prevalece); para garantia forte de consistência e auditoria, planejar update atômico com controle de versão/etag, proteção de trilha de alterações e casos de teste automatizados.
+- Não foram criadas sessions reais de Auth; as avaliações SQL anteriores com claims simuladas não equivalem a chamadas HTTP autenticadas. **Não homologar a AUD-01 integralmente sem esses testes**.
+- Nesta rodada: um ajuste de código, verificação de permissões e atualização documental. Sem migrations nem modificações de dados reais.
