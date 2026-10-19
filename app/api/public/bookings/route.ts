@@ -181,7 +181,7 @@ export async function POST(request: NextRequest) {
         end_at,
         status: 'pending',
       })
-      .select('id, client_name, start_at, services(name)')
+      .select('id, client_name, start_at, services!bookings_service_id_fkey(name)')
       .single()
 
     if (insertError?.code === '23P01') {
