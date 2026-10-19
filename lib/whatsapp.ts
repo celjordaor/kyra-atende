@@ -61,11 +61,38 @@ export async function handleWebhook(payload: EvolutionWebhookPayload): Promise<v
 
   const supabase = createAdminClient()
 
-  // Salva no histórico
+  // Política para números mistos: nenhuma mensagem entra no histórico ou
+  // na IA antes de o proprietário autorizar explicitamente o contato.
+  // Apenas telefone + metadados vão à fila de solicitações.
   if (!messageId) {
     throw new Error('Webhook recebido sem identificador de mensagem')
   }
+  if (!/^[0-9]{8,16}$/.test(from)) return
 
+  const { data: permission, error: permissionError } = await supabase
+    .from('whatsapp_contact_permissions')
+    .select('status')
+    .eq('tenant_id', tenantId)
+    .eq('phone', from)
+    .maybeSingle()
+  // Falha fechada: indisponibilidade da fila jamais habilita IA.
+  if (permissionError) throw permissionError
+
+  if (!permission) {
+    const { error: queueError } = await supabase
+      .from('whatsapp_contact_permissions')
+      .upsert({
+        tenant_id: tenantId,
+        phone: from,
+        status: 'pending',
+      }, { onConflict: 'tenant_id,phone', ignoreDuplicates: true })
+    if (queueError) throw queueError
+    return
+  }
+  if (permission.status === 'ignored' || permission.status === 'pending') return
+  if (permission.status !== 'manual' && permission.status !== 'ai') return
+
+  // Salva no histórico exclusivamente em conversas autorizadas.
   const { error: insertError } = await supabase.from('whatsapp_messages').insert({
     tenant_id:   tenantId,
     from_number: from,
@@ -82,7 +109,7 @@ export async function handleWebhook(payload: EvolutionWebhookPayload): Promise<v
   // Verifica entitlement de IA de agendamento
   const hasAiScheduling = await canUse(tenantId, 'has_ai_scheduling')
 
-  if (hasAiScheduling) {
+  if (permission.status === 'ai' && hasAiScheduling) {
     try {
       const reply = await processWhatsappMessage(tenantId, from, body, messageId)
       if (reply) {
