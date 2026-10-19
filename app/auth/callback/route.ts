@@ -29,10 +29,16 @@ export async function GET(request: NextRequest) {
       },
     )
 
-    const { error } = await supabase.auth.exchangeCodeForSession(code)
+    const { data: exchange, error } = await supabase.auth.exchangeCodeForSession(code)
 
     if (!error) {
-      return NextResponse.redirect(`${origin}${next}`)
+      const user = exchange.user
+      // Usuários novos precisam provisionar a empresa após confirmar e-mail.
+      // A rota de conclusão valida novamente a sessão no backend.
+      const destination = user?.user_metadata?.company && !user?.app_metadata?.tenant_id
+        ? '/cadastro/concluir'
+        : next.startsWith('/') && !next.startsWith('//') ? next : '/dashboard'
+      return NextResponse.redirect(new URL(destination, origin))
     }
   }
 
