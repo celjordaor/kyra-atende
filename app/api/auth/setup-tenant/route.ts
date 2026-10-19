@@ -5,6 +5,7 @@
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { createClient } from '@/lib/supabase/server'
 
 function toSlug(name: string, suffix: string): string {
   return (
@@ -22,13 +23,28 @@ function toSlug(name: string, suffix: string): string {
 
 export async function POST(request: NextRequest) {
   try {
+    const auth = createClient()
+    const { data: { user }, error: authError } = await auth.auth.getUser()
+    if (authError || !user || !user.email_confirmed_at) {
+      return NextResponse.json({ error: 'Sessão verificada obrigatória.' }, { status: 401 })
+    }
+
     const { userId, email, name, company } = await request.json()
 
-    if (!userId || !email || !name || !company) {
+    if (!userId || userId !== user.id || !email || email.toLowerCase() !== user.email?.toLowerCase() || !name || !company || name.length > 200 || company.length > 200) {
       return NextResponse.json({ error: 'Dados incompletos.' }, { status: 400 })
     }
 
     const supabase  = createAdminClient()
+    const { data: existingProfile, error: profileLookupError } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('id', user.id)
+      .maybeSingle()
+    if (profileLookupError) throw profileLookupError
+    if (existingProfile || user.app_metadata?.tenant_id) {
+      return NextResponse.json({ error: 'Usuário já possui uma empresa.' }, { status: 409 })
+    }
     const slugSuffix = Math.random().toString(36).slice(2, 6)
     const slug       = toSlug(company, slugSuffix)
     const trialEnd   = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString()
