@@ -1,10 +1,11 @@
 /**
- * app/api/billing/webhook/route.ts
- * POST /api/billing/webhook — webhook do Asaas (sem autenticação)
- * Atualiza status da assinatura do tenant após pagamento confirmado.
+ * Webhook Asaas: autenticação por authToken, conferência da cobrança na API
+ * oficial e atualização idempotente/transacional via RPC service_role.
+ * Depende da migration aud01_asaas_verified_payment.
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { PLAN_PRICES } from '@/lib/billing-prices'
 import { timingSafeEqual } from 'node:crypto'
 
 export const runtime = 'nodejs'
@@ -16,62 +17,90 @@ function authorized(received: string | null, expected: string | undefined): bool
   return a.length === b.length && timingSafeEqual(a, b)
 }
 
-type AsaasEvent =
-  | 'PAYMENT_RECEIVED'
-  | 'PAYMENT_CONFIRMED'
-  | 'PAYMENT_OVERDUE'
-  | 'PAYMENT_DELETED'
-  | 'PAYMENT_REFUNDED'
-
-const ACTIVE_EVENTS: AsaasEvent[]  = ['PAYMENT_RECEIVED', 'PAYMENT_CONFIRMED']
-const OVERDUE_EVENTS: AsaasEvent[] = ['PAYMENT_OVERDUE']
+type AsaasPayment = {
+  id?: string
+  status?: string
+  externalReference?: string
+  value?: number
+}
 
 export async function POST(request: NextRequest) {
-  // Asaas envia o authToken configurado no webhook neste header.
   if (!authorized(request.headers.get('asaas-access-token'), process.env.ASAAS_WEBHOOK_AUTH_TOKEN)) {
     return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
   }
+
   const body = await request.json().catch(() => null)
-  if (!body) return NextResponse.json({ received: true })
+  if (!body || typeof body.id !== 'string' || typeof body.event !== 'string') {
+    return NextResponse.json({ error: 'Evento inválido' }, { status: 400 })
+  }
 
-  const event   = body.event   as AsaasEvent | undefined
-  const payment = body.payment as { externalReference?: string; value?: number } | undefined
+  // Eventos que não representam pagamento liquidado não podem conceder
+  // nem revogar direitos. Suspensões exigem reconciliação separada por fatura.
+  if (!['PAYMENT_RECEIVED', 'PAYMENT_CONFIRMED'].includes(body.event)) {
+    return NextResponse.json({ received: true, ignored: true })
+  }
 
-  if (!event || !payment?.externalReference) {
+  const paymentId = body.payment?.id
+  if (typeof paymentId !== 'string' || !/^pay_[a-zA-Z0-9_-]+$/.test(paymentId)) {
+    return NextResponse.json({ error: 'Identificador de cobrança inválido' }, { status: 400 })
+  }
+
+  const apiKey = process.env.ASAAS_API_KEY
+  if (!apiKey) return NextResponse.json({ error: 'Asaas não configurado' }, { status: 503 })
+
+  const baseUrl = process.env.ASAAS_SANDBOX !== 'false'
+    ? 'https://sandbox.asaas.com/api/v3'
+    : 'https://api.asaas.com/v3'
+
+  try {
+    // Não confiar nos valores de tenant/plano enviados no webhook:
+    // consultar o registro real do pagamento no provedor.
+    const response = await fetch(`${baseUrl}/payments/${encodeURIComponent(paymentId)}`, {
+      headers: { access_token: apiKey, accept: 'application/json' },
+      cache: 'no-store',
+      signal: AbortSignal.timeout(8000),
+    })
+    if (!response.ok) {
+      console.error('[billing/webhook] falha na conciliação Asaas:', response.status)
+      return NextResponse.json({ error: 'Falha ao validar cobrança' }, { status: 503 })
+    }
+    const payment = (await response.json()) as AsaasPayment
+    if (payment.id !== paymentId || !['RECEIVED', 'CONFIRMED'].includes(payment.status ?? '')) {
+      return NextResponse.json({ error: 'Pagamento ainda não confirmado' }, { status: 409 })
+    }
+
+    const reference = payment.externalReference
+    const parts = typeof reference === 'string' ? reference.split('|') : []
+    if (parts.length !== 3) {
+      return NextResponse.json({ error: 'Cobrança sem referência válida' }, { status: 422 })
+    }
+
+    const [tenantId, plan, period] = parts
+    const expectedAmount = PLAN_PRICES[plan]?.[period]
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(tenantId) ||
+        !expectedAmount || typeof payment.value !== 'number' ||
+        Math.abs(payment.value - expectedAmount) > 0.001) {
+      return NextResponse.json({ error: 'Referência ou valor incompatível' }, { status: 422 })
+    }
+
+    const supabase = createAdminClient()
+    const { error } = await supabase.rpc('apply_verified_asaas_payment', {
+      p_payment_id: paymentId,
+      p_event_id: body.id,
+      p_tenant_id: tenantId,
+      p_plan: plan,
+      p_period: period,
+      p_amount: payment.value,
+    })
+    if (error) {
+      // Se a persistência falhar, devolver erro para permitir retentativa
+      // do mesmo evento pelo Asaas, sem confirmar recebimento antecipadamente.
+      console.error('[billing/webhook] conciliação transacional falhou:', error)
+      return NextResponse.json({ error: 'Falha ao registrar pagamento' }, { status: 503 })
+    }
     return NextResponse.json({ received: true })
+  } catch (err) {
+    console.error('[billing/webhook] indisponibilidade de conciliação:', err)
+    return NextResponse.json({ error: 'Serviço temporariamente indisponível' }, { status: 503 })
   }
-
-  // externalReference: "tenantId|plan|period"
-  const [tenantId, plan, period] = (payment.externalReference as string).split('|')
-  const allowedPlans = ['essencial', 'cresce', 'expande', 'enterprise']
-  const periodDays: Record<string, number> = { monthly: 30, quarterly: 90, semiannual: 180, annual: 365 }
-  if (!/^[0-9a-f]{8}-[0-9a-f-]{27,36}$/i.test(tenantId) || !allowedPlans.includes(plan) || !periodDays[period]) {
-    return NextResponse.json({ error: 'Referência inválida' }, { status: 400 })
-  }
-
-  const supabase = createAdminClient()
-
-  if (ACTIVE_EVENTS.includes(event as AsaasEvent)) {
-    // Calcula data de expiração com base no período
-
-    const { error } = await supabase
-      .from('tenants')
-      .update({ plan, plan_status: 'active' })
-      .eq('id', tenantId)
-    if (error) {
-      console.error('[billing/webhook] atualização falhou:', error)
-      return NextResponse.json({ error: 'Falha ao registrar pagamento' }, { status: 500 })
-    }
-  } else if (OVERDUE_EVENTS.includes(event as AsaasEvent)) {
-    const { error } = await supabase
-      .from('tenants')
-      .update({ plan_status: 'suspended' })
-      .eq('id', tenantId)
-    if (error) {
-      console.error('[billing/webhook] suspensão falhou:', error)
-      return NextResponse.json({ error: 'Falha ao registrar cobrança' }, { status: 500 })
-    }
-  }
-
-  return NextResponse.json({ received: true })
 }
