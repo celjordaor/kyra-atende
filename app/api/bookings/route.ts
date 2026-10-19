@@ -82,6 +82,19 @@ export async function POST(request: NextRequest) {
     )
   }
 
+  // Mesmas regras de horário da edição; a restrição de sobreposição
+  // continua sendo imposta pelo PostgreSQL em concorrência.
+  const startMs = typeof start_at === 'string' ? Date.parse(start_at) : NaN
+  const endMs = typeof end_at === 'string' ? Date.parse(end_at) : NaN
+  if (!Number.isFinite(startMs) || !Number.isFinite(endMs) ||
+      startMs <= Date.now() || endMs <= startMs ||
+      endMs - startMs > 8 * 60 * 60 * 1000) {
+    return NextResponse.json(
+      { error: 'Informe início e fim válidos, futuros e com duração máxima de 8 horas.' },
+      { status: 400 },
+    )
+  }
+
   // Busca nome, telefone e e-mail do cliente para preencher os campos snapshot
   const { data: clientData } = await supabase
     .from('clients')
@@ -114,7 +127,16 @@ export async function POST(request: NextRequest) {
     `)
     .single()
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) {
+    if (error.code === '23P01') {
+      return NextResponse.json(
+        { error: 'O profissional já possui outro agendamento nesse horário.' },
+        { status: 409 },
+      )
+    }
+    console.error('[bookings/create] falha no cadastro', { tenantId, code: error.code })
+    return NextResponse.json({ error: 'Não foi possível criar o agendamento.' }, { status: 500 })
+  }
 
   // Dispara push em background
   void dispatchPush(tenantId, 'booking_created', {
