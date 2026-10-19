@@ -21,15 +21,23 @@ export async function POST(
     .update({ status: 'cancelled' })
     .eq('id', id)
     .eq('tenant_id', tenantId)
+    .in('status', ['pending', 'confirmed'])
     .select(`
       id, start_at,
-      clients(name),
-      professionals(name)
+      clients!bookings_client_id_fkey(name),
+      professionals!bookings_professional_id_fkey(name)
     `)
-    .single()
+    .maybeSingle()
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  if (!data)  return NextResponse.json({ error: 'Agendamento não encontrado.' }, { status: 404 })
+  if (error) return NextResponse.json({ error: 'Não foi possível cancelar o agendamento.' }, { status: 500 })
+  if (!data) {
+    const { data: existing, error: lookupError } = await supabase
+      .from('bookings').select('status')
+      .eq('id', id).eq('tenant_id', tenantId).maybeSingle()
+    if (lookupError) return NextResponse.json({ error: 'Não foi possível consultar o agendamento.' }, { status: 500 })
+    if (!existing) return NextResponse.json({ error: 'Agendamento não encontrado.' }, { status: 404 })
+    return NextResponse.json({ error: 'O status atual não permite cancelamento.' }, { status: 409 })
+  }
 
   // Notifica cancelamento em background
   void dispatchPush(tenantId, 'booking_cancelled', {
