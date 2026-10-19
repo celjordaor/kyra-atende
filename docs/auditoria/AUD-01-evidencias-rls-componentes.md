@@ -258,3 +258,13 @@ Avisos de desempenho oficiais: 14 chaves estrangeiras sem índices auxiliares e 
 - **Desalinhamento de interface:** `app/(dashboard)/agendamentos/AgendamentosClient.tsx` continua exibindo botão `Excluir` e removendo o registro do estado local após DELETE; é necessário renomear a ação `Cancelar agendamento`, explicar que histórico será preservado, e manter o registro como cancelado após sucesso. A tentativa de atualização deste arquivo grande não foi aceita pela ferramenta; **não declarar frontend corrigido** até commit verificado.
 - **Outras lacunas:** `handleStatusChange` nesse cliente tenta usar PUT genérico para status fora de `confirmed/cancelled`, que agora rejeita alterações de status; revisar UX dos botões e usar exclusivamente endpoints dedicados, incluindo `complete`. Validação de datas do reagendamento exige início e fim juntos.
 - Nenhum dado do Supabase foi modificado pela auditoria; corrigir frontend e homologar exclusão lógica antes de encerrar o item.
+
+
+## AUD-01 — Validação final da exclusão lógica e pendência de interface (19/10/2026)
+
+- Release `c97efa8e` verificado `READY` na Vercel, incluindo backend de cancelamento lógico `4a9676d5`.
+- Conferência independente do endpoint `app/api/bookings/[id]/route.ts`: método HTTP DELETE executa `UPDATE status='cancelled'`, condicionado a `pending/confirmed`, mantendo o registro persistido. Nenhuma operação de DELETE físico nessa rota.
+- Conferência independente da UI `app/(dashboard)/agendamentos/AgendamentosClient.tsx`: botão no modal ainda rotulado **Excluir**, `handleDelete` ainda filtra/exclui o agendamento do estado local, e `handleStatusChange` ainda contém fallback `api.put(..., {status})`, incompatível com o bloqueio de edição direta do status.
+- **Bloqueio operacional:** a ferramenta GitHub não aceitou atualização do componente grande; nenhuma alteração neste arquivo foi confirmada. NÃO apresentar interface como corrigida nem simular commit.
+- Correção necessária: exigir confirmação clara de cancelamento lógico; mostrar botão `Cancelar agendamento` somente para `pending/confirmed`; preservar item no estado local com status `cancelled`; remover fallback PUT de mudanças de status e usar somente endpoints dedicados; expor erro ao operador.
+- Testes funcionais pendentes: a interface deve preservar histórico e manter filtros corretos, e o backend deve retornar 409 para tentativas em estados encerrados. O WhatsApp segue sem E2E por decisão anterior.
