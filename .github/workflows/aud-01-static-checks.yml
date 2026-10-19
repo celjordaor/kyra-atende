@@ -1,0 +1,35 @@
+name: AUD-01 Static Security & Quality Checks
+
+on:
+  push:
+    branches: [main, security/aud-01-hardening]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: aud01-checks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  static-checks:
+    name: TypeScript and ESLint
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: '9.0.0'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: TypeScript strict verification
+        run: pnpm exec tsc --noEmit
+      - name: Next.js ESLint verification
+        if: success() || failure()
+        run: pnpm exec next lint
