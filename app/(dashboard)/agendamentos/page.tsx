@@ -59,16 +59,19 @@ export default async function AgendamentosPage() {
   let professionals: ProfRow[]  = []
   let services: ServiceRow[]    = []
 
-  try {
-    ;[rawBookings, professionals, services] = await Promise.all([
-      apiGet<RawBooking[]>('/bookings'),
-      apiGet<ProfRow[]>('/professionals'),
-      apiGet<ServiceRow[]>('/services'),
-    ])
-  } catch (err) {
-    console.error('[AgendamentosPage] API unavailable:', err)
-    // continua com listas vazias — o client mostrará "Nenhum agendamento encontrado"
-  }
+  // Cada recurso deve carregar independentemente: uma falha em agendamentos
+  // não pode ocultar serviços/profissionais e bloquear novos agendamentos.
+  const results = await Promise.allSettled([
+    apiGet<RawBooking[]>('/bookings'),
+    apiGet<ProfRow[]>('/professionals'),
+    apiGet<ServiceRow[]>('/services'),
+  ] as const)
+  if (results[0].status === 'fulfilled') rawBookings = results[0].value
+  else console.error('[AgendamentosPage] falha ao carregar agendamentos:', results[0].reason)
+  if (results[1].status === 'fulfilled') professionals = results[1].value
+  else console.error('[AgendamentosPage] falha ao carregar profissionais:', results[1].reason)
+  if (results[2].status === 'fulfilled') services = results[2].value
+  else console.error('[AgendamentosPage] falha ao carregar serviços:', results[2].reason)
 
   const rows: BookingRow[] = (rawBookings ?? []).map((b) => ({
     id:              b.id,
