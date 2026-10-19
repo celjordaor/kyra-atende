@@ -51,12 +51,27 @@ export async function dispatchPush(
 
   if (error || !subscriptions?.length) return
 
+  // Push subscriptions ficam vinculadas à origem em que foram criadas.
+  // Inscrições antigas em previews da Vercel devem abrir o domínio oficial.
+  // Não aceitar URLs externas vindas do payload do evento.
+  const officialOrigin = 'https://www.kyraatende.com.br'
+  const requestedUrl = typeof data.url === 'string' ? data.url : '/dashboard'
+  let pathname = '/dashboard'
+  try {
+    const parsed = new URL(requestedUrl, officialOrigin)
+    if (parsed.origin === officialOrigin) {
+      pathname = parsed.pathname + parsed.search + parsed.hash
+    }
+  } catch {
+    // URL malformada: enviar o usuário ao dashboard.
+  }
+
   const payload = JSON.stringify({
     event,
     data,
     title: (data.title as string | undefined) ?? 'Kyra Atende',
     body:  (data.body  as string | undefined) ?? '',
-    url:   (data.url   as string | undefined) ?? '/dashboard',
+    url:   officialOrigin + pathname,
   } satisfies PushPayload)
 
   const expiredIds: string[] = []
