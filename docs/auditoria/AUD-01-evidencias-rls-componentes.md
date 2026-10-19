@@ -117,3 +117,14 @@ Avisos de desempenho oficiais: 14 chaves estrangeiras sem índices auxiliares e 
 - Correção GitHub `591ab20c`: processador `handleWebhook` normaliza `messages.upsert` e `MESSAGES_UPSERT`; controle `fromMe` e deduplicação por identificador permanecem. Exige confirmação READY e teste real antes de considerar WhatsApp homologado.
 - Risco de entrega: `handleWebhook` persiste mensagem de entrada antes de processar IA; no catch da IA dispara alerta, mas não cria estado reprocessável, então deduplicação pode impedir novo processamento. Requer desenho de fila/estados confiáveis, não alterar apressadamente em produção.
 - Avisos Supabase security advisor continuam `auth_leaked_password_protection`, `extension_in_public`, e `rls_enabled_no_policy` intencional. A proteção contra senhas vazadas não foi habilitada nesta etapa porque não há ação Auth configurável nos conectores disponíveis.
+
+
+## AUD-01 — Continuidade: auditoria de performance, push e releases (19/10/2026)
+
+- Deploy do último ajuste de identidade visual `79e4dff3` confirmado `READY` na Vercel; a correção libera `/kyra-icon.png` e `/kyra-ai.png` no middleware e restaura a logo original. Falta reteste visual após limpar o cache.
+- Supabase Security Advisor: 1 INFO (`rls_enabled_no_policy`, tabela de conciliação restrita), 2 WARN (`extension_in_public` para `btree_gist` e `auth_leaked_password_protection`). Não mover extensão sem avaliação das constraints de agendamento nem habilitar Auth sem acesso à configuração.
+- Supabase Performance Advisor: `unindexed_foreign_keys` 14, `auth_rls_initplan` 12, `unused_index` 10, `multiple_permissive_policies` 48, `duplicate_index` 2. O número 48 conta avisos por combinação de role/operação, **não 48 políticas distintas**.
+- Índices duplicados confirmados via `pg_indexes`: `public.bookings`: `bookings_status` e `bookings_tenant_status`, ambos btree `(tenant_id,status)`. `public.subscriptions`: `idx_subscriptions_asaas_link` e `subscriptions_asaas_link`, ambos btree parcial `(asaas_payment_link_id)` onde valor não nulo. A remoção de índice redundante exige migração coordenada, revisão de dependências e sincronização do histórico divergente.
+- `push_subscriptions`: 1 registro, zero divergências entre proprietário do tenant e `user_id`. Políticas RLS verificam `user_id=auth.uid()`, porém existe FK composta `push_subscription_user_same_tenant` entre `(user_id,tenant_id)` e `profiles(id,tenant_id)`. Essa constraint também impede associação cruzada. Não há evidência de acesso cross-tenant no achado; não aplicar migração RLS baseada só na leitura isolada da policy.
+- Logs recentes incluem erros anteriores de carregamento de agendamentos em deployments antigos; correções das relações ambíguas já foram publicadas. Validar funcionalmente após cada release e rastrear erros novos isoladamente.
+- Nenhuma alteração de dados, tabelas, políticas ou índices executada nesta etapa.
