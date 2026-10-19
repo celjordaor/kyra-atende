@@ -5,6 +5,7 @@
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { createClient } from '@/lib/supabase/server'
 
 function toSlug(name: string, suffix: string): string {
   return (
@@ -22,69 +23,44 @@ function toSlug(name: string, suffix: string): string {
 
 export async function POST(request: NextRequest) {
   try {
+    const auth = createClient()
+    const { data: { user }, error: authError } = await auth.auth.getUser()
+    if (authError || !user || !user.email_confirmed_at) {
+      return NextResponse.json({ error: 'Sessão verificada obrigatória.' }, { status: 401 })
+    }
+
     const { userId, email, name, company } = await request.json()
 
-    if (!userId || !email || !name || !company) {
+    if (!userId || userId !== user.id || !email || email.toLowerCase() !== user.email?.toLowerCase() || !name || !company || name.length > 200 || company.length > 200) {
       return NextResponse.json({ error: 'Dados incompletos.' }, { status: 400 })
     }
 
     const supabase  = createAdminClient()
-    const slugSuffix = Math.random().toString(36).slice(2, 6)
+    const slugSuffix = crypto.randomUUID().slice(0, 10)
     const slug       = toSlug(company, slugSuffix)
-    const trialEnd   = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString()
+    // A RPC é SECURITY DEFINER, acessível somente ao service_role.
+    // Toda a criação (tenant, perfil, assinatura e claim) ocorre em uma
+    // única transação; falhas provocam rollback automático.
+    const { data: tenantId, error: provisionError } = await supabase.rpc(
+      'create_tenant_with_owner',
+      {
+        p_user_id: user.id,
+        p_email: user.email!,
+        p_name: name.trim(),
+        p_company: company.trim(),
+        p_slug: slug,
+      },
+    )
 
-    // 1. Cria tenant
-    const { data: tenant, error: tenantError } = await supabase
-      .from('tenants')
-      .insert({
-        name:        company,
-        slug,
-        owner_id:    userId,
-        plan:        'cresce',
-        plan_status: 'trial',
-        trial_ends_at:  trialEnd,
-      })
-      .select('id')
-      .single()
-
-    if (tenantError) throw tenantError
-
-    const tenantId = tenant.id
-
-    // 2. Cria perfil
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .insert({
-        id:        userId,
-        tenant_id: tenantId,
-        name,
-        email,
-        role:      'admin',
-      })
-
-    if (profileError) throw profileError
-
-    // 3. Cria subscription trial
-    const { error: subError } = await supabase
-      .from('subscriptions')
-      .insert({
-        tenant_id:             tenantId,
-        plan:                  'cresce',
-        status:                'trial',
-        billing_cycle:         'monthly',
-        trial_ends_at:            trialEnd,
-        current_period_start:  new Date().toISOString(),
-        current_period_end:    trialEnd,
-      })
-
-    if (subError) throw subError
-
-    // 4. Injeta tenant_id no app_metadata do usuário (para o JWT)
-    const { error: metaError } = await supabase.auth.admin.updateUserById(userId, {
-      app_metadata: { tenant_id: tenantId },
-    })
-
-    if (metaError) throw metaError
+    if (provisionError) {
+      if (['23505', '23514'].includes(provisionError.code)) {
+        return NextResponse.json(
+          { error: 'Cadastro já realizado ou em processamento. Faça login novamente.' },
+          { status: 409 },
+        )
+      }
+      throw provisionError
+    }
 
     return NextResponse.json({ ok: true, tenantId })
   } catch (err: unknown) {
