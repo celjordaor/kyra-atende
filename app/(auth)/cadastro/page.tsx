@@ -56,6 +56,13 @@ export default function CadastroPage() {
       return
     }
 
+    // Sem sessão, a confirmação por e-mail deve ocorrer primeiro.
+    // O callback encaminha novos usuários para /cadastro/concluir.
+    if (!data.session) {
+      router.push('/cadastro/confirmar?email=' + encodeURIComponent(form.email))
+      return
+    }
+
     // 2. Cria tenant + perfil + subscription via API route server-side
     const setupRes = await fetch('/api/auth/setup-tenant', {
       method:  'POST',
