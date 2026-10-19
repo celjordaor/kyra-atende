@@ -44,8 +44,8 @@ export async function POST(request: NextRequest) {
   const asaasKey     = process.env.ASAAS_API_KEY ?? ''
   const asaasSandbox = process.env.ASAAS_SANDBOX !== 'false'
   const asaasUrl     = asaasSandbox
-    ? 'https://sandbox.asaas.com/api/v3'
-    : 'https://www.asaas.com/api/v3'
+    ? 'https://api-sandbox.asaas.com/v3'
+    : 'https://api.asaas.com/v3'
 
   try {
     // Cria/busca customer
@@ -70,16 +70,24 @@ export async function POST(request: NextRequest) {
       method:  'POST',
       headers: { 'Content-Type': 'application/json', access_token: asaasKey },
       body:    JSON.stringify({
-        customer: customerId,
+        name: `Kyra Atende — plano ${plan} (${period})`,
+        chargeType: 'DETACHED',
         billingType: 'UNDEFINED',
         value: amount,
         description: `Kyra ${plan.charAt(0).toUpperCase() + plan.slice(1)} — ${period}`,
         externalReference: `${tenantId}|${plan}|${period}`,
       }),
     })
+    if (!paymentRes.ok) {
+      console.error('[billing/checkout] Falha do provedor ao criar link:', paymentRes.status)
+      return NextResponse.json({ error: 'Não foi possível criar o link de pagamento.' }, { status: 502 })
+    }
     const payment = await paymentRes.json()
+    if (typeof payment.url !== 'string' || !payment.url.startsWith('https://')) {
+      return NextResponse.json({ error: 'O provedor não retornou um link válido.' }, { status: 502 })
+    }
 
-    return NextResponse.json({ paymentUrl: payment.invoiceUrl ?? payment.url })
+    return NextResponse.json({ paymentUrl: payment.url })
   } catch (err) {
     console.error('[billing/checkout]', err)
     return NextResponse.json({ error: 'Erro ao criar link de pagamento.' }, { status: 500 })
