@@ -126,8 +126,17 @@ export async function processWhatsappMessage(
     const reply = response.content[0]?.type === 'text' ? response.content[0].text.trim() : null
     return reply || null
   } catch (err) {
-    console.error(`[ai] Erro Claude API (WhatsApp tenant ${tenantId}):`, err)
-    return null
+    // Não transformar falhas do provedor em resposta vazia. O chamador
+    // precisa distinguir falha de IA de ausência legítima de resposta,
+    // para informar a equipe sem repetir envios automaticamente.
+    const providerStatus = typeof err === 'object' && err !== null && 'status' in err
+      ? (err as { status?: unknown }).status : undefined
+    console.error('[ai] Falha ao gerar resposta WhatsApp', {
+      tenantId,
+      providerStatus: typeof providerStatus === 'number' ? providerStatus : undefined,
+      errorType: err instanceof Error ? err.name : 'unknown',
+    })
+    throw new Error('whatsapp_ai_generation_failed')
   }
 }
 
