@@ -136,3 +136,13 @@ Avisos de desempenho oficiais: 14 chaves estrangeiras sem índices auxiliares e 
 - A rota `POST /api/bookings/[id]/complete` exigia somente `payment_method`, permitindo enviar `price_charged` inválido, desconto superior ao preço ou método arbitrário diretamente à API. Commit `3b8dde10`: valida valores numéricos finitos, não negativos, duas casas decimais no preço, desconto até o valor cobrado e enum de métodos compatível com o componente `CompleteModal`. Dados financeiros e agendamentos existentes não foram modificados.
 - O handler WhatsApp armazena evento inbound antes do processamento de IA e captura falhas sem registrar estado reprocessável. Não implementar retentativa ingênua, pois a deduplicação por `external_id` bloqueia nova execução e retentativas após envio de resposta podem duplicar respostas. Projetar estado transacional/fila/outbox e teste end-to-end antes de alterar.
 - Os commits foram enviados à main e acionaram deployments Vercel; confirmação de READY e testes E2E específicos permanecem necessários.
+
+
+## AUD-01 — WhatsApp e estabilidade de eventos (19/10/2026, etapa adicional)
+
+- Último release anterior `f9c5b305` verificado `READY` em Production na Vercel; o commit da validação financeira `3b8dde10` foi cancelado como deployment individual, mas seu conteúdo permanece no histórico da `main` e está incluído em deployments posteriores. Não inferir homologação de API sem teste funcional.
+- Revisão do fluxo Evolution -> webhook -> `whatsapp_messages` -> IA: há índice único `whatsapp_inbound_external_event_unique` em `(tenant_id, external_id)` para mensagens `inbound`, protegendo contra repetição concorrente do mesmo evento.
+- Erro de contexto identificado: `handleWebhook` insere a mensagem inbound antes de `processWhatsappMessage`; a busca de últimas mensagens incluía essa mesma entrada e a função ainda a acrescentava como último turno, duplicando a mensagem para o Claude.
+- Commits `f12f03df` e `4a39ae1c`: o processamento passa o `messageId`; `getRecentMessages` remove do histórico o registro de `external_id` igual ao evento atual e o acrescenta uma única vez como último turno. Nenhuma alteração no histórico persistido ou nos índices.
+- Falha da IA / Evolution após persistência: ainda não há fila ou estado de processamento que permita reexecução segura; a camada `lib/ai.ts` também captura erros da Anthropic e retorna `null`. Exige desenho de outbox, estado por mensagem, lock e idempotência de envio antes de habilitar retentativas.
+- Deploy dos commits de WhatsApp foi solicitado automaticamente pelo push à `main`; validar `READY` e tráfego real antes de homologar esta mudança.
