@@ -95,3 +95,17 @@ Avisos de desempenho oficiais: 14 chaves estrangeiras sem índices auxiliares e 
 - Evidência de consulta SQL no banco: `asaas_processed_payments=0`, `billing_events=6`, `subscriptions=3`. A contagem é fotografia no momento da auditoria, não significa que houve cobrança real processada.
 - Teste HTTP pela origem pública não pôde ser executado porque o ambiente de execução não resolveu DNS externo; consulta de logs de runtime filtrada por billing não retornou eventos recentes.
 - **NÃO HOMOLOGADO:** falta testar uma transação integral no Sandbox (geração de link → pagamento simulado → evento recebido → conciliação RPC → mudança da assinatura), conferir token configurado no Asaas, logs de entrega e ausência de duplicidade em reenvio do mesmo evento.
+
+
+## Continuidade AUD-01 — evidências após pagamento PIX Sandbox (19/10/2026)
+
+- Pagamento Sandbox confirmado por inspeção direta de `public.asaas_processed_payments`: 1 pagamento, plano `expande`, período `monthly`, valor R$ 149,00. Não registrar identificadores de pagamento ou usuário nesta documentação pública.
+- `tenants.plan='expande'` / `plan_status='active'`; `subscriptions.plan='expande'`, `status='active'`, `billing_cycle='monthly'`, `amount=149.00`.
+- Uma linha em `asaas_processed_payments` e um evento `asaas.payment.confirmed`. Intervalo de assinatura `2026-11-02T14:22:27Z` a `2026-12-02T14:22:27Z`, alinhado ao fim do trial de 14 dias, mas **política comercial de crédito do trial após pagamento antecipado exige aceite**.
+- Teste real de idempotência da RPC: chamada de `public.apply_verified_asaas_payment` com os argumentos exatos do pagamento já processado, dentro de transação com `ROLLBACK`, retornou `false` (`duplicate_applied=false`). Consulta posterior confirmou ainda 1 pagamento, 1 evento e vigência inalterada. Esse teste prova o caminho de duplicidade de pagamento na RPC, **não** uma nova entrega HTTP autenticada do webhook.
+- Auditoria de privilégios: `has_function_privilege('anon', ...,'EXECUTE')=false`; `authenticated=false`; `service_role=true`, restringindo conciliação à identidade de serviço.
+- Webhook Asaas: logs Vercel mostram rejeição antiga `422 missing_or_malformed_reference` para evento externo; após commit `8a4f07e5`, novas entregas produziram `evento externo ignorado / unassociated_reference`. Confirmar sucesso HTTP no painel do Asaas para encerrar alerta operacional.
+- Security advisor atual: `auth_leaked_password_protection` WARN (habilitar e verificar via configuração Auth); `extension_in_public` WARN para `btree_gist` (não mover sem plano de dependências); `rls_enabled_no_policy` INFO em `asaas_processed_payments` é intencional.
+- Performance advisor: 14 avisos de FKs não indexadas e 12 de otimização de políticas RLS. Requer plano de índices sem travar tabelas ativas e benchmark antes/depois.
+- Ainda não validados: cancelamento, estorno, pagamento não confirmado, renovação, concorrência de eventos, testes reais de HTTP cross-tenant, build rigoroso TS/ESLint, Evolution WhatsApp, configuração Auth de senhas vazadas, convergência do histórico de migrations.
+- Governança: histórico remoto e nomes dos arquivos de migrations seguem divergentes. Não usar `supabase db push` sem reconciliação controlada.
