@@ -10,7 +10,14 @@ import { createClient } from '@/lib/supabase/client'
 export default function LoginClient() {
   const router       = useRouter()
   const searchParams = useSearchParams()
-  const next         = searchParams.get('next') ?? '/dashboard'
+  const requestedNext = searchParams.get('next') ?? '/dashboard'
+  // Evita redirecionamentos externos ou esquemas como javascript: após o login.
+  const next = requestedNext.startsWith('/') &&
+    !requestedNext.startsWith('//') &&
+    !requestedNext.includes('\\') &&
+    !/[\u0000-\u001f]/.test(requestedNext)
+    ? requestedNext
+    : '/dashboard'
 
   const [email,   setEmail]   = useState('')
   const [password, setPassword] = useState('')
