@@ -43,7 +43,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
 
   const { data, error } = await admin.from('tenants').update(changes).eq('id',id).select('id,plan,plan_status,trial_ends_at').maybeSingle()
   if (error) {
-    console.error('[superadmin/tenant/status] erro:',error)
+    console.error('[superadmin/tenant/status] falha na atualização', { code: error.code })
     return NextResponse.json({ error: 'Falha na atualização' }, { status: 500 })
   }
   if (!data) return NextResponse.json({ error: 'Tenant não encontrado' }, { status: 404 })
