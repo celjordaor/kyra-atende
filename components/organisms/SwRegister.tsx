@@ -9,6 +9,7 @@ import { useEffect } from 'react';
 export function SwRegister() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
+    if (window.location.origin !== 'https://www.kyraatende.com.br') return;
     if (!('serviceWorker' in navigator)) return;
 
     // Registra na navegação inicial (não bloqueia o carregamento da página)
