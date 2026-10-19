@@ -241,3 +241,11 @@ Avisos de desempenho oficiais: 14 chaves estrangeiras sem índices auxiliares e 
 - **Exclusão:** `DELETE /api/bookings/[id]` ainda permite exclusão física de registros por ID + tenant; revisar política funcional de retenção, rastreabilidade financeira e eventual arquivamento/cancelamento lógico antes de modificar. Não realizar exclusões retroativas.
 - **Evidências:** consultas estáticas ao GitHub confirmaram filtros condicionais nos três endpoints; última publicação anterior `8006e095` estava READY. Os deployments das novas alterações ainda não tiveram READY confirmado. Regressões funcionais e consumo pelo frontend precisam de E2E.
 - **Banco:** nenhuma migration, DDL ou alteração de dados aplicada nesta rodada. Fluxo WhatsApp continua com teste E2E adiado conforme decisão.
+
+
+## AUD-01 — Reagendamento, exclusão e integridade de intervalos (19/10/2026)
+
+- O PostgreSQL possui a constraint `bookings_no_professional_overlap` que proíbe intervalos sobrepostos de um profissional, inclusive entre inserções concorrentes, para agendamentos não cancelados. Check constraints de `status` e de `payment_method` também estão presentes.
+- Em `PUT /api/bookings/[id]`, datas podiam ser alteradas sem verificação de intervalo. Commit `4906af74`: a API exige início/fim em conjunto, datas válidas e futuras, fim posterior ao início e duração até 8 horas. Restrição de status `pending/confirmed` segue vigente.
+- **Exclusão física permanece pendente:** `DELETE /api/bookings/[id]` continua removendo dados por ID + tenant, inclusive potencialmente registros concluídos. A proteção de retenção foi analisada, mas **não foi implantada nesta etapa**; decidir regra de retenção, exclusão lógica ou arquivamento e verificar dependências antes de modificar.
+- Sem DDL nem alterações em dados existentes. Testes E2E ainda pendentes para reagendamento e para o webhook WhatsApp; deployment da validação precisa ser confirmado.
