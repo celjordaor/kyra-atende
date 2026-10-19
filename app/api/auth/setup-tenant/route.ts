@@ -29,9 +29,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Sessão verificada obrigatória.' }, { status: 401 })
     }
 
-    const { userId, email, name, company } = await request.json()
+    const payload = await request.json().catch(() => null)
+    if (!payload || typeof payload !== 'object') {
+      return NextResponse.json({ error: 'Dados inválidos.' }, { status: 400 })
+    }
+    const { userId, email, name, company } = payload
 
-    if (!userId || userId !== user.id || !email || email.toLowerCase() !== user.email?.toLowerCase() || !name || !company || name.length > 200 || company.length > 200) {
+    if (typeof userId !== 'string' || userId !== user.id ||
+        typeof email !== 'string' || email.toLowerCase() !== user.email?.toLowerCase() ||
+        typeof name !== 'string' || !name.trim() || name.length > 200 ||
+        typeof company !== 'string' || !company.trim() || company.length > 200) {
       return NextResponse.json({ error: 'Dados incompletos.' }, { status: 400 })
     }
 
@@ -64,8 +71,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ ok: true, tenantId })
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Erro interno.'
-    console.error('[setup-tenant]', message)
-    return NextResponse.json({ error: message }, { status: 500 })
+    console.error('[setup-tenant] Falha no provisionamento:', err)
+    return NextResponse.json({ error: 'Não foi possível concluir o cadastro. Tente novamente ou procure o suporte.' }, { status: 500 })
   }
 }
