@@ -37,7 +37,10 @@ export async function GET(request: NextRequest) {
   if (status)   query = query.eq('status', status)
 
   const { data, error } = await query
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) {
+    console.error('[bookings/list] falha na consulta', { tenantId, code: error.code })
+    return NextResponse.json({ error: 'Não foi possível consultar os agendamentos.' }, { status: 500 })
+  }
   return NextResponse.json(data ?? [])
 }
 
