@@ -28,6 +28,8 @@ jobs:
           node-version: '20'
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: Migration lineage guard (AUD-01)
+        run: node scripts/check-migration-lineage.mjs
       - name: TypeScript strict verification
         run: pnpm exec tsc --noEmit
       - name: Next.js ESLint verification
