@@ -391,3 +391,12 @@ Autorização recebida para utilizar contas de teste existentes. Ensaios executa
 - A observação anterior sobre regras de disponibilidade, duração e slots mantém-se adiada para mecanismo futuro, não é escopo desta rodada.
 - Na consulta inicial à Vercel: `fb8f5386` estava QUEUED, `f3c90cbc` BUILDING e `ac336cf2` READY. O novo commit requer nova confirmação de deployment e testes de integração; não afirmar homologação só pelo commit.
 - Não foram feitos testes HTTP com sessões reais nesta rodada. Continuam pendentes provas de autenticação dos diversos perfis via HTTP, revisão das rotas privilegiadas restantes e eventuais controles de auditoria administrativa.
+
+
+## AUD-01 — Estado dos deploys e distinção entre logs de Auth e auditoria administrativa (19/10/2026)
+
+- Vercel verificada novamente: commit `f3c90cbc` (redução de detalhes nos logs da rota Superadmin tenant status) alcançou **READY**; o commit `f6fdc1f4` (erro genérico na listagem de bookings) estava **QUEUED**, e o commit documental `60a01648` em **BUILDING** no momento da consulta. Não atribuir deploy READY a commits ainda pendentes.
+- Inventário adicional localizou `auth.audit_log_entries` com colunas `instance_id`, `id`, `payload`, `created_at` e `ip_address`. É uma tabela do subsistema de autenticação; não é evidência suficiente de rastreamento de mudanças de plano, suspensão de empresa ou edições de templates via API.
+- Revisões anteriores não encontraram tabela `public.*audit*` nem gravação de trilha de auditoria persistente nas rotas Superadmin verificadas. Não concluir que inexiste outra telemetria de aplicação/infraestrutura.
+- Proposta de controle: trilha de auditoria administrativa de somente acréscimo, acesso restrito ao backend privilegiado, com ator autenticado, ação, tipo e ID do recurso, data e ID de correlação; registrar apenas diferenças não sensíveis/permitidas. Exigir que o registro tenha comportamento de falha definido, sem permitir operações administrativas não auditadas. Não criar schema nem rotas antes de projetar e testar atomicidade e proteção de privilégios.
+- Pendentes: autenticação HTTP com usuários reais, testes dos endpoints privilegiados, validação de deploys pendentes e testes de emissão/persistência dos eventos administrativos. Nenhum dado de cliente ou migração foi alterado nesta rodada.
