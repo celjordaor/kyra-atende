@@ -18,10 +18,9 @@ const nextConfig = {
     ],
     // web-push tem código nativo — não bundlar em cada Lambda reduz o tracing
     serverComponentsExternalPackages: ['web-push'],
-  },
 
-  // ── Reduz tamanho do bundle excluindo binários nativos desnecessários ──────
-  outputFileTracingExcludes: {
+    // Next.js 14.2: esta opção pertence à seção experimental.
+    outputFileTracingExcludes: {
     '*': [
       'node_modules/@swc/core-linux-x64-gnu',
       'node_modules/@swc/core-linux-x64-musl',
@@ -30,6 +29,7 @@ const nextConfig = {
       'node_modules/jest*',
       'node_modules/ts-node',
     ],
+    },
   },
 }
 
