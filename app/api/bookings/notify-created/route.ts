@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import webpush from 'web-push'
+import { requireSession } from '@/lib/route-helpers'
 
 // Cliente Supabase com service_role para leitura sem RLS
 function adminClient() {
@@ -19,6 +20,8 @@ function formatDateTime(iso: string): string {
 }
 
 export async function POST(request: NextRequest) {
+  const session = await requireSession()
+  if (!session.ok) return session.response
   // Configuração VAPID dentro do handler para evitar erro no build
   // quando as variáveis de ambiente ainda não estão disponíveis
   webpush.setVapidDetails(
@@ -35,7 +38,7 @@ export async function POST(request: NextRequest) {
       startAt:     string
     }
 
-    if (!tenantId || !clientName) {
+    if (!tenantId || tenantId !== session.tenantId || !clientName || !startAt) {
       return NextResponse.json({ error: 'Parâmetros inválidos' }, { status: 400 })
     }
 
