@@ -947,35 +947,33 @@ export default function AgendamentosClient({ initialBookings, professionals, ser
   }
 
   const handleDelete = async () => {
-    if (!editRow) return
+    if (!editRow || !['pending', 'confirmed'].includes(editRow.status)) return
+    if (!window.confirm('Desmarcar este horário? O agendamento continuará no histórico como cancelado.')) return
     setDeleting(true)
     try {
       await api.delete(`/bookings/${editRow.id}`)
-      setBookings(bs => bs.filter(b => b.id !== editRow.id))
+      setBookings(bs => bs.map(b => b.id === editRow.id ? { ...b, status: 'cancelled' } : b))
       setModalOpen(false)
       router.refresh()
     } catch (e) {
-      setFormErrors({ api: e instanceof ApiError ? e.message : 'Erro ao excluir.' })
+      setFormErrors({ api: e instanceof ApiError ? e.message : 'Erro ao desmarcar horário.' })
     } finally { setDeleting(false) }
   }
 
   const handleStatusChange = async (row: BookingRow, newStatus: BookingStatus) => {
+    if (newStatus === 'confirmed' && row.status !== 'pending') return
+    if (newStatus === 'cancelled' && !['pending', 'confirmed'].includes(row.status)) return
+    if (newStatus !== 'confirmed' && newStatus !== 'cancelled') return
     try {
       const endpoint = newStatus === 'confirmed'
         ? `/bookings/${row.id}/confirm`
-        : newStatus === 'cancelled'
-          ? `/bookings/${row.id}/cancel`
-          : `/bookings/${row.id}`
-      let updated: BookingRow
-      if (newStatus === 'confirmed' || newStatus === 'cancelled') {
-        await api.post(endpoint, {})
-        updated = { ...row, status: newStatus }
-      } else {
-        updated = await api.put<BookingRow>(endpoint, { status: newStatus })
-      }
-      setBookings(bs => bs.map(b => b.id === row.id ? { ...b, ...updated } : b))
+        : `/bookings/${row.id}/cancel`
+      await api.post(endpoint, {})
+      setBookings(bs => bs.map(b => b.id === row.id ? { ...b, status: newStatus } : b))
       router.refresh()
-    } catch {}
+    } catch (error) {
+      setFormErrors({ api: error instanceof ApiError ? error.message : 'Não foi possível alterar o status.' })
+    }
   }
 
   const columns: Column<BookingRow>[] = [
@@ -986,7 +984,7 @@ export default function AgendamentosClient({ initialBookings, professionals, ser
       render: (_v: unknown, row: BookingRow) => (
         <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end', alignItems: 'center' }}>
           {/* Editar */}
-          {row.status !== 'completed' && (
+          {(row.status === 'pending' || row.status === 'confirmed') && (
             <button
               type="button"
               title="Editar agendamento"
@@ -1142,8 +1140,8 @@ export default function AgendamentosClient({ initialBookings, professionals, ser
         title={editRow ? 'Editar agendamento' : 'Novo agendamento'}
         footer={
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-            {editRow
-              ? <Button variant="danger" onClick={handleDelete} loading={deleting}>Excluir</Button>
+            {editRow && (editRow.status === 'pending' || editRow.status === 'confirmed')
+              ? <Button variant="danger" onClick={handleDelete} loading={deleting}>Desmarcar horário</Button>
               : <div />}
             <div style={{ display: 'flex', gap: '10px' }}>
               <Button variant="ghost" onClick={() => setModalOpen(false)} disabled={saving || deleting}>Cancelar</Button>
