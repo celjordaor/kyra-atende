@@ -36,15 +36,6 @@ export async function POST(request: NextRequest) {
     }
 
     const supabase  = createAdminClient()
-    const { data: existingProfile, error: profileLookupError } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('id', user.id)
-      .maybeSingle()
-    if (profileLookupError) throw profileLookupError
-    if (existingProfile || user.app_metadata?.tenant_id) {
-      return NextResponse.json({ error: 'Usuário já possui uma empresa.' }, { status: 409 })
-    }
     const slugSuffix = crypto.randomUUID().slice(0, 10)
     const slug       = toSlug(company, slugSuffix)
     // A RPC é SECURITY DEFINER, acessível somente ao service_role.
@@ -62,7 +53,7 @@ export async function POST(request: NextRequest) {
     )
 
     if (provisionError) {
-      if (provisionError.code === '23505') {
+      if (['23505', '23514'].includes(provisionError.code)) {
         return NextResponse.json(
           { error: 'Cadastro já realizado ou em processamento. Faça login novamente.' },
           { status: 409 },
