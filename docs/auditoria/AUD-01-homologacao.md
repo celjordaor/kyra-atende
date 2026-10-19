@@ -9,12 +9,14 @@
 
 ## Pendências que bloqueiam publicação
 1. Fazer TypeScript, lint e build sem depender de `ignoreBuildErrors`.
-2. Garantir autenticação e idempotência efetivas nos webhooks. Asaas entrega duplicatas e pode entregar eventos fora de ordem: ainda falta ledger de eventos + validação da identidade do pagamento, não apenas `externalReference`.
+2. **Asaas em fase de implementação:** webhook agora consulta `GET /payments/{id}` e confere status, referência e preço; migration `20261019000500` oferece idempotência por payment ID e operação transacional. É indispensável homologar com o Asaas Sandbox, conferir se `externalReference` é transmitida da payment link à cobrança e validar estado da assinatura. Eventos `PAYMENT_OVERDUE` ficam sem suspensão automática até implementar conciliação segura por fatura. Não publicar sem esses testes.
 3. Evolution: conferir que instâncias existentes enviam o header; configurar instâncias antigas, não apenas novas. Falta controle idempotente de `data.key.id` e fila durável; o handler agora aguarda execução.
-4. Cadastro: o endpoint `setup-tenant` passou a exigir e-mail confirmado; verificar o fluxo real de signup, evitar travar cadastro. Provisionamento ainda é não transacional.
+4. Cadastro: provisionamento via RPC transacional foi implementado na branch; migration `20261019000300` pendente de aplicar/testar. Verificar fluxo completo com confirmação de e-mail, retries e criação concorrente.
 5. Agendamento: conferir conflitos concorrentes em transação/constraint, aplicação de timezone e seleção sem profissional. Validar telefones e restringir tenant publicado via slug. Ainda não resolvidos.
 6. Rodar testes tenant A/B para todas as rotas service_role e cenários anônimos, testes de carga de endpoints e regressão visual de `/agendar/[slug]`.
 7. Verificar o comportamento de `/api/bookings/notify-created` em seus chamadores antes de homologar.
-8. Conferir migrations remotas versus arquivo de espelhamento `20261018000100_aud01_privileged_boundary.sql`; não reaplicar automaticamente sem verificar histórico.
+8. Conferir migrations remotas versus arquivos de espelhamento `20261018000100` e `20261019000200`/`00400`; não reaplicar automaticamente sem verificar histórico. Aplicar novas migrations 00100 integridade, 00300 provisionamento e 00500 Asaas apenas após revisão/homologação.
+9. No Asaas, testar `PAYMENT_CONFIRMED`, `PAYMENT_RECEIVED`, repetição do mesmo evento, eventos diferentes para o mesmo payment ID, pagamento de valor incorreto e referência inválida; comparar `GET /payments/{id}` no ambiente efetivamente configurado.
+10. Revisar planos vigentes e renovação: pagamento só ativa via fatura confirmada; suspensões por atraso não ocorrem automaticamente neste patch. A regra de início/fim de período e comunicação ao cliente requer aprovação funcional.
 
 **Status:** alterações somente na branch `security/aud-01-hardening`. Não fazer merge/deploy automático.
