@@ -84,3 +84,14 @@ Avisos de desempenho oficiais: 14 chaves estrangeiras sem índices auxiliares e 
 **Bloqueio de governança identificado:** todas as migrations AUD-01 foram aplicadas com timestamps gerados remotamente, distintos dos prefixos dos arquivos SQL versionados em `supabase/migrations`. Por exemplo, o arquivo `20261019001000_aud01_pin_function_search_paths.sql` corresponde à execução remota `20261019040630`. O mesmo desalinhamento já existia nas nove migrations anteriores. **Não executar `supabase db push` cegamente:** conciliar a tabela de histórico de migrations e os nomes dos arquivos, por procedimento controlado, antes da próxima entrega via CLI. Não foi feita alteração manual em `supabase_migrations.schema_migrations` nesta etapa.
 
 **CI:** o workflow GitHub Actions está commitado, mas o conector utilizado não retornou execuções associadas ao commit consultado; status combinado lista somente Vercel. `READY` de Vercel ainda não comprova `tsc --noEmit` nem `next lint`, porque `next.config.mjs` ignora as verificações.
+
+## Asaas Sandbox — integração 19/10/2026
+
+- Domínio oficial configurado na Vercel: `www.kyraatende.com.br`. Endpoint do webhook: `https://www.kyraatende.com.br/api/billing/webhook`.
+- Variáveis em Production confirmadas por presença: `APP_URL`, `ASAAS_API_KEY`, `ASAAS_WEBHOOK_AUTH_TOKEN`, `ASAAS_SANDBOX` (= `true` quando configurado). O valor dos segredos é protegido e **não** foi lido ou divulgado.
+- Nova implantação com variáveis iniciada; versões novas requerem status READY antes de considerá-las operacionais.
+- Checkout `app/api/billing/checkout/route.ts`: endpoint oficial `https://api-sandbox.asaas.com/v3`, campos obrigatórios `name` e `chargeType: DETACHED`, validação de payload e resultado, remoção da pré-criação desnecessária de customer.
+- Webhook `app/api/billing/webhook/route.ts`: mesmo host oficial. Para cobrança com `paymentLink`, consultar o link por ID e obter `externalReference` autoritativa do Asaas; validar referência, tenant/plano/período e valores, mantendo `apply_verified_asaas_payment` idempotente.
+- Evidência de consulta SQL no banco: `asaas_processed_payments=0`, `billing_events=6`, `subscriptions=3`. A contagem é fotografia no momento da auditoria, não significa que houve cobrança real processada.
+- Teste HTTP pela origem pública não pôde ser executado porque o ambiente de execução não resolveu DNS externo; consulta de logs de runtime filtrada por billing não retornou eventos recentes.
+- **NÃO HOMOLOGADO:** falta testar uma transação integral no Sandbox (geração de link → pagamento simulado → evento recebido → conciliação RPC → mudança da assinatura), conferir token configurado no Asaas, logs de entrega e ausência de duplicidade em reenvio do mesmo evento.
