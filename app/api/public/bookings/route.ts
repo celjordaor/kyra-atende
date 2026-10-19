@@ -44,11 +44,71 @@ export async function POST(request: NextRequest) {
       notes, start_at, end_at,
     } = body
 
-    if (!tenant_id || !service_id || !client_name?.trim() || !start_at || !end_at) {
+    if (!tenant_id || !service_id || !client_name?.trim() || !start_at || !end_at || !client_phone?.trim()) {
       return NextResponse.json({ message: 'Parâmetros obrigatórios ausentes.' }, { status: 400 })
     }
 
     const supabase = adminClient()
+
+    const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+    const start = new Date(start_at)
+    const end = new Date(end_at)
+    if (
+      !uuidPattern.test(tenant_id) ||
+      !uuidPattern.test(service_id) ||
+      (professional_id && !uuidPattern.test(professional_id)) ||
+      !Number.isFinite(start.getTime()) ||
+      !Number.isFinite(end.getTime()) ||
+      start.getTime() <= Date.now() ||
+      end.getTime() <= start.getTime() ||
+      end.getTime() - start.getTime() > 8 * 60 * 60 * 1000 ||
+      client_name.trim().length > 200 ||
+      client_phone.trim().length > 40 ||
+      (client_email && client_email.length > 254) ||
+      (notes && notes.length > 2000)
+    ) {
+      return NextResponse.json({ message: 'Dados do agendamento inválidos.' }, { status: 400 })
+    }
+
+    // Nunca confiar nos IDs fornecidos pelo navegador. Todas as entidades
+    // relacionadas devem pertencer ao mesmo tenant e estar habilitadas.
+    const { data: tenant, error: tenantError } = await supabase
+      .from('tenants')
+      .select('id')
+      .eq('id', tenant_id)
+      .limit(1)
+      .maybeSingle()
+    if (tenantError || !tenant) {
+      return NextResponse.json({ message: 'Empresa não encontrada.' }, { status: 404 })
+    }
+
+    const { data: service, error: serviceError } = await supabase
+      .from('services')
+      .select('id, duration_minutes')
+      .eq('tenant_id', tenant_id)
+      .eq('id', service_id)
+      .eq('is_active', true)
+      .maybeSingle()
+    if (serviceError || !service) {
+      return NextResponse.json({ message: 'Serviço não disponível.' }, { status: 400 })
+    }
+
+    if (end.getTime() - start.getTime() !== service.duration_minutes * 60 * 1000) {
+      return NextResponse.json({ message: 'Duração incompatível com o serviço.' }, { status: 400 })
+    }
+
+    if (professional_id) {
+      const { data: professional, error: professionalError } = await supabase
+        .from('professionals')
+        .select('id')
+        .eq('tenant_id', tenant_id)
+        .eq('id', professional_id)
+        .eq('is_active', true)
+        .maybeSingle()
+      if (professionalError || !professional) {
+        return NextResponse.json({ message: 'Profissional não disponível.' }, { status: 400 })
+      }
+    }
 
     // ── Verificar conflito se tem profissional selecionado ───────────────────
     if (professional_id) {
