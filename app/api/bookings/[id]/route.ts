@@ -29,6 +29,15 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     status?:          string
   }
 
+  // Alterações de estado devem usar /confirm, /cancel e /complete,
+  // que validam transições atomically e impedem reabertura acidental.
+  if (status !== undefined) {
+    return NextResponse.json(
+      { message: 'Altere o status pelas ações Confirmar, Cancelar ou Concluir.' },
+      { status: 400 },
+    )
+  }
+
   // Monta apenas os campos enviados
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const patch: Record<string, any> = {}
@@ -38,7 +47,6 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
   if (start_at        !== undefined) patch.start_at        = start_at
   if (end_at          !== undefined) patch.end_at          = end_at
   if (notes           !== undefined) patch.notes           = notes ?? null
-  if (status          !== undefined) patch.status          = status
 
   if (Object.keys(patch).length === 0) {
     return NextResponse.json({ message: 'Nenhum campo para atualizar.' }, { status: 400 })
@@ -63,6 +71,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     .update(patch)
     .eq('id', params.id)
     .eq('tenant_id', tenantId)   // garante isolamento por tenant
+    .in('status', ['pending', 'confirmed']) // não editar agendamentos encerrados
     .select(`
       id, tenant_id, client_id, professional_id, service_id,
       client_name, client_phone, client_email,
