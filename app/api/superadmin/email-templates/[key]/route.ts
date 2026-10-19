@@ -40,6 +40,18 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     return NextResponse.json({ message: 'Body inválido' }, { status: 400 })
   }
 
+  if (!/^[a-z0-9][a-z0-9_-]{0,99}$/.test(params.key)) {
+    return NextResponse.json({ message: 'Identificador de template inválido.' }, { status: 400 })
+  }
+  if (!body || typeof body !== 'object' ||
+      typeof body.subject !== 'string' || !body.subject.trim() ||
+      body.subject.length > 250 ||
+      typeof body.html !== 'string' || !body.html.trim() ||
+      body.html.length > 100000 ||
+      (body.isActive !== undefined && typeof body.isActive !== 'boolean')) {
+    return NextResponse.json({ message: 'Assunto, conteúdo ou status inválidos.' }, { status: 400 })
+  }
+
   const admin = createAdminClient()
   const { error } = await admin
     .from('email_templates')
@@ -69,6 +81,9 @@ export async function DELETE(_req: NextRequest, { params }: Params) {
     return NextResponse.json({ message: 'Não autorizado' }, { status: 401 })
   }
 
+  if (!/^[a-z0-9][a-z0-9_-]{0,99}$/.test(params.key)) {
+    return NextResponse.json({ message: 'Identificador de template inválido.' }, { status: 400 })
+  }
   const admin = createAdminClient()
   const { error } = await admin
     .from('email_templates')
