@@ -288,3 +288,16 @@ Avisos de desempenho oficiais: 14 chaves estrangeiras sem índices auxiliares e 
 - Commit `314a10d6`: API `PUT /api/bookings/[id]` passa a tratar SQLSTATE `23P01` como 409; distingue 404 para registro ausente e 409 para registro encerrado, mantendo segurança do status. Erros internos retornam mensagem genérica e registram apenas código e tenant.
 - **Validação estática:** inspeção dos commits no GitHub confirmou os trechos alterados. Deploy mais recente `314a10d6` estava BUILDING na última consulta, portanto os ajustes novos ainda não foram homologados funcionalmente. Nenhuma migration, alteração de dados ou teste WhatsApp nesta rodada.
 - **Pendência:** regras de criação e reagendamento ainda precisam de teste E2E positivo, teste de conflito de profissional e avaliação de limite máximo de oito horas frente ao catálogo de serviços e agenda do tenant. Também permanece pendente linha de base independente de CI TypeScript/ESLint.
+
+
+## AUD-01 — Nova frente: APIs e controle de consumo de IA (19/10/2026)
+
+**Escopo explicitamente adiado:** horários disponíveis, horário de funcionamento/comercial, cálculo de slots e validações de duração máxima serão definidos por mecanismos futuros. A validação atual de intervalo de 8h não é critério definitivo de homologação. Não alterar o módulo de disponibilidade enquanto o novo desenho não estiver definido.
+
+**Revisão do chat interno IA:**
+- `POST /api/ai/chat` validava apenas presença de messages; sem validar roles, estrutura de dados, tamanho por mensagem, quantidade de turnos ou volume total antes da chamada Anthropic.
+- Commit `ae2c59dc`: exige array de 1 a 30 mensagens com role user/assistant e texto não vazio, máximo de 4.000 caracteres cada e 20.000 no total, último turno user; normaliza objetos ao shape esperado e rejeita entrada inválida com HTTP 400. A autenticação/tenant continua pela sessão.
+- Commit `f9120c07`: página `/ia` limita texto a 4.000 caracteres e restringe o histórico enviado a até 30 mensagens/20.000 caracteres, priorizando as mais recentes; o histórico visual anterior não é apagado.
+- **Risco de custo ainda aberto:** `getUsage` consulta saldo, a chamada Anthropic ocorre em seguida e `incrementUsage` é disparado em background sem transação de reserva; requisições simultâneas podem ultrapassar limite e falhas do incremento podem não ser observadas. Requer desenho de quota/reserva atômica, conciliação e testes concorrentes. Não alegar bloqueio financeiro rigoroso pela implementação atual.
+- **Outros endpoints examinados:** webhook Asaas exige token e reconfirma cobrança no provedor antes de RPC idempotente; cron reset counters exige segredo; `GET /api/public/slots` expõe apenas intervalos ocupados sob tenant fornecido e será revisitado na evolução de horários. Observações derivadas da leitura de rotas, não de teste E2E.
+- **Pendente:** comprovar GitHub Actions TypeScript/ESLint, revisão de permissões superadmin, rate limiting e testes de inputs malformados; release dos commits novos precisa de READY.
