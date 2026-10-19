@@ -29,13 +29,13 @@ export default function CadastroPage() {
 
     const supabase = createClient()
 
-    // 1. Cria o usuário no Supabase Auth
+    // 1. Cria o usuário no Supabase Auth. Nome/empresa ficam no user_metadata
+    //    para que o callback autenticado consiga provisionar após confirmação.
     const { data, error: signUpError } = await supabase.auth.signUp({
       email:    form.email,
       password: form.password,
       options: {
         data: { name: form.name, company: form.company },
-        // Após confirmar o e-mail, vai para /auth/callback que redireciona ao /dashboard
         emailRedirectTo: `${window.location.origin}/auth/callback`,
       },
     })
@@ -56,35 +56,30 @@ export default function CadastroPage() {
       return
     }
 
-    // 2. Cria tenant + perfil + subscription via API route server-side
-    const setupRes = await fetch('/api/auth/setup-tenant', {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({
-        userId:  data.user.id,
-        email:   form.email,
-        name:    form.name,
-        company: form.company,
-        phone:   form.phone,
-      }),
-    })
+    // 2. Quando há sessão imediata (autoconfirm), provisiona agora usando o
+    //    access token do próprio usuário. Sem sessão, o callback fará isso
+    //    somente após a confirmação do e-mail.
+    if (data.session?.access_token) {
+      const setupRes = await fetch('/api/auth/setup-tenant', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${data.session.access_token}`,
+        },
+      })
 
-    if (!setupRes.ok) {
-      const body = await setupRes.json().catch(() => ({}))
-      setError(body.error ?? 'Erro ao configurar sua empresa. Entre em contato com o suporte.')
-      setLoading(false)
+      if (!setupRes.ok) {
+        const body = await setupRes.json().catch(() => ({}))
+        setError(body.error ?? 'Erro ao configurar sua empresa. Entre em contato com o suporte.')
+        setLoading(false)
+        return
+      }
+
+      router.push('/dashboard')
+      router.refresh()
       return
     }
 
-    // 3. Se o Supabase exige confirmação de e-mail, mostra aviso
-    //    Se autoconfirm está ativo, a sessão já existe → vai ao dashboard
-    if (data.session) {
-      router.push('/dashboard')
-      router.refresh()
-    } else {
-      // Redireciona para página de "verifique seu e-mail"
-      router.push('/cadastro/confirmar?email=' + encodeURIComponent(form.email))
-    }
+    router.push('/cadastro/confirmar?email=' + encodeURIComponent(form.email))
   }
 
   return (
