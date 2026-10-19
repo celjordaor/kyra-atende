@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
   if (now.getUTCDate()!==1) return NextResponse.json({ reset:false, reason:'Fora do primeiro dia UTC' })
   const monthStart=new Date(Date.UTC(now.getUTCFullYear(),now.getUTCMonth(),1)).toISOString()
   const { data, error }=await supabase.from('usage_counters')
-    .update({value:0,reset_at:monthStart}).lt('reset_at',monthStart)
+    .update({value:0,reset_at:monthStart}).or(`reset_at.is.null,reset_at.lt.${monthStart}`)
     .select('tenant_id,key')
   if(error) {
     console.error('[cron/reset-counters]',error)
