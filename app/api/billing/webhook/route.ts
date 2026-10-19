@@ -90,6 +90,7 @@ export async function POST(request: NextRequest) {
     if (payment.paymentLink) {
       const linkId = String(payment.paymentLink)
       if (!/^[a-zA-Z0-9_-]{1,100}$/.test(linkId)) {
+        console.warn('[billing/webhook] 422', { reason: 'invalid_payment_link_id' })
         return NextResponse.json({ error: 'Link de pagamento inválido' }, { status: 422 })
       }
       const linkResponse = await fetch(`${baseUrl}/paymentLinks/${encodeURIComponent(linkId)}`, {
@@ -105,12 +106,14 @@ export async function POST(request: NextRequest) {
           typeof link.externalReference !== 'string' ||
           (reference && reference !== link.externalReference) ||
           (typeof link.value === 'number' && (typeof payment.value !== 'number' || Math.abs(link.value - payment.value) > 0.001))) {
+        console.warn('[billing/webhook] 422', { reason: 'payment_link_reference_mismatch', linkReferencePresent: typeof link.externalReference === 'string', paymentReferencePresent: Boolean(reference), linkValuePresent: typeof link.value === 'number' })
         return NextResponse.json({ error: 'Referência do link incompatível' }, { status: 422 })
       }
       reference = link.externalReference
     }
     const parts = typeof reference === 'string' ? reference.split('|') : []
     if (parts.length !== 3) {
+      console.warn('[billing/webhook] 422', { reason: 'missing_or_malformed_reference', paymentLinkPresent: Boolean(payment.paymentLink), externalReferencePresent: Boolean(reference) })
       return NextResponse.json({ error: 'Cobrança sem referência válida' }, { status: 422 })
     }
 
@@ -119,6 +122,7 @@ export async function POST(request: NextRequest) {
     if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(tenantId) ||
         !expectedAmount || typeof payment.value !== 'number' ||
         Math.abs(payment.value - expectedAmount) > 0.001) {
+      console.warn('[billing/webhook] 422', { reason: 'invalid_tenant_plan_period_or_amount', tenantIdFormatValid: /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(tenantId), validPlanPeriod: Boolean(expectedAmount), paymentValuePresent: typeof payment.value === 'number' })
       return NextResponse.json({ error: 'Referência ou valor incompatível' }, { status: 422 })
     }
 
