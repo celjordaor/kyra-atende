@@ -67,7 +67,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     )
 
   if (error) {
-    console.error('[email-templates PATCH]', error)
+    console.error('[email-templates PATCH]', { code: error.code })
     return NextResponse.json({ message: 'Não foi possível salvar o template.' }, { status: 500 })
   }
 
@@ -91,7 +91,7 @@ export async function DELETE(_req: NextRequest, { params }: Params) {
     .eq('name', params.key)
 
   if (error) {
-    console.error('[email-templates DELETE]', error)
+    console.error('[email-templates DELETE]', { code: error.code })
     return NextResponse.json({ message: 'Não foi possível restaurar o template.' }, { status: 500 })
   }
 
