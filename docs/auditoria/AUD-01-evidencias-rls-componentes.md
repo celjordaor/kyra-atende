@@ -371,3 +371,13 @@ Autorização recebida para utilizar contas de teste existentes. Ensaios executa
 - **Controle positivo de INSERT próprio**: cliente descartável com `tenant_id` do tenant A foi aceito (`inserted=1`) dentro da transação, seguida por rollback; nenhum dado de teste permaneceu.
 - Isso amplia a cobertura já documentada de SELECT, UPDATE e DELETE cruzados: as regras de `USING` e `WITH CHECK` se comportaram como esperado nos casos verificados.
 - Limitações: testes feitos na camada de banco com claims simuladas; ainda não abrangem autenticação real via HTTP, API com service_role, atualização/expiração de JWT, todos os perfis, nem todas as tabelas. Não afirmar homologação E2E ou ausência geral de vulnerabilidades.
+
+
+## AUD-01 — Backend privilegiado e redução de exposição nos logs (19/10/2026)
+
+- Inspeção estática de `lib/supabase/admin.ts`: `createAdminClient()` usa `SUPABASE_SERVICE_ROLE_KEY` do ambiente servidor, com sessão não persistida. Como service_role ignora RLS, qualquer rota que o utilize exige autorização e escopo explícitos; não foi realizado teste HTTP de autenticação real nesta etapa.
+- `app/api/superadmin/tenants/[id]/status/route.ts`: verifica sessão via `auth.getUser()`, papel `superadmin` recuperado no banco, UUID e allowlist de campos; a atualização é restrita pelo identificador do tenant alvo. Correção pontual commit `f3c90cbc`: substitui `console.error(..., error)` por log do código `error.code`; mensagem retornada ao cliente permanece genérica. Código pós-commit relido e confirmado.
+- `app/api/superadmin/email-templates/[key]/route.ts`: PATCH/DELETE exigem papel superadmin antes de operações privilegiadas, e logs de erro já se limitam a código. Seguem pendentes trilha imutável de mudanças, rate limiting e revisão de conteúdo HTML.
+- `app/api/bookings/route.ts` e `app/api/bookings/[id]/route.ts`: exigem `requireSession()`, usam o cliente de sessão e restringem consultas/alterações por `tenant_id`; no cancelamento lógico a atualização depende também de status permitido. Há retorno de `error.message` bruto na falha de GET de bookings; revisar exposição e padronizar erros sem mascarar o diagnóstico interno.
+- Estado do deployment após o commit `f3c90cbc` na consulta: **BUILDING**, não declarar READY nem homologado em produção até confirmação. Precedente `ac336cf2` encontrava-se READY.
+- Escopo desta rodada: revisão estática e alteração de log; nenhuma alteração de dados ou migrations. Testes HTTP reais por sessões de usuários e operações service_role continuam pendentes.
