@@ -2,7 +2,7 @@
  * lib/whatsapp.ts
  * Wrapper da Evolution API — lógica de negócio do WhatsApp.
  * Substitui o NestJS WhatsappService.
- * ⚠️ handleWebhook() deve ser chamado com `void` (fire-and-forget).
+ * Webhooks recebidos são aguardados pelo handler HTTP para reduzir perda de eventos.
  */
 import { createAdminClient } from '@/lib/supabase/admin'
 import { canUse, assertWithinLimit, incrementUsage, getLimit, getUsage } from '@/lib/entitlements'
@@ -37,8 +37,7 @@ export interface ConnectionStatus {
 // ── Webhook ───────────────────────────────────────────────────────────────────
 
 /**
- * Processa webhook da Evolution API em background (fire-and-forget).
- * Retorna imediatamente — não bloqueia a resposta HTTP.
+ * Processa webhook da Evolution API. O endpoint HTTP aguarda a execução.
  */
 export async function handleWebhook(payload: EvolutionWebhookPayload): Promise<void> {
   if (payload.event !== 'messages.upsert') return
@@ -162,6 +161,12 @@ export async function connectInstance(
   if (!url || !key) return { status: 'not_configured' }
 
   const appUrl = process.env.APP_URL ?? process.env.NEXT_PUBLIC_APP_URL ?? ''
+  const secret = process.env.EVOLUTION_WEBHOOK_SECRET ?? ''
+  // Não gerar uma instância aparentemente conectada, mas incapaz de
+  // autenticar eventos de entrada no webhook da aplicação.
+  if (secret.length < 32 || !/^https:\/\//.test(appUrl)) {
+    return { status: 'webhook_not_configured' }
+  }
 
   const res = await fetch(`${url}/instance/create`, {
     method: 'POST',
@@ -171,7 +176,15 @@ export async function connectInstance(
       qrcode:           true,
       integration:      'WHATSAPP-BAILEYS',
       webhookUrl:       `${appUrl}/api/whatsapp/webhook`,
-      webhookByEvents:  true,
+      webhookByEvents:  false,
+      webhook: {
+        enabled: true,
+        url: `${appUrl}/api/whatsapp/webhook`,
+        webhookByEvents: false,
+        webhookBase64: false,
+        events: ['MESSAGES_UPSERT', 'CONNECTION_UPDATE'],
+        headers: { 'x-kyra-webhook-secret': secret },
+      },
       webhookBase64:    false,
       events:           ['MESSAGES_UPSERT', 'CONNECTION_UPDATE'],
     }),
