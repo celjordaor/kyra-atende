@@ -12,10 +12,13 @@ export async function POST(request: NextRequest) {
   if (!session.ok) return session.response
 
   const { tenantId } = session
-  const body = await request.json()
-  const { plan, period } = body as { plan: string; period: string }
+  const body = await request.json().catch(() => null)
+  if (!body || typeof body !== 'object') {
+    return NextResponse.json({ error: 'Dados inválidos.' }, { status: 400 })
+  }
+  const { plan, period } = body as { plan?: unknown; period?: unknown }
 
-  if (!plan || !period) {
+  if (typeof plan !== 'string' || typeof period !== 'string') {
     return NextResponse.json({ error: 'Plano e período são obrigatórios.' }, { status: 400 })
   }
 
@@ -28,17 +31,13 @@ export async function POST(request: NextRequest) {
   const supabase = createAdminClient()
   const { data: tenant } = await supabase
     .from('tenants')
-    .select('name, owner_id')
+    .select('name')
     .eq('id', tenantId)
     .single()
 
   if (!tenant) {
     return NextResponse.json({ error: 'Tenant não encontrado.' }, { status: 404 })
   }
-
-  // Busca email do owner
-  const { data: { user: owner } } = await supabase.auth.admin.getUserById(tenant.owner_id)
-  const ownerEmail = owner?.email ?? ''
 
   // Chama Asaas
   const asaasKey     = process.env.ASAAS_API_KEY ?? ''
@@ -47,24 +46,9 @@ export async function POST(request: NextRequest) {
     ? 'https://api-sandbox.asaas.com/v3'
     : 'https://api.asaas.com/v3'
 
+  if (!asaasKey) return NextResponse.json({ error: 'Provedor de pagamento indisponível.' }, { status: 503 })
+
   try {
-    // Cria/busca customer
-    const customerRes = await fetch(`${asaasUrl}/customers?email=${encodeURIComponent(ownerEmail)}`, {
-      headers: { access_token: asaasKey },
-    })
-    const customerData = await customerRes.json()
-    let customerId = customerData.data?.[0]?.id
-
-    if (!customerId) {
-      const createRes = await fetch(`${asaasUrl}/customers`, {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json', access_token: asaasKey },
-        body:    JSON.stringify({ name: tenant.name, email: ownerEmail }),
-      })
-      const created = await createRes.json()
-      customerId = created.id
-    }
-
     // Cria payment link
     const paymentRes = await fetch(`${asaasUrl}/paymentLinks`, {
       method:  'POST',
