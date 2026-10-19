@@ -54,3 +54,9 @@ Em `lib/whatsapp.ts` a configuração de novas instâncias passou a usar `webhoo
 
 ## Deploy
 Commits recentes no `main` exigem verificação READY antes de considerá-los ativos. Não há homologação de webhook ponta-a-ponta, nem validação de build com TypeScript e ESLint sem dispensas.
+
+## Autorização de sessão por perfil — 19/10/2026
+- `lib/route-helpers.ts` agora verifica `profiles.tenant_id = user.app_metadata.tenant_id` para requisições normais autenticadas, usando a RLS do próprio perfil, além da validação do JWT por `auth.getUser()`.
+- Auditoria dos perfis: 3 administradores com claims coerentes; superadmin da plataforma sem claim de tenant; uma conta Auth ainda não provisionada. O superadmin usa autorização própria nas rotas administrativas.
+- Teste SQL transacional com JWT simulado para o próprio administrador: leitura do perfil retornou **1 linha**, sem alteração de dados.
+- A validação da nova API em sessão real e o comportamento de usuários com claim antiga ainda exigem teste E2E.
