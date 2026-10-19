@@ -88,12 +88,38 @@ export async function handleWebhook(payload: EvolutionWebhookPayload): Promise<v
       if (reply) {
         await sendMessage({ to: from, body: reply, tenantId })
       }
-    } catch {
-      void dispatchPush(tenantId, 'whatsapp.unhandled', { from })
+    } catch (err) {
+      // Persistência inbound já concluída: não reenviar a resposta
+      // automaticamente, porque uma falha de rede pode ocorrer depois de
+      // a Evolution ter entregue a mensagem.
+      console.error('[whatsapp] resposta automática não concluída', {
+        tenantId,
+        messageId,
+        failure: err instanceof Error ? err.message : 'unknown',
+      })
+      await dispatchPush(tenantId, 'whatsapp.unhandled', {
+        title: 'WhatsApp precisa de atendimento',
+        body: 'Uma mensagem não recebeu resposta automática. Verifique o histórico.',
+        url: '/whatsapp',
+      }).catch(pushErr => {
+        console.error('[whatsapp] falha ao enviar alerta de atendimento', {
+          tenantId,
+          errorType: pushErr instanceof Error ? pushErr.name : 'unknown',
+        })
+      })
     }
   } else {
-    // Sem IA: notifica o owner para responder manualmente
-    void dispatchPush(tenantId, 'whatsapp.unhandled', { from })
+    // Sem IA: encaminha a mensagem para atendimento humano.
+    await dispatchPush(tenantId, 'whatsapp.unhandled', {
+      title: 'Nova mensagem no WhatsApp',
+      body: 'Há uma mensagem aguardando atendimento.',
+      url: '/whatsapp',
+    }).catch(pushErr => {
+      console.error('[whatsapp] falha ao enviar alerta de atendimento', {
+        tenantId,
+        errorType: pushErr instanceof Error ? pushErr.name : 'unknown',
+      })
+    })
   }
 }
 
