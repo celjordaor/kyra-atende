@@ -221,3 +221,13 @@ Avisos de desempenho oficiais: 14 chaves estrangeiras sem índices auxiliares e 
 - Criado `scripts/check-migration-lineage.mjs` (commit `973c9107`), com hashes Git blob dos 6 arquivos-base e limite de versão `20261019181854`. O script falha se um mirror conhecido for alterado/removido ou novo arquivo reutilizar versão do histórico remoto. Ele é um **guard de baseline**, não uma reconciliação do histórico e não substitui revisão SQL.
 - Workflow `.github/workflows/aud-01-static-checks.yml` atualizado para executar o guard junto a TypeScript/ESLint (commit `2433f924`). Execução e exigência como check obrigatório ainda precisam de comprovação. Enquanto isso, `next.config.mjs` ainda não bloqueia erros estáticos no deploy.
 - **Nenhum DDL ou reparo do histórico do Supabase** nesta etapa; para reconciliar definitivamente, avaliar scripts remotos sem mirror, regras de bootstrapping, schema esperado e estratégia de baseline em ambiente seguro antes de mudar a tabela `supabase_migrations.schema_migrations`.
+
+
+## AUD-01 — Controle de transição na conclusão de agendamentos (19/10/2026)
+
+- Último baseline documental `894717e2` verificado `READY` antes da alteração.
+- Consulta somente leitura confirmou estados em uso: `pending`, `confirmed`, `completed`, `cancelled`.
+- Falha funcional encontrada em `POST /api/bookings/[id]/complete`: o `UPDATE` filtrava por ID e tenant, **não por estado**; reenvios poderiam alterar dados financeiros de agendamentos `completed` ou reabrir agendamentos `cancelled` como `completed`, gerando push novamente.
+- Commit `5d899396`: acrescentado filtro atômico `status IN ('pending','confirmed')` na atualização. Se nenhuma linha for atualizada, a API distingue ID inexistente (404) de estado já concluído/cancelado (409), sem retornar erro bruto de SQL. Validação financeira anterior permanece.
+- Sem DDL e sem alteração retroativa em agendamentos. Homologação E2E do novo comportamento e verificação de deployment ainda pendentes.
+- A implementação evita reaplicação concorrente da conclusão via API; não equivale a um controle transacional de todos os efeitos externos do fluxo.
