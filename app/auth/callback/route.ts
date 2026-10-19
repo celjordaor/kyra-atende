@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
       // A rota de conclusão valida novamente a sessão no backend.
       const destination = user?.user_metadata?.company && !user?.app_metadata?.tenant_id
         ? '/cadastro/concluir'
-        : next.startsWith('/') && !next.startsWith('//') ? next : '/dashboard'
+        : next.startsWith('/') && !next.startsWith('//') && !next.includes('\\') && !/[\u0000-\u001f]/.test(next) ? next : '/dashboard'
       return NextResponse.redirect(new URL(destination, origin))
     }
   }
