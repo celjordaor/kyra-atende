@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { UsageBar } from '@/components/molecules'
 import { Button, Alert } from '@/components/atoms'
+import { WhatsappRequests } from './WhatsappRequests'
 
 /* ─── Types ──────────────────────────────────────────────── */
 interface WaMessage {
@@ -322,6 +323,9 @@ export default function WhatsappClient({
           <UsageBar used={monthlyUsed} limit={monthlyLimit as number} label="Mensagens este mês" />
         </div>
       )}
+
+      {/* Autorização de contatos antes de armazenar mensagens / usar IA */}
+      <WhatsappRequests />
 
       {/* ── Message list ── */}
       {initialMessages.length === 0 ? (
