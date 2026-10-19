@@ -15,6 +15,8 @@ const PUBLIC_PATHS = new Set([
   '/',
   '/login',
   '/cadastro',
+  '/cadastro/confirmar',
+  '/auth/callback',
   '/recuperar-senha',
 ])
 
