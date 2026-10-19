@@ -110,9 +110,10 @@ interface SidebarProps {
   tenantName?: string
   tenantLogoUrl?: string
   onClose?: () => void
+  collapsed?: boolean
 }
 
-function Sidebar({ variant, tenantName, tenantLogoUrl, onClose }: SidebarProps) {
+function Sidebar({ variant, tenantName, tenantLogoUrl, onClose, collapsed = false }: SidebarProps) {
   const pathname = usePathname()
   const navItems = variant === 'superadmin' ? SUPERADMIN_NAV : ADMIN_NAV
   const isSuperAdmin = variant === 'superadmin'
@@ -122,7 +123,7 @@ function Sidebar({ variant, tenantName, tenantLogoUrl, onClose }: SidebarProps) 
   }
 
   return (
-    <aside style={{ width: '240px', minWidth: '240px', height: '100%', background: 'var(--surface-2)', borderRight: '1px solid var(--border)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+    <aside style={{ width: collapsed ? '64px' : '240px', minWidth: collapsed ? '64px' : '240px', transition: 'width 180ms ease, min-width 180ms ease', height: '100%', background: 'var(--surface-2)', borderRight: '1px solid var(--border)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       {/* Tenant branding — shown only on mobile where topbar logo is hidden */}
       <div className="kyra-sidebar-brand" style={{ padding: '16px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '10px', minHeight: '64px' }}>
         {tenantLogoUrl ? (
@@ -151,14 +152,14 @@ function Sidebar({ variant, tenantName, tenantLogoUrl, onClose }: SidebarProps) 
             const active = isActive(item.href)
             return (
               <li key={item.href}>
-                <Link href={item.href} onClick={onClose}
-                  style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '9px 12px', borderRadius: 'var(--r-md)', fontSize: '14px', fontWeight: active ? 600 : 400, color: active ? 'var(--brand)' : 'var(--ink-soft)', background: active ? 'var(--brand-faint)' : 'transparent', textDecoration: 'none', transition: 'background 150ms, color 150ms' }}
+                <Link href={item.href} onClick={onClose} title={collapsed ? item.label : undefined} aria-label={collapsed ? item.label : undefined}
+                  style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: collapsed ? '9px 14px' : '9px 12px', borderRadius: 'var(--r-md)', fontSize: '14px', fontWeight: active ? 600 : 400, color: active ? 'var(--brand)' : 'var(--ink-soft)', background: active ? 'var(--brand-faint)' : 'transparent', textDecoration: 'none', transition: 'background 150ms, color 150ms' }}
                   onMouseEnter={(e) => { if (!active) { e.currentTarget.style.background = 'var(--surface-3)'; e.currentTarget.style.color = 'var(--ink-body)' } }}
                   onMouseLeave={(e) => { if (!active) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--ink-soft)' } }}
                   aria-current={active ? 'page' : undefined}
                 >
                   <span style={{ color: active ? 'var(--brand)' : 'var(--muted)', flexShrink: 0, display: 'flex', alignItems: 'center' }}>{item.icon}</span>
-                  {item.label}
+                  {!collapsed && item.label}
                 </Link>
               </li>
             )
@@ -363,9 +364,10 @@ interface TopbarProps {
   onSignOut?: () => void
   headerActions?: React.ReactNode
   onHamburgerClick: () => void
+  menuExpanded: boolean
 }
 
-function Topbar({ userName, userEmail, userAvatarUrl, onSignOut, headerActions, onHamburgerClick }: TopbarProps) {
+function Topbar({ userName, userEmail, userAvatarUrl, onSignOut, headerActions, onHamburgerClick, menuExpanded }: TopbarProps) {
   return (
     <header
       id="kyra-topbar"
@@ -375,7 +377,9 @@ function Topbar({ userName, userEmail, userAvatarUrl, onSignOut, headerActions, 
       <button
         className="kyra-hamburger"
         onClick={onHamburgerClick}
-        aria-label="Abrir menu"
+        aria-label={menuExpanded ? 'Recolher menu' : 'Expandir menu'}
+        aria-expanded={menuExpanded}
+        aria-controls="kyra-sidebar-navigation"
         style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', padding: '6px', borderRadius: 'var(--r)', display: 'flex', alignItems: 'center', marginLeft: '-6px' }}
       >
         <IconMenu />
@@ -383,13 +387,7 @@ function Topbar({ userName, userEmail, userAvatarUrl, onSignOut, headerActions, 
 
       {/* Kyra brand */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
-        <img
-          src="/kyra-icon.png"
-          alt="Kyra Atende"
-          width={32}
-          height={32}
-          style={{ objectFit: 'contain', display: 'block' }}
-        />
+        <span aria-hidden="true" style={{ width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 9, background: 'var(--brand)', color: '#fff', fontWeight: 800, fontSize: 19, flexShrink: 0 }}>K</span>
         <span className="kyra-brand-name" style={{ fontSize: '16px', fontWeight: 700, color: 'var(--ink)', letterSpacing: '-0.3px', whiteSpace: 'nowrap' }}>
           Kyra Atende
         </span>
@@ -426,6 +424,7 @@ export function DashboardLayout({
   onSignOut,
 }: DashboardLayoutProps) {
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [desktopCollapsed, setDesktopCollapsed] = useState(false)
   const closeMobile = useCallback(() => setMobileOpen(false), [])
 
   return (
@@ -437,14 +436,15 @@ export function DashboardLayout({
         userAvatarUrl={userAvatarUrl}
         onSignOut={onSignOut}
         headerActions={headerActions}
-        onHamburgerClick={() => setMobileOpen(true)}
+        onHamburgerClick={() => { if (window.matchMedia('(max-width: 768px)').matches) setMobileOpen(v => !v); else setDesktopCollapsed(v => !v) }}
+        menuExpanded={!desktopCollapsed}
       />
 
       {/* Body: sidebar + content side by side */}
       <div style={{ display: 'flex', flex: 1, minHeight: 0, overflow: 'hidden' }}>
         {/* Desktop sidebar */}
-        <div className="kyra-sidebar-desktop" style={{ height: '100%', flexShrink: 0 }}>
-          <Sidebar variant={sidebarVariant} tenantName={tenantName} tenantLogoUrl={tenantLogoUrl} />
+        <div id="kyra-sidebar-navigation" className="kyra-sidebar-desktop" style={{ height: '100%', flexShrink: 0 }}>
+          <Sidebar variant={sidebarVariant} tenantName={tenantName} tenantLogoUrl={tenantLogoUrl} collapsed={desktopCollapsed} />
         </div>
 
         {/* Mobile overlay */}
@@ -473,7 +473,7 @@ export function DashboardLayout({
       <style>{`
         .kyra-sidebar-desktop { display: flex; }
         .kyra-sidebar-mobile  { display: none; }
-        .kyra-hamburger       { display: none; }
+        .kyra-hamburger       { display: flex; }
         .kyra-sidebar-brand   { display: none; }
         @media (max-width: 768px) {
           .kyra-sidebar-desktop { display: none; }
