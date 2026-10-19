@@ -58,16 +58,36 @@ export async function POST(
     })
     .eq('id', id)
     .eq('tenant_id', tenantId)
+    // Transição atômica: não reabrir cancelados nem concluir duas vezes.
+    .in('status', ['pending', 'confirmed'])
     .select(`
       id, client_id, start_at,
       price_charged, discount, payment_method,
       clients!bookings_client_id_fkey(id, name, status),
       professionals!bookings_professional_id_fkey(name)
     `)
-    .single()
+    .maybeSingle()
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  if (!data)  return NextResponse.json({ error: 'Agendamento não encontrado.' }, { status: 404 })
+  if (error) {
+    console.error('[bookings/complete] falha ao concluir agendamento', { id, tenantId, code: error.code })
+    return NextResponse.json({ error: 'Não foi possível concluir o agendamento.' }, { status: 500 })
+  }
+  if (!data) {
+    // Ausência após UPDATE condicionado também pode significar status já
+    // concluído/cancelado; retornar 409 em vez de registrar outra conclusão.
+    const { data: existing, error: lookupError } = await supabase
+      .from('bookings')
+      .select('status')
+      .eq('id', id)
+      .eq('tenant_id', tenantId)
+      .maybeSingle()
+    if (lookupError) return NextResponse.json({ error: 'Falha ao consultar agendamento.' }, { status: 500 })
+    if (!existing) return NextResponse.json({ error: 'Agendamento não encontrado.' }, { status: 404 })
+    return NextResponse.json(
+      { error: 'Este agendamento já foi concluído ou cancelado. Atualize a lista.' },
+      { status: 409 },
+    )
+  }
 
   // Promove lead → active (idempotente: só atualiza se status === 'lead')
   const clientId = data.client_id as string | null
