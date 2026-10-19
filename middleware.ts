@@ -31,6 +31,8 @@ const PUBLIC_PREFIXES = [
   '/sw.js',
   '/manifest',
   '/api/',
+  '/kyra-icon.png',
+  '/kyra-ai.png',
 ]
 
 function isPublicPath(pathname: string): boolean {
