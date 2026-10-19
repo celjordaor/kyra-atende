@@ -27,9 +27,22 @@ export async function POST(
     payment_method: string
   }
 
-  if (!payment_method) {
+  // O navegador não é uma fronteira de confiança: validar os valores
+  // financeiros também no endpoint, antes de alterar o agendamento.
+  const validMethods = new Set(['pix', 'dinheiro', 'débito', 'crédito', 'cortesia'])
+  if (
+    typeof price_charged !== 'number' ||
+    !Number.isFinite(price_charged) ||
+    price_charged < 0 ||
+    Math.abs(price_charged * 100 - Math.round(price_charged * 100)) > 1e-7 ||
+    typeof discount !== 'number' ||
+    !Number.isFinite(discount) ||
+    discount < 0 ||
+    discount > price_charged ||
+    !validMethods.has(payment_method)
+  ) {
     return NextResponse.json(
-      { error: 'payment_method é obrigatório.' },
+      { error: 'Valor cobrado, desconto ou forma de pagamento inválidos.' },
       { status: 400 },
     )
   }
