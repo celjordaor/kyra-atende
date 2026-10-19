@@ -73,9 +73,23 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     updated_at: new Date().toISOString(),
   }
 
-  const { error } = existing
+  let { error } = existing
     ? await admin.from('email_templates').update(templateValues).eq('id', existing.id)
     : await admin.from('email_templates').insert({ name: params.key, ...templateValues })
+
+  // Outra requisição pode ter criado a chave entre a leitura e o INSERT.
+  // Nesse caso, atualizar apenas os campos enviados, preservando is_active.
+  if (!existing && error?.code === '23505') {
+    const retry = await admin.from('email_templates')
+      .update(templateValues)
+      .eq('name', params.key)
+      .select('id')
+      .maybeSingle()
+    error = retry.error
+    if (!error && !retry.data) {
+      return NextResponse.json({ message: 'Template alterado simultaneamente. Tente novamente.' }, { status: 409 })
+    }
+  }
 
   if (error) {
     console.error('[email-templates PATCH]', { code: error.code })
