@@ -22,7 +22,7 @@ export async function POST(
     .eq('id', id)
     .eq('tenant_id', tenantId)
     .select(`
-      id, scheduled_at,
+      id, start_at,
       clients(name),
       professionals(name)
     `)
@@ -34,7 +34,7 @@ export async function POST(
   // Notifica cancelamento em background
   void dispatchPush(tenantId, 'booking_cancelled', {
     bookingId:    data.id,
-    scheduledAt:  data.scheduled_at,
+    scheduledAt:  data.start_at,
     clientName:   (data.clients as unknown as { name: string } | null)?.name ?? '',
     professional: (data.professionals as unknown as { name: string } | null)?.name ?? '',
   })
