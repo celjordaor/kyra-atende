@@ -78,6 +78,22 @@ export async function requireSession(): Promise<AuthResult> {
     return { ok: false, response: NextResponse.json({ error: 'Tenant não encontrado' }, { status: 404 }) }
   }
 
+  // O app_metadata é assinado pelo Supabase, mas pode ficar desatualizado
+  // caso um administrador altere o vínculo do usuário. Validar contra
+  // o perfil real, consultado sob as regras RLS do próprio usuário.
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('tenant_id')
+    .eq('id', user.id)
+    .maybeSingle()
+
+  if (profileError || !profile || profile.tenant_id !== tenantId) {
+    return { ok: false, response: NextResponse.json(
+      { error: 'Vínculo de empresa inválido. Entre novamente na sua conta.' },
+      { status: 403 },
+    ) }
+  }
+
   return {
     ok: true,
     userId:   user.id,
