@@ -52,11 +52,12 @@ export async function POST(request: NextRequest) {
     // Cria payment link
     const paymentRes = await fetch(`${asaasUrl}/paymentLinks`, {
       method:  'POST',
-      headers: { 'Content-Type': 'application/json', access_token: asaasKey },
+      headers: { 'Content-Type': 'application/json', 'User-Agent': 'KyraAtende/1.0', access_token: asaasKey },
       body:    JSON.stringify({
         name: `Kyra Atende — plano ${plan} (${period})`,
         chargeType: 'DETACHED',
         billingType: 'UNDEFINED',
+        dueDateLimitDays: 10,
         value: amount,
         description: `Kyra ${plan.charAt(0).toUpperCase() + plan.slice(1)} — ${period}`,
         externalReference: `${tenantId}|${plan}|${period}`,
