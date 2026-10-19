@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
     // Não confiar nos valores de tenant/plano enviados no webhook:
     // consultar o registro real do pagamento no provedor.
     const response = await fetch(`${baseUrl}/payments/${encodeURIComponent(paymentId)}`, {
-      headers: { access_token: apiKey, accept: 'application/json' },
+      headers: { access_token: apiKey, accept: 'application/json', 'User-Agent': 'KyraAtende/1.0' },
       cache: 'no-store',
       signal: AbortSignal.timeout(8000),
     })
@@ -93,7 +93,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Link de pagamento inválido' }, { status: 422 })
       }
       const linkResponse = await fetch(`${baseUrl}/paymentLinks/${encodeURIComponent(linkId)}`, {
-        headers: { access_token: apiKey, accept: 'application/json' },
+        headers: { access_token: apiKey, accept: 'application/json', 'User-Agent': 'KyraAtende/1.0' },
         cache: 'no-store',
         signal: AbortSignal.timeout(8000),
       })
