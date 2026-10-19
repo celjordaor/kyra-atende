@@ -400,3 +400,13 @@ Autorização recebida para utilizar contas de teste existentes. Ensaios executa
 - Revisões anteriores não encontraram tabela `public.*audit*` nem gravação de trilha de auditoria persistente nas rotas Superadmin verificadas. Não concluir que inexiste outra telemetria de aplicação/infraestrutura.
 - Proposta de controle: trilha de auditoria administrativa de somente acréscimo, acesso restrito ao backend privilegiado, com ator autenticado, ação, tipo e ID do recurso, data e ID de correlação; registrar apenas diferenças não sensíveis/permitidas. Exigir que o registro tenha comportamento de falha definido, sem permitir operações administrativas não auditadas. Não criar schema nem rotas antes de projetar e testar atomicidade e proteção de privilégios.
 - Pendentes: autenticação HTTP com usuários reais, testes dos endpoints privilegiados, validação de deploys pendentes e testes de emissão/persistência dos eventos administrativos. Nenhum dado de cliente ou migração foi alterado nesta rodada.
+
+
+## AUD-01 — Tentativas HTTP não destrutivas e estado do release (19/10/2026)
+
+- Teste de leitura HTTP usando recurso de acesso a deployment da Vercel, **sem credenciais de cliente e sem operações mutáveis**.
+- `GET /api/superadmin/tenants/<uuid>/status` no deployment `f3c90cbc`: recebeu HTTP **405 Method Not Allowed**, consistente com a rota que implementa somente PATCH. **Este 405 não testa a autorização PATCH**.
+- `GET /api/bookings` no mesmo deployment: ferramenta encontrou HTTP 401 `deployment_authentication_required` após redirecionamento; acesso barrado na camada de proteção do deployment. Não foi possível verificar o comportamento da API ou autenticação de usuário. Não interpretar como resposta 401 da própria API.
+- Última inspeção Vercel: `f3c90cbc` READY, `f6fdc1f4` QUEUED, `60a01648` BUILDING e `3a787fd8` QUEUED. Nenhuma confirmação de READY dos commits mais novos neste instante.
+- Próxima verificação exigida para homologação HTTP: sessão legítima de administrador de tenant A, tenant B e superadmin; executar requisições controladas nos métodos suportados, assegurando ausência de efeitos colaterais sobre registros não descartáveis. Preferir ambiente/fixtures exclusivos de homologação. Sem autenticação HTTP válida não foi possível homologar a matriz de permissões.
+- Nenhuma escrita ao banco, alteração de tenant, migration ou mudança de código funcional nesta etapa; apenas atualização documental.
