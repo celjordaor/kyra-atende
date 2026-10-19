@@ -84,7 +84,7 @@ export async function handleWebhook(payload: EvolutionWebhookPayload): Promise<v
 
   if (hasAiScheduling) {
     try {
-      const reply = await processWhatsappMessage(tenantId, from, body)
+      const reply = await processWhatsappMessage(tenantId, from, body, messageId)
       if (reply) {
         await sendMessage({ to: from, body: reply, tenantId })
       }
