@@ -87,6 +87,15 @@ export async function handleWebhook(payload: EvolutionWebhookPayload): Promise<v
       const reply = await processWhatsappMessage(tenantId, from, body, messageId)
       if (reply) {
         await sendMessage({ to: from, body: reply, tenantId })
+      } else {
+        // Resposta vazia também precisa de acompanhamento humano.
+        await dispatchPush(tenantId, 'whatsapp.unhandled', {
+          title: 'WhatsApp precisa de atendimento',
+          body: 'A IA não produziu uma resposta. Verifique a conversa.',
+          url: '/whatsapp',
+        }).catch(() => {
+          console.warn('[whatsapp] alerta de resposta vazia não entregue', { tenantId })
+        })
       }
     } catch (err) {
       // Persistência inbound já concluída: não reenviar a resposta
