@@ -34,14 +34,16 @@ export default async function AgendaPage() {
   let rawBookings: RawBooking[] = []
   let services: ServiceRow[]    = []
 
-  try {
-    ;[rawBookings, services] = await Promise.all([
-      apiGet<RawBooking[]>(`/bookings?dateFrom=${from.toISOString()}&dateTo=${to.toISOString()}`),
-      apiGet<ServiceRow[]>('/services'),
-    ])
-  } catch (err) {
-    console.error('[AgendaPage] API unavailable:', err)
-  }
+  // Carregar recursos independentemente evita que um erro em bookings
+  // esconda os serviços disponíveis no calendário.
+  const results = await Promise.allSettled([
+    apiGet<RawBooking[]>(`/bookings?dateFrom=${from.toISOString()}&dateTo=${to.toISOString()}`),
+    apiGet<ServiceRow[]>('/services'),
+  ] as const)
+  if (results[0].status === 'fulfilled') rawBookings = results[0].value
+  else console.error('[AgendaPage] falha ao carregar agendamentos:', results[0].reason)
+  if (results[1].status === 'fulfilled') services = results[1].value
+  else console.error('[AgendaPage] falha ao carregar serviços:', results[1].reason)
 
   const bookings: Booking[] = (rawBookings ?? [])
     .map((b) => ({
