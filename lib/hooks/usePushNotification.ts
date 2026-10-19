@@ -72,6 +72,9 @@ export function usePushNotification() {
     setLoading(true);
     setError(null);
     try {
+      if (window.location.origin !== 'https://www.kyraatende.com.br') {
+        throw new Error('Ative notificações somente em https://www.kyraatende.com.br.');
+      }
       if (!('serviceWorker' in navigator)) {
         throw new Error('Service Worker não suportado neste navegador.');
       }
