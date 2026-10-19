@@ -197,7 +197,8 @@ export async function connectInstance(
 
   const data = await res.json()
   return {
-    qrcode: data.qrcode?.base64,
+    qrcode: typeof data.qrcode?.base64 === 'string' ? data.qrcode.base64 :
+            typeof data.base64 === 'string' ? data.base64 : undefined,
     status: data.instance?.status ?? 'connecting',
   }
 }
@@ -213,7 +214,14 @@ async function getQRCode(tenantId: string): Promise<{ qrcode?: string; status: s
   if (!res.ok) return { status: 'error' }
 
   const data = await res.json()
-  return { qrcode: data.base64, status: data.code ? 'qr_ready' : 'connecting' }
+  // A Evolution v2 pode retornar base64 na raiz ou em qrcode.base64.
+  // "code" é o conteúdo bruto do QR, não uma imagem PNG.
+  const qrcode = (
+    typeof data.base64 === 'string' ? data.base64 :
+    typeof data.qrcode?.base64 === 'string' ? data.qrcode.base64 :
+    undefined
+  )
+  return { qrcode, status: qrcode ? 'qr_ready' : 'qr_unavailable' }
 }
 
 export async function getConnectionStatus(tenantId: string): Promise<ConnectionStatus> {
