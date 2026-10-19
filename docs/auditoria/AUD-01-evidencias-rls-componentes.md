@@ -277,3 +277,14 @@ Avisos de desempenho oficiais: 14 chaves estrangeiras sem índices auxiliares e 
 - `handleStatusChange` deixa de fazer fallback `PUT { status }` na rota genérica; ações de confirmar/cancelar usam apenas endpoints dedicados e conferem o estado no cliente, além dos guards atômicos do backend.
 - Inspeção independente do código confirmou presença das mudanças e ausência do antigo fallback e remoção local. O deployment `e2997ac0` estava BUILDING na última consulta; **teste E2E da interface ainda pendente**.
 - Observação: o botão lateral **Cancelar agendamento** nas ações da tabela continua com esse nome, mas não fica no modal e portanto não concorre visualmente com seu botão **Cancelar**. Revisar mensagens de erro na tabela e a UX de edição de horários passados em rodada futura.
+
+
+## AUD-01 — Consistência do formulário e dos intervalos de agendamento (19/10/2026)
+
+- Último baseline `e60dabe9` verificado **READY**. O ajuste do modal `e2997ac0` também estava READY; mantém `Cancelar` como fechamento sem salvar e `Desmarcar horário` para o cancelamento lógico.
+- **Falha encontrada:** formulário `AgendamentosClient.tsx` enviava `start_at/end_at` em toda edição, mesmo ao mudar somente notas. Como o backend exige início futuro para reagendamento, edições comuns de agendamentos antigos pendentes/confirmados podiam falhar.
+- Commit `00a20484`: frontend envia datas na edição apenas se diferirem das datas do agendamento original; valida início anterior ao fim, máximo de 8 horas e início futuro quando houve mudança de horário. Mantém campos originais em operações sem reagendamento.
+- Commit `fa7388a2`: API `POST /api/bookings` passa a validar intervalo futuro, início anterior ao fim e duração máxima de 8 horas, em linha com o PUT. O conflito de sobreposição SQLSTATE `23P01` retorna HTTP 409 com mensagem clara, sem expor o SQL bruto.
+- Commit `314a10d6`: API `PUT /api/bookings/[id]` passa a tratar SQLSTATE `23P01` como 409; distingue 404 para registro ausente e 409 para registro encerrado, mantendo segurança do status. Erros internos retornam mensagem genérica e registram apenas código e tenant.
+- **Validação estática:** inspeção dos commits no GitHub confirmou os trechos alterados. Deploy mais recente `314a10d6` estava BUILDING na última consulta, portanto os ajustes novos ainda não foram homologados funcionalmente. Nenhuma migration, alteração de dados ou teste WhatsApp nesta rodada.
+- **Pendência:** regras de criação e reagendamento ainda precisam de teste E2E positivo, teste de conflito de profissional e avaliação de limite máximo de oito horas frente ao catálogo de serviços e agenda do tenant. Também permanece pendente linha de base independente de CI TypeScript/ESLint.
