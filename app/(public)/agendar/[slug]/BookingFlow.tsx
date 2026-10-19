@@ -31,7 +31,7 @@ interface Prefill {
 }
 
 interface Props {
-  tenantId:      string
+  tenantSlug:    string
   services:      Service[]
   professionals: Professional[]
   prefill?:      Prefill
@@ -337,7 +337,7 @@ function DataRow({ icon, label, value }: { icon: string; label: string; value: s
 
 // ─── BookingFlow ──────────────────────────────────────────────────────────────
 
-export default function BookingFlow({ tenantId, services, professionals, prefill }: Props) {
+export default function BookingFlow({ tenantSlug, services, professionals, prefill }: Props) {
   const hasMultipleProfs = professionals.length > 1
 
   const [step,          setStep]          = useState<Step>('service')
@@ -382,7 +382,7 @@ export default function BookingFlow({ tenantId, services, professionals, prefill
         const dateStr   = selectedDay.toISOString().split('T')[0]
         const profParam = professional?.id ? `&professionalId=${professional.id}` : ''
         const res = await fetch(
-          `/api/public/slots?tenantId=${tenantId}&date=${dateStr}${profParam}`,
+          `/api/public/slots?tenantSlug=${encodeURIComponent(tenantSlug)}&date=${dateStr}${profParam}`,
         )
         if (res.ok) {
           const json = await res.json()
@@ -398,7 +398,7 @@ export default function BookingFlow({ tenantId, services, professionals, prefill
     }
 
     loadTakenSlots()
-  }, [step, selectedDay, professional, tenantId])
+  }, [step, selectedDay, professional, tenantSlug])
 
   async function handleConfirm() {
     if (!service || !selectedSlot || !clientName.trim() || !clientPhone) return
@@ -406,14 +406,13 @@ export default function BookingFlow({ tenantId, services, professionals, prefill
     setError(null)
 
     const startAt = new Date(selectedSlot)
-    const endAt   = addMinutes(startAt, service.duration_minutes)
 
     try {
       const res = await fetch('/api/public/bookings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          tenant_id:       tenantId,
+          tenant_slug:     tenantSlug,
           service_id:      service.id,
           professional_id: professional?.id ?? null,
           client_name:     clientName.trim(),
@@ -421,7 +420,6 @@ export default function BookingFlow({ tenantId, services, professionals, prefill
           client_email:    clientEmail.trim() || null,
           notes:           notes.trim() || null,
           start_at:        startAt.toISOString(),
-          end_at:          endAt.toISOString(),
         }),
       })
 
