@@ -24,15 +24,33 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Parâmetros obrigatórios: tenantId, date' }, { status: 400 })
   }
 
+  const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+  if (!uuidPattern.test(tenantId) || (professionalId && !uuidPattern.test(professionalId))) {
+    return NextResponse.json({ error: 'Identificador inválido.' }, { status: 400 })
+  }
+
   // Valida formato da data
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
     return NextResponse.json({ error: 'Formato de data inválido. Use YYYY-MM-DD' }, { status: 400 })
   }
 
+  const supabase = adminClient()
+
+  if (professionalId) {
+    const { data: professional, error } = await supabase
+      .from('professionals')
+      .select('id')
+      .eq('tenant_id', tenantId)
+      .eq('id', professionalId)
+      .eq('is_active', true)
+      .maybeSingle()
+    if (error || !professional) {
+      return NextResponse.json({ error: 'Profissional não disponível.' }, { status: 404 })
+    }
+  }
+
   const dayStart = `${date}T00:00:00.000Z`
   const dayEnd   = `${date}T23:59:59.999Z`
-
-  const supabase = adminClient()
 
   let query = supabase
     .from('bookings')
