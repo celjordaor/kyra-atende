@@ -26,8 +26,8 @@ export async function GET(request: NextRequest) {
       client_name, client_phone, client_email,
       start_at, end_at,
       status, notes, created_at,
-      professionals(id, name),
-      services(id, name, duration_minutes, price)
+      professionals!bookings_professional_id_fkey(id, name),
+      services!bookings_service_id_fkey(id, name, duration_minutes, price)
     `)
     .eq('tenant_id', tenantId)
     .order('start_at', { ascending: true })
@@ -109,8 +109,8 @@ export async function POST(request: NextRequest) {
       client_name, client_phone, client_email,
       start_at, end_at,
       status, notes, created_at,
-      professionals(id, name),
-      services(id, name, duration_minutes, price)
+      professionals!bookings_professional_id_fkey(id, name),
+      services!bookings_service_id_fkey(id, name, duration_minutes, price)
     `)
     .single()
 
