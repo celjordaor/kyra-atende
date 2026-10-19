@@ -39,6 +39,13 @@ BEGIN
       RAISE EXCEPTION 'Vínculo de tenant inconsistente'
         USING ERRCODE = '23514';
     END IF;
+    -- Recupera claim ausente de um cadastro legado/interrompido.
+    IF v_claim_tenant IS NULL THEN
+      UPDATE auth.users SET raw_app_meta_data =
+        coalesce(raw_app_meta_data,'{}'::jsonb)
+        || jsonb_build_object('tenant_id', v_tenant_id)
+      WHERE id = p_user_id;
+    END IF;
     -- Retorno idempotente após sucesso anterior.
     RETURN v_tenant_id;
   END IF;
