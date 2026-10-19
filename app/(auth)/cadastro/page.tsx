@@ -83,15 +83,15 @@ export default function CadastroPage() {
       return
     }
 
-    // 3. Se o Supabase exige confirmação de e-mail, mostra aviso
-    //    Se autoconfirm está ativo, a sessão já existe → vai ao dashboard
-    if (data.session) {
-      router.push('/dashboard')
-      router.refresh()
-    } else {
-      // Redireciona para página de "verifique seu e-mail"
-      router.push('/cadastro/confirmar?email=' + encodeURIComponent(form.email))
+    // Atualiza claims do JWT após a criação transacional do tenant.
+    const { error: refreshError } = await supabase.auth.refreshSession()
+    if (refreshError) {
+      setError('Conta criada. Faça login novamente para continuar.')
+      setLoading(false)
+      return
     }
+    router.replace('/dashboard')
+    router.refresh()
   }
 
   return (
