@@ -48,8 +48,8 @@ export async function POST(
     .select(`
       id, client_id, start_at,
       price_charged, discount, payment_method,
-      clients(id, name, status),
-      professionals(name)
+      clients!bookings_client_id_fkey(id, name, status),
+      professionals!bookings_professional_id_fkey(name)
     `)
     .single()
 
