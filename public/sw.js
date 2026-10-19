@@ -68,7 +68,16 @@ self.addEventListener('push', (e) => {
 self.addEventListener('notificationclick', (e) => {
   e.notification.close();
 
-  const url = e.notification.data?.url ?? '/dashboard';
+  // As notificações devem abrir o domínio canônico, mesmo se o usuário
+  // tiver inscrito um Service Worker num deployment temporário da Vercel.
+  const officialOrigin = 'https://www.kyraatende.com.br';
+  let url = officialOrigin + '/dashboard';
+  try {
+    const candidate = new URL(e.notification.data?.url ?? '/dashboard', officialOrigin);
+    if (candidate.origin === officialOrigin) url = candidate.href;
+  } catch {
+    // URL inválida: fallback seguro para o dashboard oficial.
+  }
 
   e.waitUntil(
     clients
