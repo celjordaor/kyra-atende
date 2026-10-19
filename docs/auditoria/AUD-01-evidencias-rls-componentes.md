@@ -268,3 +268,12 @@ Avisos de desempenho oficiais: 14 chaves estrangeiras sem índices auxiliares e 
 - **Bloqueio operacional:** a ferramenta GitHub não aceitou atualização do componente grande; nenhuma alteração neste arquivo foi confirmada. NÃO apresentar interface como corrigida nem simular commit.
 - Correção necessária: exigir confirmação clara de cancelamento lógico; mostrar botão `Cancelar agendamento` somente para `pending/confirmed`; preservar item no estado local com status `cancelled`; remover fallback PUT de mudanças de status e usar somente endpoints dedicados; expor erro ao operador.
 - Testes funcionais pendentes: a interface deve preservar histórico e manter filtros corretos, e o backend deve retornar 409 para tentativas em estados encerrados. O WhatsApp segue sem E2E por decisão anterior.
+
+
+## AUD-01 — Interface de desmarcação sem confundir o botão Cancelar (19/10/2026)
+
+- Decisão de UX: o botão **Cancelar** do modal continua exclusivamente fechando a edição **sem salvar**. O antigo botão destrutivo **Excluir** passa a ser **Desmarcar horário**, com confirmação de que o registro permanecerá no histórico como cancelado. Nenhum segundo botão com nome Cancelar foi criado.
+- Commit `e2997ac0` atualizou `app/(dashboard)/agendamentos/AgendamentosClient.tsx`: a ação de desmarcação só aparece para `pending/confirmed`, exige confirmação, chama DELETE (agora cancelamento lógico), e preserva o item local com status `cancelled` em vez de removê-lo da lista. O botão de fechamento `Cancelar` foi mantido.
+- `handleStatusChange` deixa de fazer fallback `PUT { status }` na rota genérica; ações de confirmar/cancelar usam apenas endpoints dedicados e conferem o estado no cliente, além dos guards atômicos do backend.
+- Inspeção independente do código confirmou presença das mudanças e ausência do antigo fallback e remoção local. O deployment `e2997ac0` estava BUILDING na última consulta; **teste E2E da interface ainda pendente**.
+- Observação: o botão lateral **Cancelar agendamento** nas ações da tabela continua com esse nome, mas não fica no modal e portanto não concorre visualmente com seu botão **Cancelar**. Revisar mensagens de erro na tabela e a UX de edição de horários passados em rodada futura.
