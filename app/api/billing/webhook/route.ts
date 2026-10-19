@@ -121,7 +121,21 @@ export async function POST(request: NextRequest) {
     }
     const parts = typeof reference === 'string' ? reference.split('|') : []
     if (parts.length !== 3) {
-      console.warn('[billing/webhook] 422', { reason: 'missing_or_malformed_reference', paymentLinkPresent: Boolean(payment.paymentLink), externalReferencePresent: Boolean(reference) })
+      if (!payment.paymentLink) {
+        // Asaas pode enviar eventos de outras cobranças da mesma conta.
+        // Referência sem nosso formato e sem paymentLink não comprova
+        // vínculo com o produto. Acknowledge SEM gravar nem conceder acesso.
+        console.info('[billing/webhook] evento externo ignorado', {
+          reason: 'unassociated_reference',
+          referencePresent: Boolean(reference),
+        })
+        return NextResponse.json({ received: true, ignored: true })
+      }
+      console.warn('[billing/webhook] 422', {
+        reason: 'missing_or_malformed_reference',
+        paymentLinkPresent: true,
+        externalReferencePresent: Boolean(reference),
+      })
       return NextResponse.json({ error: 'Cobrança sem referência válida' }, { status: 422 })
     }
 
