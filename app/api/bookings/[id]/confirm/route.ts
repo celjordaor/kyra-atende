@@ -20,11 +20,22 @@ export async function POST(
     .update({ status: 'confirmed' })
     .eq('id', id)
     .eq('tenant_id', tenantId)
+    .eq('status', 'pending')
     .select()
-    .single()
+    .maybeSingle()
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  if (!data)  return NextResponse.json({ error: 'Agendamento não encontrado.' }, { status: 404 })
+  if (error) {
+    console.error('[bookings/confirm] update failed', { tenantId, id, code: error.code })
+    return NextResponse.json({ error: 'Não foi possível confirmar o agendamento.' }, { status: 500 })
+  }
+  if (!data) {
+    const { data: existing, error: lookupError } = await supabase
+      .from('bookings').select('status')
+      .eq('id', id).eq('tenant_id', tenantId).maybeSingle()
+    if (lookupError) return NextResponse.json({ error: 'Não foi possível consultar o agendamento.' }, { status: 500 })
+    if (!existing) return NextResponse.json({ error: 'Agendamento não encontrado.' }, { status: 404 })
+    return NextResponse.json({ error: 'O status atual não permite esta operação. Atualize a lista.' }, { status: 409 })
+  }
 
   return NextResponse.json(data)
 }
