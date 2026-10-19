@@ -71,6 +71,7 @@ export async function processWhatsappMessage(
   tenantId: string,
   phone:    string,
   text:     string,
+  incomingMessageId?: string,
 ): Promise<string | null> {
   const supabase = createAdminClient()
 
@@ -100,7 +101,7 @@ export async function processWhatsappMessage(
     .replace('{booking_url}', bookingUrl)
 
   // Histórico recente para contexto
-  const history = await getRecentMessages(supabase, tenantId, phone, 8)
+  const history = await getRecentMessages(supabase, tenantId, phone, 8, incomingMessageId)
 
   const messages: ChatMessage[] = [
     ...history.map((m) => ({
@@ -153,14 +154,20 @@ async function getRecentMessages(
   tenantId: string,
   phone:    string,
   limit:    number,
+  incomingMessageId?: string,
 ): Promise<Array<{ direction: string; body: string }>> {
   const { data } = await supabase
     .from('whatsapp_messages')
-    .select('direction, body')
+    .select('direction, body, external_id')
     .eq('tenant_id', tenantId)
     .or(`from_number.eq.${phone},to_number.eq.${phone}`)
     .order('created_at', { ascending: false })
-    .limit(limit)
+    .limit(incomingMessageId ? limit + 1 : limit)
 
-  return ((data ?? []) as Array<{ direction: string; body: string }>).reverse()
+  // O webhook grava a mensagem atual antes de gerar a resposta. Evitar
+  // que ela apareça duas vezes: no histórico e no último turno do usuário.
+  const previous = ((data ?? []) as Array<{ direction: string; body: string; external_id: string | null }>)
+    .filter(m => !incomingMessageId || m.external_id !== incomingMessageId)
+    .slice(0, limit)
+  return previous.reverse().map(({ direction, body }) => ({ direction, body }))
 }
