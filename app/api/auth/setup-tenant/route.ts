@@ -45,62 +45,31 @@ export async function POST(request: NextRequest) {
     if (existingProfile || user.app_metadata?.tenant_id) {
       return NextResponse.json({ error: 'Usuário já possui uma empresa.' }, { status: 409 })
     }
-    const slugSuffix = Math.random().toString(36).slice(2, 6)
+    const slugSuffix = crypto.randomUUID().slice(0, 10)
     const slug       = toSlug(company, slugSuffix)
-    const trialEnd   = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString()
+    // A RPC é SECURITY DEFINER, acessível somente ao service_role.
+    // Toda a criação (tenant, perfil, assinatura e claim) ocorre em uma
+    // única transação; falhas provocam rollback automático.
+    const { data: tenantId, error: provisionError } = await supabase.rpc(
+      'create_tenant_with_owner',
+      {
+        p_user_id: user.id,
+        p_email: user.email!,
+        p_name: name.trim(),
+        p_company: company.trim(),
+        p_slug: slug,
+      },
+    )
 
-    // 1. Cria tenant
-    const { data: tenant, error: tenantError } = await supabase
-      .from('tenants')
-      .insert({
-        name:        company,
-        slug,
-        owner_id:    userId,
-        plan:        'cresce',
-        plan_status: 'trial',
-        trial_ends_at:  trialEnd,
-      })
-      .select('id')
-      .single()
-
-    if (tenantError) throw tenantError
-
-    const tenantId = tenant.id
-
-    // 2. Cria perfil
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .insert({
-        id:        userId,
-        tenant_id: tenantId,
-        name,
-        email,
-        role:      'admin',
-      })
-
-    if (profileError) throw profileError
-
-    // 3. Cria subscription trial
-    const { error: subError } = await supabase
-      .from('subscriptions')
-      .insert({
-        tenant_id:             tenantId,
-        plan:                  'cresce',
-        status:                'trial',
-        billing_cycle:         'monthly',
-        trial_ends_at:            trialEnd,
-        current_period_start:  new Date().toISOString(),
-        current_period_end:    trialEnd,
-      })
-
-    if (subError) throw subError
-
-    // 4. Injeta tenant_id no app_metadata do usuário (para o JWT)
-    const { error: metaError } = await supabase.auth.admin.updateUserById(userId, {
-      app_metadata: { tenant_id: tenantId },
-    })
-
-    if (metaError) throw metaError
+    if (provisionError) {
+      if (provisionError.code === '23505') {
+        return NextResponse.json(
+          { error: 'Cadastro já realizado ou em processamento. Faça login novamente.' },
+          { status: 409 },
+        )
+      }
+      throw provisionError
+    }
 
     return NextResponse.json({ ok: true, tenantId })
   } catch (err: unknown) {
