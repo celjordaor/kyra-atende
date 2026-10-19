@@ -11,10 +11,10 @@ import { createAdminClient } from '@/lib/supabase/admin'
 type Params = { params: { key: string } }
 
 // ── Verifica se o usuário é superadmin ──────────────────────────────────────
-async function assertSuperAdmin(): Promise<401 | 403 | null> {
+async function assertSuperAdmin(): Promise<{ status: 401 | 403 } | { userId: string }> {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return 401
+  if (!user) return { status: 401 }
 
   const { data: profile } = await supabase
     .from('profiles')
@@ -22,15 +22,15 @@ async function assertSuperAdmin(): Promise<401 | 403 | null> {
     .eq('id', user.id)
     .single()
 
-  if (profile?.role !== 'superadmin') return 403
-  return null
+  if (profile?.role !== 'superadmin') return { status: 403 }
+  return { userId: user.id }
 }
 
 // ── PATCH — salvar template ─────────────────────────────────────────────────
 export async function PATCH(req: NextRequest, { params }: Params) {
-  const authError = await assertSuperAdmin()
-  if (authError) {
-    return NextResponse.json({ message: authError === 401 ? 'Não autorizado' : 'Acesso restrito' }, { status: authError })
+  const authorization = await assertSuperAdmin()
+  if ('status' in authorization) {
+    return NextResponse.json({ message: authorization.status === 401 ? 'Não autorizado' : 'Acesso restrito' }, { status: authorization.status })
   }
 
   let body: { subject?: string; html?: string; isActive?: boolean }
@@ -53,49 +53,13 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   }
 
   const admin = createAdminClient()
-  // Atualização parcial preserva is_active quando não enviado; no INSERT,
-  // o padrão do banco (true) é utilizado apenas para um template novo.
-  const { data: existing, error: lookupError } = await admin
-    .from('email_templates')
-    .select('id')
-    .eq('name', params.key)
-    .maybeSingle()
-
-  if (lookupError) {
-    console.error('[email-templates PATCH lookup]', { code: lookupError.code })
-    return NextResponse.json({ message: 'Não foi possível salvar o template.' }, { status: 500 })
-  }
-
-  const templateValues = {
-    subject: body.subject,
-    body_html: body.html,
-    ...(body.isActive !== undefined ? { is_active: body.isActive } : {}),
-    updated_at: new Date().toISOString(),
-  }
-
-  const write = existing
-    ? await admin.from('email_templates').update(templateValues).eq('id', existing.id).select('id').maybeSingle()
-    : await admin.from('email_templates').insert({ name: params.key, ...templateValues }).select('id').maybeSingle()
-  let error = write.error
-
-  // A linha pode ter sido excluída entre a leitura e o UPDATE.
-  if (existing && !error && !write.data) {
-    return NextResponse.json({ message: 'Template alterado simultaneamente. Tente novamente.' }, { status: 409 })
-  }
-
-  // Outra requisição pode ter criado a chave entre a leitura e o INSERT.
-  // Nesse caso, atualizar apenas os campos enviados, preservando is_active.
-  if (!existing && error?.code === '23505') {
-    const retry = await admin.from('email_templates')
-      .update(templateValues)
-      .eq('name', params.key)
-      .select('id')
-      .maybeSingle()
-    error = retry.error
-    if (!error && !retry.data) {
-      return NextResponse.json({ message: 'Template alterado simultaneamente. Tente novamente.' }, { status: 409 })
-    }
-  }
+  const { error } = await admin.rpc('audit_save_email_template', {
+    p_actor: authorization.userId,
+    p_name: params.key,
+    p_subject: body.subject,
+    p_html: body.html,
+    p_is_active: body.isActive ?? null,
+  })
 
   if (error) {
     console.error('[email-templates PATCH]', { code: error.code })
@@ -107,19 +71,19 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 
 // ── DELETE — resetar para padrão ────────────────────────────────────────────
 export async function DELETE(_req: NextRequest, { params }: Params) {
-  const authError = await assertSuperAdmin()
-  if (authError) {
-    return NextResponse.json({ message: authError === 401 ? 'Não autorizado' : 'Acesso restrito' }, { status: authError })
+  const authorization = await assertSuperAdmin()
+  if ('status' in authorization) {
+    return NextResponse.json({ message: authorization.status === 401 ? 'Não autorizado' : 'Acesso restrito' }, { status: authorization.status })
   }
 
   if (!/^[a-z0-9][a-z0-9_-]{0,99}$/.test(params.key)) {
     return NextResponse.json({ message: 'Identificador de template inválido.' }, { status: 400 })
   }
   const admin = createAdminClient()
-  const { error } = await admin
-    .from('email_templates')
-    .delete()
-    .eq('name', params.key)
+  const { error } = await admin.rpc('audit_delete_email_template', {
+    p_actor: authorization.userId,
+    p_name: params.key,
+  })
 
   if (error) {
     console.error('[email-templates DELETE]', { code: error.code })
