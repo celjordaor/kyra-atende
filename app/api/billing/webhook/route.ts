@@ -87,6 +87,14 @@ export async function POST(request: NextRequest) {
     // Recuperar a referência do próprio link, sempre pela API autenticada,
     // em vez de depender de ela ser copiada para a cobrança.
     let reference = payment.externalReference
+    // O webhook do Asaas pode entregar cobranças que não foram emitidas
+    // pelo Kyra Atende. Sem link E sem referência não há associação
+    // comprovável a qualquer tenant: reconhecer sem conciliar nem conceder
+    // direitos, evitando retentativas intermináveis de eventos externos.
+    if (!payment.paymentLink && !reference) {
+      console.info('[billing/webhook] evento sem vínculo com Kyra Atende ignorado')
+      return NextResponse.json({ received: true, ignored: true })
+    }
     if (payment.paymentLink) {
       const linkId = String(payment.paymentLink)
       if (!/^[a-zA-Z0-9_-]{1,100}$/.test(linkId)) {
