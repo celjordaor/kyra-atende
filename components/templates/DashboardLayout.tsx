@@ -387,7 +387,13 @@ function Topbar({ userName, userEmail, userAvatarUrl, onSignOut, headerActions, 
 
       {/* Kyra brand */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
-        <span aria-hidden="true" style={{ width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 9, background: 'var(--brand)', color: '#fff', fontWeight: 800, fontSize: 19, flexShrink: 0 }}>K</span>
+        <img
+          src="/kyra-icon.png"
+          alt="Kyra Atende"
+          width={32}
+          height={32}
+          style={{ objectFit: 'contain', display: 'block', flexShrink: 0 }}
+        />
         <span className="kyra-brand-name" style={{ fontSize: '16px', fontWeight: 700, color: 'var(--ink)', letterSpacing: '-0.3px', whiteSpace: 'nowrap' }}>
           Kyra Atende
         </span>
