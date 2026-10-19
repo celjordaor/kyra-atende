@@ -204,3 +204,11 @@ Avisos de desempenho oficiais: 14 chaves estrangeiras sem índices auxiliares e 
 **Segurança atual:** Security Advisor 2 INFO (`rls_enabled_no_policy`, incluindo tabela de fila intencionalmente inacessível a papéis públicos), 2 WARN (`btree_gist` no schema public; leaked-password protection desativado). Tabela da fila tem 0 solicitações pendentes; não houve teste de inbound.
 
 **Próximas ações:** (1) obter SQL exato/assinaturas das 12 migrations aplicadas e conciliar inventário local; (2) executar CI estático com logs e corrigir erros de maneira incremental; (3) só então tornar checks bloqueantes; (4) observar produção após retestes E2E. Nenhum DDL, alteração de Auth, índice ou configuração de Vercel executado nesta revisão.
+
+
+## AUD-01 — Preservação do SQL histórico remoto e baseline de CI (19/10/2026)
+
+- Consulta somente leitura de `supabase_migrations.schema_migrations` recuperou os `statements` completos das **12 migrations** aplicadas em produção no projeto `zrszytzlovthyezozqhj`.
+- Os 12 scripts foram arquivados integralmente em `docs/auditoria/sql-remoto-aplicado/`, com cabeçalhos de procedência e manifesto `README.md` (commit `17cc12a1`). O histórico local executável continua com seis arquivos sob `supabase/migrations`; **não foi reconciliado ou reparado automaticamente**.
+- O diretório de arquivo é apenas evidência, deliberadamente fora do pipeline de migrations; nenhuma alteração de banco foi executada na exportação. Próxima etapa: comparação por efeitos e ordenação, escolha de baseline sem reaplicação.
+- Workflow `.github/workflows/aud-01-static-checks.yml` existe e declara TypeScript/ESLint, mas o status combinado GitHub do release `0188e66f` mostrou somente `Vercel: success`. Não foi obtida prova de resultado dos checks estáticos; não inferir que passaram. Não remover os bypasses de `next.config.mjs` até baseline de erros e checagem de branch protection.
