@@ -146,3 +146,13 @@ Avisos de desempenho oficiais: 14 chaves estrangeiras sem índices auxiliares e 
 - Commits `f12f03df` e `4a39ae1c`: o processamento passa o `messageId`; `getRecentMessages` remove do histórico o registro de `external_id` igual ao evento atual e o acrescenta uma única vez como último turno. Nenhuma alteração no histórico persistido ou nos índices.
 - Falha da IA / Evolution após persistência: ainda não há fila ou estado de processamento que permita reexecução segura; a camada `lib/ai.ts` também captura erros da Anthropic e retorna `null`. Exige desenho de outbox, estado por mensagem, lock e idempotência de envio antes de habilitar retentativas.
 - Deploy dos commits de WhatsApp foi solicitado automaticamente pelo push à `main`; validar `READY` e tráfego real antes de homologar esta mudança.
+
+
+## AUD-01 — WhatsApp: falha de IA e recuperação manual (19/10/2026)
+
+- Em produção, release `bccd379c` verificado `READY` antes das alterações desta etapa.
+- Inspeção direta `public.whatsapp_messages`: 1 registro outbound e **0 inbound** na ocasião. A conexão WhatsApp ter sido realizada **não comprova** recebimento por webhook autenticado. Teste real inbound e confirmação de payload/headers permanece bloqueador de homologação.
+- A camada `lib/ai.ts` capturava falhas da Anthropic e retornava `null`, indistinguível da ausência legítima de resposta; não gerava alerta ao operador. Commit `fb49bc4d`: erro registrado em log estruturado sem corpo da mensagem ou credencial e propagado ao chamador.
+- `lib/whatsapp.ts` passa a enviar push de atendimento manual quando a IA falha ou não retorna resposta, sem disparar outra resposta WhatsApp automaticamente. Commits `2cee511c` e `bbab3ebf`. Falhas de push são registradas sem invalidar o webhook que já persistiu o inbound.
+- **Limite declarado:** ainda não existe fila/outbox nem estado `pending/processing/sent/failed` por mensagem; também não há retentativas seguras de envio. Se Evolution receber pedido e a conexão cair antes da confirmação, não é seguro repetir sem idempotência comprovada. Esta fase só melhora a observabilidade e o fallback humano.
+- Após deploy, validar recebimento, histórico, resposta IA, alerta de falha e não duplicidade por reenvio do mesmo evento. Não modificar instâncias Evolution/Prontim/n8n compartilhadas.
