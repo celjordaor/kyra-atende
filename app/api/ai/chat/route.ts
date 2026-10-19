@@ -15,12 +15,31 @@ export async function POST(request: NextRequest) {
 
   const { tenantId } = session
 
-  const body = await request.json()
-  const messages = body?.messages as ChatMessage[] | undefined
-
-  if (!messages?.length) {
-    return NextResponse.json({ error: 'Nenhuma mensagem enviada.' }, { status: 400 })
+  // Entrada não confiável: limitar custo, tamanho do histórico e formato
+  // antes de enviar qualquer conteúdo ao provedor de IA.
+  const rawBody: unknown = await request.json().catch(() => null)
+  const rawMessages = rawBody && typeof rawBody === 'object' && 'messages' in rawBody
+    ? rawBody.messages
+    : null
+  if (!Array.isArray(rawMessages) || rawMessages.length === 0 ||
+      rawMessages.length > 30 ||
+      !rawMessages.every((m: unknown) =>
+        m !== null && typeof m === 'object' &&
+        'role' in m && (m.role === 'user' || m.role === 'assistant') &&
+        'content' in m && typeof m.content === 'string' &&
+        m.content.trim().length > 0 && m.content.length <= 4000
+      ) ||
+      rawMessages.reduce((total: number, m: ChatMessage) => total + m.content.length, 0) > 20000 ||
+      rawMessages[rawMessages.length - 1].role !== 'user') {
+    return NextResponse.json(
+      { error: 'Histórico inválido. Envie até 30 mensagens de texto, com até 4.000 caracteres cada e 20.000 no total.' },
+      { status: 400 },
+    )
   }
+  const messages: ChatMessage[] = rawMessages.map((m: ChatMessage) => ({
+    role: m.role,
+    content: m.content,
+  }))
 
   // Verifica limite de tokens de IA
   const limit = await getLimit(tenantId, 'ai_chat_monthly_limit')
