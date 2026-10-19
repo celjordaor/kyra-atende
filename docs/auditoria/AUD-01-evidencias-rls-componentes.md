@@ -457,3 +457,15 @@ Autorização recebida para utilizar contas de teste existentes. Ensaios executa
 - A operação de template continua sujeita a corrida de conteúdo (última gravação prevalece); para garantia forte de consistência e auditoria, planejar update atômico com controle de versão/etag, proteção de trilha de alterações e casos de teste automatizados.
 - Não foram criadas sessions reais de Auth; as avaliações SQL anteriores com claims simuladas não equivalem a chamadas HTTP autenticadas. **Não homologar a AUD-01 integralmente sem esses testes**.
 - Nesta rodada: um ajuste de código, verificação de permissões e atualização documental. Sem migrations nem modificações de dados reais.
+
+
+## AUD-01 — Rodada agrupada: liberação, checagens automáticas e pendências finais (19/10/2026)
+
+- Vercel: na consulta desta rodada, o commit `00c4b9f6` (documentação do tratamento de concorrência) alcançou READY; o commit `3378eeb0` ainda BUILDING e `19bc7f51` QUEUED. O estado dos deploys muda; considerar apenas a última verificação e não confundir READY com teste funcional.
+- `email_templates` ainda utiliza `service_role` apenas após conferência de superadmin por sessão; PATCH diferencia 401/403 e atualiza sem trocar `is_active` omitido; trata conflito de INSERT 23505 e linha removida entre SELECT e UPDATE como HTTP 409. Revisão estática reconfirmada; teste HTTP de perfis e concorrência segue pendente.
+- `GET /api/bookings` foi relido: resposta HTTP 500 não expõe mais `error.message` bruto.
+- Supabase: consulta `has_column_privilege` reconfirmou `UPDATE=false` para `authenticated` em `profiles.role` e `profiles.tenant_id`. RLS de leitura e escrita intertenant foi exercitada em rodadas anteriores com transações revertidas, sem vulnerabilidade comprovada nos cenários exercitados.
+- **Novo controle de regressão:** commit `03134e8b` criou `.github/workflows/aud-01-quality.yml` para executar `pnpm install --frozen-lockfile`, `tsc --noEmit --incremental false` e `pnpm lint -- --no-cache` em push de main e PRs. Arquivo GitHub relido e confirmado. **Execução/resultado de GitHub Actions ainda não confirmado**, portanto não alegar qualidade aprovada.
+- **Bloqueadores de encerramento:** testes HTTP com sessões legítimas de superadmin/administradores de diferentes tenants (inclusive negação 401/403); confirmação de resultado verde de CI; prova de integridade de templates via rota com mudanças reais; trilha de auditoria administrativa durável e protegida para alterações de tenant/template.
+- Controles com acompanhamento pós-AUD-01: proteção de abuso/rate limiting, sanitização/preview HTML e política definida para edições simultâneas de conteúdo (last-write-wins vs controle de versão). Não há evidência suficiente para os marcar como corrigidos.
+- Nesta rodada, não houve DDL, migrations, alterações em dados de clientes ou templates; apenas criação de workflow CI e documentação consolidada.
