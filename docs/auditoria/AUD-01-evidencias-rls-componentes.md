@@ -231,3 +231,13 @@ Avisos de desempenho oficiais: 14 chaves estrangeiras sem índices auxiliares e 
 - Commit `5d899396`: acrescentado filtro atômico `status IN ('pending','confirmed')` na atualização. Se nenhuma linha for atualizada, a API distingue ID inexistente (404) de estado já concluído/cancelado (409), sem retornar erro bruto de SQL. Validação financeira anterior permanece.
 - Sem DDL e sem alteração retroativa em agendamentos. Homologação E2E do novo comportamento e verificação de deployment ainda pendentes.
 - A implementação evita reaplicação concorrente da conclusão via API; não equivale a um controle transacional de todos os efeitos externos do fluxo.
+
+
+## AUD-01 — Transições de estado de agendamentos (19/10/2026)
+
+- **Confirmação:** `POST /api/bookings/[id]/confirm` não filtrava por estado anterior e podia reabrir agendamentos cancelados/concluídos como confirmados. Commit `a2c81480` limita o UPDATE atômico a `status='pending'` e distingue 404 (ausente) de 409 (transição proibida).
+- **Cancelamento:** `POST /api/bookings/[id]/cancel` também não filtrava estado e utilizava joins relacionais ambíguos `clients(name)`/`professionals(name)`. Commit `6d3f6bac` limita o UPDATE a `pending/confirmed`, usa chaves estrangeiras explícitas nos joins e distingue 404 de 409. Evita push repetido por duplo cancelamento.
+- **Edição geral:** `PUT /api/bookings/[id]` aceitava `status` arbitrário e permitia alterar dados de agendamentos encerrados. Commit `fdb0aac1` proíbe mudar status pelo PUT e limita alterações comuns a `pending/confirmed`. Estados passam exclusivamente pelos endpoints específicos confirm/cancel/complete.
+- **Exclusão:** `DELETE /api/bookings/[id]` ainda permite exclusão física de registros por ID + tenant; revisar política funcional de retenção, rastreabilidade financeira e eventual arquivamento/cancelamento lógico antes de modificar. Não realizar exclusões retroativas.
+- **Evidências:** consultas estáticas ao GitHub confirmaram filtros condicionais nos três endpoints; última publicação anterior `8006e095` estava READY. Os deployments das novas alterações ainda não tiveram READY confirmado. Regressões funcionais e consumo pelo frontend precisam de E2E.
+- **Banco:** nenhuma migration, DDL ou alteração de dados aplicada nesta rodada. Fluxo WhatsApp continua com teste E2E adiado conforme decisão.
