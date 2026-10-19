@@ -249,3 +249,12 @@ Avisos de desempenho oficiais: 14 chaves estrangeiras sem índices auxiliares e 
 - Em `PUT /api/bookings/[id]`, datas podiam ser alteradas sem verificação de intervalo. Commit `4906af74`: a API exige início/fim em conjunto, datas válidas e futuras, fim posterior ao início e duração até 8 horas. Restrição de status `pending/confirmed` segue vigente.
 - **Exclusão física permanece pendente:** `DELETE /api/bookings/[id]` continua removendo dados por ID + tenant, inclusive potencialmente registros concluídos. A proteção de retenção foi analisada, mas **não foi implantada nesta etapa**; decidir regra de retenção, exclusão lógica ou arquivamento e verificar dependências antes de modificar.
 - Sem DDL nem alterações em dados existentes. Testes E2E ainda pendentes para reagendamento e para o webhook WhatsApp; deployment da validação precisa ser confirmado.
+
+
+## AUD-01 — Exclusão física substituída por cancelamento lógico (19/10/2026)
+
+- `DELETE /api/bookings/[id]` eliminava fisicamente qualquer registro do tenant, inclusive agendamentos `completed` com preço, desconto e forma de pagamento. Inspeção de `pg_constraint` não encontrou FKs apontando para `bookings`, mas isso não autoriza apagar histórico financeiro.
+- Commit `4a9676d5`: a rota DELETE agora **atualiza o status para `cancelled` somente se estiver `pending` ou `confirmed`**, usando uma transição atômica e mantendo o contrato HTTP 204 em caso de sucesso. IDs inexistentes retornam 404; agendamentos concluídos ou já cancelados retornam 409. Não há operação física de DELETE nessa rota.
+- **Desalinhamento de interface:** `app/(dashboard)/agendamentos/AgendamentosClient.tsx` continua exibindo botão `Excluir` e removendo o registro do estado local após DELETE; é necessário renomear a ação `Cancelar agendamento`, explicar que histórico será preservado, e manter o registro como cancelado após sucesso. A tentativa de atualização deste arquivo grande não foi aceita pela ferramenta; **não declarar frontend corrigido** até commit verificado.
+- **Outras lacunas:** `handleStatusChange` nesse cliente tenta usar PUT genérico para status fora de `confirmed/cancelled`, que agora rejeita alterações de status; revisar UX dos botões e usar exclusivamente endpoints dedicados, incluindo `complete`. Validação de datas do reagendamento exige início e fim juntos.
+- Nenhum dado do Supabase foi modificado pela auditoria; corrigir frontend e homologar exclusão lógica antes de encerrar o item.
