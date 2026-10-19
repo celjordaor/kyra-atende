@@ -15,13 +15,20 @@ export default function NovaSenhaPage() {
   const [error,     setError]     = useState<string | null>(null)
   const [ready,     setReady]     = useState(false)
 
-  // Supabase troca o hash da URL por uma sessão assim que a página carrega
+  // A recuperação utiliza /auth/callback (PKCE), que troca o código
+  // por uma sessão antes de abrir esta página. Confirmar essa sessão.
   useEffect(() => {
+    let mounted = true
     const supabase = createClient()
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'PASSWORD_RECOVERY') setReady(true)
+    void supabase.auth.getUser().then(({ data: { user }, error: authError }) => {
+      if (!mounted) return
+      if (authError || !user) {
+        setError('Link de recuperação inválido ou expirado. Solicite um novo link.')
+      } else {
+        setReady(true)
+      }
     })
-    return () => subscription.unsubscribe()
+    return () => { mounted = false }
   }, [])
 
   async function handleSubmit(e: React.FormEvent) {
@@ -47,9 +54,9 @@ export default function NovaSenhaPage() {
 
   if (!ready) {
     return (
-      <AuthLayout title="Redefinir senha" subtitle="Validando link de recuperação…">
+      <AuthLayout title="Redefinir senha" subtitle={error ?? 'Validando link de recuperação…'}>
         <div style={{ textAlign: 'center', padding: '32px 0', color: 'var(--muted)', fontSize: '14px' }}>
-          Aguarde um momento…
+          {error ? <a href="/recuperar-senha">Solicitar novo link</a> : 'Aguarde um momento…'}
         </div>
       </AuthLayout>
     )
