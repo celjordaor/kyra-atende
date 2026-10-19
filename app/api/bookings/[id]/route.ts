@@ -38,6 +38,20 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     )
   }
 
+  // Validar datas de reagendamento também na API, não apenas no formulário.
+  if (start_at !== undefined || end_at !== undefined) {
+    const startMs = typeof start_at === 'string' ? Date.parse(start_at) : NaN
+    const endMs = typeof end_at === 'string' ? Date.parse(end_at) : NaN
+    if (!Number.isFinite(startMs) || !Number.isFinite(endMs) ||
+        startMs <= Date.now() || endMs <= startMs ||
+        endMs - startMs > 8 * 60 * 60 * 1000) {
+      return NextResponse.json(
+        { message: 'Informe início e fim válidos, futuros e com duração máxima de 8 horas.' },
+        { status: 400 },
+      )
+    }
+  }
+
   // Monta apenas os campos enviados
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const patch: Record<string, any> = {}
