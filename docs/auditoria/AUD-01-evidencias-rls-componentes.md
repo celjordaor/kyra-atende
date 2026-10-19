@@ -69,3 +69,18 @@ Commits recentes no `main` exigem verificação READY antes de considerá-los at
 - Login e callback rejeitam parâmetro `next` externo, com barras duplas, contrabarras ou caracteres de controle.
 - **Evidência**: arquivos inspecionados e mudanças versionadas no `main`; testes de navegação reais com links Supabase ainda pendentes.
 - **Atenção**: não utilizar teste de recuperação com senha real sem uma conta dedicada de testes.
+
+## Diagnóstico oficial Supabase e divergência do histórico — 19/10/2026
+
+Projeto confirmado: `zrszytzlovthyezozqhj`. `get_advisors(type=security)` antes da correção revelou dois alertas `function_search_path_mutable` em `current_tenant_id()` e `set_updated_at()`. Ambas foram corrigidas por `ALTER FUNCTION ... SET search_path = ''` (migration remota `20261019040630`, `aud01_pin_function_search_paths`); a segunda execução do diagnóstico **não retornou** esse alerta. A definição das funções foi inspecionada antes, e `pg_proc.proconfig` confirmou a configuração depois.
+
+Outros avisos de segurança oficiais **ainda abertos**:
+- `extension_in_public`: `btree_gist` no schema `public`. A consulta ao catálogo encontrou 264 entradas de dependência para a extensão; não mover sem plano de impacto, porque há restrições GiST de agendamento.
+- `auth_leaked_password_protection`: proteção contra senhas comprometidas desabilitada no Supabase Auth; demanda configuração e validação específicas no painel.
+- `rls_enabled_no_policy`: `asaas_processed_payments` possui RLS ativo e nenhuma política, comportamento **intencional** para tabela restrita ao backend. Não abrir política para retirar o aviso.
+
+Avisos de desempenho oficiais: 14 chaves estrangeiras sem índices auxiliares e 12 políticas RLS com sugestões de `(select auth.func())`. São recomendações de tuning, não evidência de vazamento. Priorizar conforme carga e planos de execução.
+
+**Bloqueio de governança identificado:** todas as migrations AUD-01 foram aplicadas com timestamps gerados remotamente, distintos dos prefixos dos arquivos SQL versionados em `supabase/migrations`. Por exemplo, o arquivo `20261019001000_aud01_pin_function_search_paths.sql` corresponde à execução remota `20261019040630`. O mesmo desalinhamento já existia nas nove migrations anteriores. **Não executar `supabase db push` cegamente:** conciliar a tabela de histórico de migrations e os nomes dos arquivos, por procedimento controlado, antes da próxima entrega via CLI. Não foi feita alteração manual em `supabase_migrations.schema_migrations` nesta etapa.
+
+**CI:** o workflow GitHub Actions está commitado, mas o conector utilizado não retornou execuções associadas ao commit consultado; status combinado lista somente Vercel. `READY` de Vercel ainda não comprova `tsc --noEmit` nem `next lint`, porque `next.config.mjs` ignora as verificações.
