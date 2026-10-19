@@ -469,3 +469,14 @@ Autorização recebida para utilizar contas de teste existentes. Ensaios executa
 - **Bloqueadores de encerramento:** testes HTTP com sessões legítimas de superadmin/administradores de diferentes tenants (inclusive negação 401/403); confirmação de resultado verde de CI; prova de integridade de templates via rota com mudanças reais; trilha de auditoria administrativa durável e protegida para alterações de tenant/template.
 - Controles com acompanhamento pós-AUD-01: proteção de abuso/rate limiting, sanitização/preview HTML e política definida para edições simultâneas de conteúdo (last-write-wins vs controle de versão). Não há evidência suficiente para os marcar como corrigidos.
 - Nesta rodada, não houve DDL, migrations, alterações em dados de clientes ou templates; apenas criação de workflow CI e documentação consolidada.
+
+
+## AUD-01 — Trilha transacional de mudanças de empresas (19/10/2026)
+
+- Migration remota `20261019235119_aud01_transactional_admin_tenant_audit` aplicada no projeto correto (`zrszytzlovthyezozqhj`), espelhada no GitHub em `supabase/migrations/20261019235119_aud01_transactional_admin_tenant_audit.sql` (commit `d46a2e0d`).
+- Tabela `public.admin_audit_events` com RLS habilitada; sem GRANT de acesso a PUBLIC/anon/authenticated. Escrita e leitura permitidas a service_role. A API do cliente não recebe permissão direta de leitura dos eventos.
+- RPC `audit_update_tenant_status` restrita a service_role (consulta de ACL confirmou `authenticated_execute=false`, `service_execute=true`), valida que `p_actor` é superadmin no banco e faz UPDATE e INSERT do evento de auditoria na **mesma transação**. Não registra detalhes sensíveis além das alterações de plano, status e expiração.
+- Rota `PATCH /api/superadmin/tenants/[id]/status` passou a chamar a RPC, mantendo autenticação e checagem de superadmin anteriores. Commit `92bcb8e2`. Por restrições de `SECURITY DEFINER`, a função só é executável via cliente privilegiado; não expor sua permissão a authenticated.
+- Teste SQL executado em `BEGIN ... ROLLBACK` com role service_role e ator Superadmin de teste: evento de auditoria foi registrado na transação (`audit_rows_in_transaction=1`). Transação revertida, sem alterações persistentes. Isso é evidência de integração RPC e banco, não teste HTTP final.
+- Novo CI TypeScript e ESLint existe na branch main, mas os checks consultados do commit `03134e8b` indicaram apenas estado Vercel pending; **não há confirmação de aprovação do workflow GitHub Actions**.
+- Pendentes de encerramento AUD-01: validação do deploy com novo RPC, chamadas HTTP reais por perfis e tenants, criação de eventos auditáveis para templates de e-mail, verificação de CI concluído e teste integrado das restrições de escrita/leitura dos logs. A auditoria administrativa **não** está integralmente homologada.
