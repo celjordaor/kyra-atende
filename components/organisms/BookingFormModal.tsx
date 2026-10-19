@@ -540,11 +540,20 @@ export function BookingFormModal({
     if (!open) return
     let cancelled = false
     setLoadingData(true)
-    Promise.all([
+    Promise.allSettled([
       api.get<ServiceRow[]>('/services'),
       api.get<ProfRow[]>('/professionals'),
-    ]).then(([svcs, profs]) => {
+    ] as const).then(([servicesResult, professionalsResult]) => {
       if (cancelled) return
+      const svcs = servicesResult.status === 'fulfilled' ? servicesResult.value : []
+      const profs = professionalsResult.status === 'fulfilled' ? professionalsResult.value : []
+      if (servicesResult.status === 'rejected') {
+        console.error('[BookingFormModal] falha ao carregar serviços:', servicesResult.reason)
+        setFormErrors(prev => ({ ...prev, api: 'Não foi possível carregar os serviços. Feche e abra o agendamento para tentar novamente.' }))
+      }
+      if (professionalsResult.status === 'rejected') {
+        console.error('[BookingFormModal] falha ao carregar profissionais:', professionalsResult.reason)
+      }
       const activeServices = svcs.filter((s: any) => s.is_active !== false)
       setServices(activeServices)
       setProfessionals(profs)
