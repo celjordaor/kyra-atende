@@ -114,8 +114,7 @@ async function sendViaEvolution(msg: OutboundMessage): Promise<void> {
   const url = evolutionUrl()
   const key = evolutionKey()
   if (!url || !key) {
-    console.warn('[whatsapp] Evolution API não configurada — mensagem descartada')
-    return
+    throw new Error('Evolution API não configurada. Envio não realizado.')
   }
 
   const res = await fetch(`${url}/message/sendText/${msg.tenantId}`, {
