@@ -32,3 +32,25 @@ Todos feitos com `SET LOCAL ROLE authenticated`, claim tenant simulada em `reque
 3. Revisão visual e estática da reutilização de componentes em cada módulo.
 4. Integração Evolution/Asaas: secrets ausentes em Vercel, sincronização dos provedores e testes funcionais ainda pendentes.
 5. Eliminar a dispensa de validação TypeScript/ESLint no build e confirmar pipelines.
+
+## Revisão adicional de UI/UX — amostragem de código
+
+Verificados diretamente os imports de:
+- `app/(dashboard)/clientes/ClientesClient.tsx`: DataTable, Modal, Button, Avatar, FormField e SearchBar compartilhados.
+- `app/(dashboard)/servicos/ServicosClient.tsx`: DataTable, Modal, Button, FormField e StatusBadge compartilhados.
+- `app/(dashboard)/agendamentos/AgendamentosClient.tsx`: DataTable, Modal, SearchBar, Button, StatusBadge, FormField e Avatar compartilhados.
+- `app/(dashboard)/agenda/AgendaClient.tsx`: Button, StatusBadge, Modal, BookingFormModal e CompleteModal compartilhados.
+- `components/organisms/BookingFormModal.tsx`: organismo reutilizável, usa Modal, Button, FormField e Avatar.
+
+**Achado:** a lista de estados brasileiros `ESTADOS` está duplicada pelo menos em `ClientesClient` e `AgendamentosClient`; não é uma vulnerabilidade, mas cria risco de divergência de UX e manutenção. Refatoração a acompanhar, sem alterar formulários de produção nesta rodada.
+
+## Evolution — correção do fluxo de webhook e envio
+
+Em `lib/whatsapp.ts` a configuração de novas instâncias passou a usar `webhookByEvents: false` e um objeto `webhook.headers['x-kyra-webhook-secret']`, derivado de `EVOLUTION_WEBHOOK_SECRET` no servidor. Falta validar o schema da versão Evolution instalada e reconfigurar as instâncias já criadas. Sem segredo de webhook (mínimo 32 caracteres), `connectInstance()` retorna `webhook_not_configured` em vez de gerar conexão que não receberá eventos.
+
+`sendViaEvolution` agora lança exceção se `EVOLUTION_API_URL` ou `EVOLUTION_API_KEY` estiverem ausentes, em vez de descartar silenciosamente uma mensagem e aparentar sucesso.
+
+**Risco ainda aberto:** a deduplicação grava a mensagem antes da resposta da IA; se o processamento falhar após a inserção, um reenvio pode ser tratado como duplicado. Uma fila com estados `pending/processing/done/failed` e reprocessamento controlado é necessária para entrega resiliente.
+
+## Deploy
+Commits recentes no `main` exigem verificação READY antes de considerá-los ativos. Não há homologação de webhook ponta-a-ponta, nem validação de build com TypeScript e ESLint sem dispensas.
