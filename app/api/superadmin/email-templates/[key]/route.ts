@@ -5,31 +5,15 @@
  * DELETE /api/superadmin/email-templates/:key  — reseta para o padrão (exclui customização)
  */
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { requireSuperAdmin } from '@/lib/superadmin'
 
 type Params = { params: { key: string } }
 
-// ── Verifica se o usuário é superadmin ──────────────────────────────────────
-async function assertSuperAdmin(): Promise<string | null> {
-  const supabase = createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return null
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single()
-
-  if (profile?.role !== 'superadmin') return null
-  return user.id
-}
-
 // ── PATCH — salvar template ─────────────────────────────────────────────────
 export async function PATCH(req: NextRequest, { params }: Params) {
-  const userId = await assertSuperAdmin()
-  if (!userId) {
+  const actor = await requireSuperAdmin()
+  if (!actor) {
     return NextResponse.json({ message: 'Não autorizado' }, { status: 401 })
   }
 
@@ -64,8 +48,8 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 
 // ── DELETE — resetar para padrão ────────────────────────────────────────────
 export async function DELETE(_req: NextRequest, { params }: Params) {
-  const userId = await assertSuperAdmin()
-  if (!userId) {
+  const actor = await requireSuperAdmin()
+  if (!actor) {
     return NextResponse.json({ message: 'Não autorizado' }, { status: 401 })
   }
 
