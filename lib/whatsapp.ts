@@ -59,14 +59,22 @@ export async function handleWebhook(payload: EvolutionWebhookPayload): Promise<v
   const supabase = createAdminClient()
 
   // Salva no histórico
-  await supabase.from('whatsapp_messages').insert({
+  if (!messageId) {
+    throw new Error('Webhook recebido sem identificador de mensagem')
+  }
+
+  const { error: insertError } = await supabase.from('whatsapp_messages').insert({
     tenant_id:   tenantId,
     from_number: from,
     to_number:   tenantId,
     body,
     direction:   'inbound',
-    external_id: messageId || null,
+    external_id: messageId,
   })
+  // A constraint unique protege inclusive contra chamadas concorrentes.
+  // Reenvios da Evolution não podem disparar outra resposta da IA.
+  if (insertError?.code === '23505') return
+  if (insertError) throw insertError
 
   // Verifica entitlement de IA de agendamento
   const hasAiScheduling = await canUse(tenantId, 'has_ai_scheduling')
