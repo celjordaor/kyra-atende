@@ -410,3 +410,13 @@ Autorização recebida para utilizar contas de teste existentes. Ensaios executa
 - Última inspeção Vercel: `f3c90cbc` READY, `f6fdc1f4` QUEUED, `60a01648` BUILDING e `3a787fd8` QUEUED. Nenhuma confirmação de READY dos commits mais novos neste instante.
 - Próxima verificação exigida para homologação HTTP: sessão legítima de administrador de tenant A, tenant B e superadmin; executar requisições controladas nos métodos suportados, assegurando ausência de efeitos colaterais sobre registros não descartáveis. Preferir ambiente/fixtures exclusivos de homologação. Sem autenticação HTTP válida não foi possível homologar a matriz de permissões.
 - Nenhuma escrita ao banco, alteração de tenant, migration ou mudança de código funcional nesta etapa; apenas atualização documental.
+
+
+## AUD-01 — Inspeção de templates e verificação de release consolidado (19/10/2026)
+
+- Release `60a01648` confirmado **READY** na Vercel. Este commit inclui o ajuste anterior de erros da listagem de agendamentos (`f6fdc1f4`), embora o deployment isolado `f6fdc1f4` tenha sido cancelado pela fila de deploys. O commit seguinte `3a787fd8` também estava READY; `db7dd1b7` estava BUILDING na consulta. O estado READY prova a conclusão do build/deploy, não execução de testes de autorização HTTP.
+- Revisão da rota `app/api/superadmin/email-templates/[key]/route.ts`: `assertSuperAdmin` valida sessão e papel antes de PATCH/DELETE; não recebe credenciais HTTP artificiais nem executa operação sem autenticação. Testes HTTP com sessão legítima continuam pendentes.
+- **Achado funcional/segurança de configuração:** o PATCH executa UPSERT com `is_active: body.isActive ?? true`. Portanto, uma alteração de assunto/HTML que omita `isActive` pode **reativar** silenciosamente um template já desativado. Tratar como falha provável de integridade da configuração; requer confirmação de chamadas do frontend e correção que preserve estado atual quando campo não for enviado, incluindo proteção contra concorrência.
+- **Achado de consistência HTTP:** a rota devolve 401 tanto para ausência de sessão quanto para usuário autenticado sem papel superadmin. Diferenciar 403 para perfil não autorizado melhora clareza de contrato, mas não implica bypass de autorização.
+- **Pendente alto:** controle de trilha de auditoria das alterações realizadas por superadmin; não confundir `auth.audit_log_entries` com log de operações do negócio.
+- **Ação desta rodada:** inspeção estática e consolidação de achados, sem escrever em banco, alterar templates existentes ou tentar autenticação real por credenciais de terceiros. Próxima correção deve verificar impacto no frontend e ser validada com teste de PATCH mantendo `is_active=false`.
