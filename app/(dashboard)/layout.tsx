@@ -16,8 +16,8 @@ export default async function DashboardGroupLayout({
   // Carrega perfil (com role) e tenant em paralelo
   // O cliente regular tem acesso via RLS (auth.uid() = id)
   const [profileRes, tenantRes] = await Promise.all([
-    supabase.from('profiles').select('name, avatar_url, role').eq('id', user.id).single(),
-    supabase.from('tenants').select('name, logo_url').eq('owner_id', user.id).single(),
+    supabase.from('profiles').select('name, avatar_url, role, tenant_id').eq('id', user.id).single(),
+    supabase.from('tenants').select('name, logo_url').eq('id', user.app_metadata?.tenant_id).single(),
   ])
 
   // Superadmin não usa o dashboard regular
