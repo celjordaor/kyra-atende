@@ -125,7 +125,10 @@ export default function WhatsappClient({
       const data = await res.json()
       if (!res.ok) throw new Error(data.message ?? data.error ?? 'Erro ao conectar')
       const raw = (data.qrcode ?? data.qr) as string | undefined
-      if (raw) setQrSrc(raw.startsWith('data:') ? raw : `data:image/png;base64,${raw}`)
+      if (!raw) {
+        throw new Error('A Evolution ainda não disponibilizou o QR Code. Aguarde alguns segundos e tente novamente, sem excluir a instância.')
+      }
+      setQrSrc(raw.startsWith('data:') ? raw : `data:image/png;base64,${raw}`)
       setConn(prev => ({ ...prev, status: 'connecting', connected: false }))
     } catch (e: unknown) {
       setConnError(e instanceof Error ? e.message : 'Erro ao gerar QR Code')
@@ -141,8 +144,8 @@ export default function WhatsappClient({
     setConn(prev => ({ ...prev, status: 'close', connected: false }))
     // Pause polling 8 s so server "connecting" state doesn't revert badge
     pausePollUntil.current = Date.now() + 8_000
-    // Clean up Evolution API instance in background (fire-and-forget)
-    fetch('/api/whatsapp/disconnect', { method: 'DELETE' }).catch(() => {})
+    // Cancelar a exibição do QR não deve desconectar a instância no provedor.
+    // A desconexão só ocorre pelo botão "Desconectar" com confirmação explícita.
   }, [])
 
     /* ── Disconnect — FIX: uses DELETE, not POST ─────────── */
