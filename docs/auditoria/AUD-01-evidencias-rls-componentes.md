@@ -436,3 +436,11 @@ Autorização recebida para utilizar contas de teste existentes. Ensaios executa
 - Commit `f15f3081`: rota PATCH de templates deixou de usar UPSERT genérico. Agora consulta pelo nome via cliente privilegiado, faz UPDATE parcial por ID quando existente (omitindo `is_active` se não informado) ou INSERT para template novo (usando o default do banco). Releitura pós-commit confirmou ambos os caminhos. A API mantém 401/403 separados.
 - Limite: consulta seguida de UPDATE/INSERT não é operação atômica; duas criações simultâneas para a mesma chave podem gerar erro de unicidade, e mudanças concorrentes continuam necessitando política definida. Nenhum teste HTTP real realizado. Para garantia rigorosa, evoluir para operação atômica em banco com `ON CONFLICT DO UPDATE` que modifique somente colunas explicitamente enviadas; testar concorrência e permissões.
 - Deploy do commit `f15f3081` ainda não homologado neste registro. Testes não deixaram dados persistidos; atualização apenas no código e documentação.
+
+
+## AUD-01 — Concorrência em criação/edição de templates (19/10/2026)
+
+- O fluxo prévio `SELECT` seguido de `INSERT` pode sofrer corrida quando duas requisições criam a mesma chave. A chave única de `name` protege a integridade dos registros, mas a segunda requisição recebia erro interno genérico.
+- Commit `cde70f5b`: quando a tentativa de INSERT retorna PostgreSQL `23505` (conflito de unicidade), a rota tenta UPDATE por `name`, usando exclusivamente `templateValues` — portanto, sem atualizar `is_active` quando o campo foi omitido. Se a linha desapareceu novamente, retorna HTTP 409 com mensagem de conflito. Preservados os retornos 401/403 e o log mínimo de erro.
+- Validação estática após commit confirmou o fallback condicional. **Não houve teste HTTP de concorrência ou prova de linearizabilidade**; outras corridas (`DELETE` simultâneo, edições concorrentes de conteúdo) permanecem. Para atomicidade forte futura, considerar RPC privilegiada em transação única com contrato de atualização parcial e audit trail.
+- Deploy ainda necessita confirmação de READY e teste integrado. Nenhum template persistido foi modificado nesta rodada.
