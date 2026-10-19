@@ -109,3 +109,11 @@ Avisos de desempenho oficiais: 14 chaves estrangeiras sem índices auxiliares e 
 - Performance advisor: 14 avisos de FKs não indexadas e 12 de otimização de políticas RLS. Requer plano de índices sem travar tabelas ativas e benchmark antes/depois.
 - Ainda não validados: cancelamento, estorno, pagamento não confirmado, renovação, concorrência de eventos, testes reais de HTTP cross-tenant, build rigoroso TS/ESLint, Evolution WhatsApp, configuração Auth de senhas vazadas, convergência do histórico de migrations.
 - Governança: histórico remoto e nomes dos arquivos de migrations seguem divergentes. Não usar `supabase db push` sem reconciliação controlada.
+
+
+## AUD-01 — Revisão Evolution e Auth, continuação de 19/10/2026
+
+- Conferência em Vercel Production: `EVOLUTION_API_URL` e `EVOLUTION_API_KEY` presentes; `EVOLUTION_WEBHOOK_SECRET` **ausente**. `connectInstance()` exige segredo com >=32 caracteres e URL HTTPS, retornando `webhook_not_configured` na ausência. A rota `POST /api/whatsapp/webhook` também responde 401 sem segredo; não implantar segredo unilateralmente sem configurá-lo nas instâncias da Evolution.
+- Correção GitHub `591ab20c`: processador `handleWebhook` normaliza `messages.upsert` e `MESSAGES_UPSERT`; controle `fromMe` e deduplicação por identificador permanecem. Exige confirmação READY e teste real antes de considerar WhatsApp homologado.
+- Risco de entrega: `handleWebhook` persiste mensagem de entrada antes de processar IA; no catch da IA dispara alerta, mas não cria estado reprocessável, então deduplicação pode impedir novo processamento. Requer desenho de fila/estados confiáveis, não alterar apressadamente em produção.
+- Avisos Supabase security advisor continuam `auth_leaked_password_protection`, `extension_in_public`, e `rls_enabled_no_policy` intencional. A proteção contra senhas vazadas não foi habilitada nesta etapa porque não há ação Auth configurável nos conectores disponíveis.
