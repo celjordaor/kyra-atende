@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { notFound } from 'next/navigation'
 import { PublicBookingLayout } from '@/components/templates'
 import BookingFlow from './BookingFlow'
@@ -9,7 +9,9 @@ interface PageProps {
 }
 
 export default async function PublicBookingPage({ params, searchParams }: PageProps) {
-  const supabase = createClient()
+  // Somente no servidor: a policy pública de tenants foi removida.
+  // Retornar exclusivamente os campos públicos necessários ao agendamento.
+  const supabase = createAdminClient()
 
   // Busca o tenant pelo slug
   const { data: tenant, error } = await supabase
