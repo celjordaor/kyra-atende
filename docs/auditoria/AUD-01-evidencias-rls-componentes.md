@@ -428,3 +428,11 @@ Autorização recebida para utilizar contas de teste existentes. Ensaios executa
 - UPSERT de template agora inclui `is_active` somente se `body.isActive !== undefined`. Evita o antigo `is_active: body.isActive ?? true` que reativava templates em atualizações de assunto/HTML com campo omitido. O banco confirma `email_templates.is_active DEFAULT true NOT NULL` para criação sem status explícito.
 - Inspeção estática do arquivo após commit confirmou a nova lógica; nenhum registro de template foi alterado manualmente. O efeito em conflito de UPSERT deve ser coberto por teste integrado com template previamente desativado, inclusive quando `isActive=false` explícito.
 - Vercel apontava o deploy do commit `326ccff2` como `QUEUED`; build/produção e testes HTTP permanecem pendentes. Trilha administrativa, sanitização de HTML e rate limiting ainda não estão homologados.
+
+
+## AUD-01 — Teste de preservação de status e correção adicional do UPSERT (19/10/2026)
+
+- Testes SQL transacionais com registros descartáveis e rollback: atualização que omite `is_active` preservou `false`; simulação de INSERT ON CONFLICT atualizando `is_active=EXCLUDED.is_active` resultou em `true`, pois a coluna possui default true. Isso mostrou que retirar o campo do payload de UPSERT não bastava para garantir ausência de reativação.
+- Commit `f15f3081`: rota PATCH de templates deixou de usar UPSERT genérico. Agora consulta pelo nome via cliente privilegiado, faz UPDATE parcial por ID quando existente (omitindo `is_active` se não informado) ou INSERT para template novo (usando o default do banco). Releitura pós-commit confirmou ambos os caminhos. A API mantém 401/403 separados.
+- Limite: consulta seguida de UPDATE/INSERT não é operação atômica; duas criações simultâneas para a mesma chave podem gerar erro de unicidade, e mudanças concorrentes continuam necessitando política definida. Nenhum teste HTTP real realizado. Para garantia rigorosa, evoluir para operação atômica em banco com `ON CONFLICT DO UPDATE` que modifique somente colunas explicitamente enviadas; testar concorrência e permissões.
+- Deploy do commit `f15f3081` ainda não homologado neste registro. Testes não deixaram dados persistidos; atualização apenas no código e documentação.
