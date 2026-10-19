@@ -896,11 +896,25 @@ export default function AgendamentosClient({ initialBookings, professionals, ser
     const start_at = toIso(form.start_date, form.start_time)
     const end_at   = toIso(form.end_date, form.end_time)
     if (!start_at || !end_at) errs.datetime = 'Data ou hora inválida.'
+    const hasDateChange = !editRow || start_at !== editRow.start_at || end_at !== editRow.end_at
+    if (start_at && end_at) {
+      const startMs = Date.parse(start_at)
+      const endMs = Date.parse(end_at)
+      if (endMs <= startMs) errs.datetime = 'O término deve ser posterior ao início.'
+      else if (endMs - startMs > 8 * 60 * 60 * 1000) errs.datetime = 'A duração não pode ultrapassar oito horas.'
+      else if (hasDateChange && startMs <= Date.now()) errs.datetime = 'Escolha uma data e um horário futuros.'
+    }
     if (Object.keys(errs).length) { setFormErrors(errs); return }
 
     setSaving(true); setFormErrors({})
     try {
-      const payload = { client_id: form.client_id, service_id: form.service_id, professional_id: form.professional_id || null, start_at, end_at, notes: form.notes || null }
+      const payload = {
+        client_id: form.client_id,
+        service_id: form.service_id,
+        professional_id: form.professional_id || null,
+        notes: form.notes || null,
+        ...(hasDateChange ? { start_at, end_at } : {}),
+      }
       if (editRow) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const raw = await api.put<any>(`/bookings/${editRow.id}`, payload)
