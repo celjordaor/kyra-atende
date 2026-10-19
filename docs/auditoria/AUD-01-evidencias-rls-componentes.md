@@ -156,3 +156,18 @@ Avisos de desempenho oficiais: 14 chaves estrangeiras sem índices auxiliares e 
 - `lib/whatsapp.ts` passa a enviar push de atendimento manual quando a IA falha ou não retorna resposta, sem disparar outra resposta WhatsApp automaticamente. Commits `2cee511c` e `bbab3ebf`. Falhas de push são registradas sem invalidar o webhook que já persistiu o inbound.
 - **Limite declarado:** ainda não existe fila/outbox nem estado `pending/processing/sent/failed` por mensagem; também não há retentativas seguras de envio. Se Evolution receber pedido e a conexão cair antes da confirmação, não é seguro repetir sem idempotência comprovada. Esta fase só melhora a observabilidade e o fallback humano.
 - Após deploy, validar recebimento, histórico, resposta IA, alerta de falha e não duplicidade por reenvio do mesmo evento. Não modificar instâncias Evolution/Prontim/n8n compartilhadas.
+
+
+## AUD-01 — WhatsApp misto: fila de solicitações com privacidade por padrão
+
+**Decisão de produto aprovada:** números WhatsApp podem ser pessoais e profissionais; contatos ainda não autorizados entram na fila **somente com telefone e metadados**. Texto de mensagens desconhecidas não deve aparecer nem ser salvo no histórico. IA é opt-in por contato.
+
+**Implementação em etapas (19/10/2026):**
+- Migration `whatsapp_contact_privacy_queue` aplicada no projeto Supabase Kyra Atende e versionada como `supabase/migrations/20261019181500_whatsapp_contact_privacy_queue.sql`. Tabela `whatsapp_contact_permissions`: chave única `(tenant_id,phone)`, status `pending/ignored/manual/ai`, RLS ativada, privilégios removidos de anon/authenticated, service_role apenas. Histórico remoto das migrations anteriores já possui divergência de nomes: não executar `supabase db push` cegamente.
+- `lib/whatsapp.ts`: antes de persistir inbound ou chamar IA, verifica autorização; sem cadastro insere apenas telefone/status pending com `ignoreDuplicates`, sem conteúdo; `ignored` ou `pending` retorna sem armazenar, `manual` armazena e alerta o responsável, `ai` armazena e só executa IA se entitlement permitir. Falha na verificação de permissões não libera processamento.
+- API `/api/whatsapp/requests`: GET e PATCH exigem sessão com tenant verificado e correspondência com `tenants.owner_id`; consulta/alteração por service-role e filtro obrigatório de tenant. PATCH aceita somente `ignored`, `manual`, `ai`; não recebe textos de conversas.
+- Interface `WhatsappRequests` integrada à tela `/whatsapp`: fila pendente, ações Ignorar/Atendimento manual/Autorizar IA e contatos com decisão.
+- A autorização não recupera conteúdo de mensagens anteriores: novas mensagens autorizadas serão processadas a partir da próxima entrada. Mensagens de grupos seguem ignoradas.
+- **Testes de aceite pendentes:** 1) número não cadastrado envia texto, fila mostra número mas nenhuma mensagem no histórico; 2) repetir mensagem pendente não cria item duplicado; 3) ignorar impede captura; 4) liberar manual registra somente mensagens futuras sem IA; 5) autorizar IA responde somente se habilitada no plano; 6) usuário de outra empresa não vê nem decide contatos; 7) validar fluxo de `@lid` no Evolution v2 e matching de telefone, antes de comercializar.
+- **Pendência de privacidade:** mensagens antigas já armazenadas antes da mudança não são apagadas retroativamente. Necessária política de retenção, exclusão e consentimento para conversas profissionais.
+- **Limite de segurança operacional:** a conexão Evolution webhook real ainda não está homologada; não afirmar funcionamento E2E antes de teste com celular externo. Nenhuma instância da VPS, Prontim ou n8n foi alterada.
