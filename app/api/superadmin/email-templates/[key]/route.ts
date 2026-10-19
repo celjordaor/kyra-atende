@@ -53,18 +53,29 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   }
 
   const admin = createAdminClient()
-  const { error } = await admin
+  // Atualização parcial preserva is_active quando não enviado; no INSERT,
+  // o padrão do banco (true) é utilizado apenas para um template novo.
+  const { data: existing, error: lookupError } = await admin
     .from('email_templates')
-    .upsert(
-      {
-        name:       params.key,
-        subject:    body.subject,
-        body_html:  body.html,
-        ...(body.isActive !== undefined ? { is_active: body.isActive } : {}),
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: 'name' }
-    )
+    .select('id')
+    .eq('name', params.key)
+    .maybeSingle()
+
+  if (lookupError) {
+    console.error('[email-templates PATCH lookup]', { code: lookupError.code })
+    return NextResponse.json({ message: 'Não foi possível salvar o template.' }, { status: 500 })
+  }
+
+  const templateValues = {
+    subject: body.subject,
+    body_html: body.html,
+    ...(body.isActive !== undefined ? { is_active: body.isActive } : {}),
+    updated_at: new Date().toISOString(),
+  }
+
+  const { error } = existing
+    ? await admin.from('email_templates').update(templateValues).eq('id', existing.id)
+    : await admin.from('email_templates').insert({ name: params.key, ...templateValues })
 
   if (error) {
     console.error('[email-templates PATCH]', { code: error.code })
