@@ -32,7 +32,14 @@ type AsaasPaymentLink = {
 }
 
 export async function POST(request: NextRequest) {
-  if (!authorized(request.headers.get('asaas-access-token'), process.env.ASAAS_WEBHOOK_AUTH_TOKEN)) {
+  const receivedToken = request.headers.get('asaas-access-token')
+  const configuredToken = process.env.ASAAS_WEBHOOK_AUTH_TOKEN
+  if (!authorized(receivedToken, configuredToken)) {
+    // Apenas diagnósticos booleanos: nunca registrar token, body ou credenciais.
+    console.warn('[billing/webhook] 401 token de autenticação rejeitado', {
+      tokenConfigured: Boolean(configuredToken && configuredToken.length >= 32),
+      authHeaderPresent: Boolean(receivedToken),
+    })
     return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
   }
 
