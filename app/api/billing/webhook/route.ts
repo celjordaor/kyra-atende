@@ -22,6 +22,13 @@ type AsaasPayment = {
   status?: string
   externalReference?: string
   value?: number
+  paymentLink?: string
+}
+
+type AsaasPaymentLink = {
+  id?: string
+  externalReference?: string
+  value?: number
 }
 
 export async function POST(request: NextRequest) {
@@ -69,7 +76,32 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Pagamento ainda não confirmado' }, { status: 409 })
     }
 
-    const reference = payment.externalReference
+    // Cobranças criadas por Links de Pagamento informam paymentLink.
+    // Recuperar a referência do próprio link, sempre pela API autenticada,
+    // em vez de depender de ela ser copiada para a cobrança.
+    let reference = payment.externalReference
+    if (payment.paymentLink) {
+      const linkId = String(payment.paymentLink)
+      if (!/^[a-zA-Z0-9_-]{1,100}$/.test(linkId)) {
+        return NextResponse.json({ error: 'Link de pagamento inválido' }, { status: 422 })
+      }
+      const linkResponse = await fetch(`${baseUrl}/paymentLinks/${encodeURIComponent(linkId)}`, {
+        headers: { access_token: apiKey, accept: 'application/json' },
+        cache: 'no-store',
+        signal: AbortSignal.timeout(8000),
+      })
+      if (!linkResponse.ok) {
+        return NextResponse.json({ error: 'Não foi possível validar o link de pagamento' }, { status: 503 })
+      }
+      const link = (await linkResponse.json()) as AsaasPaymentLink
+      if (String(link.id) !== linkId ||
+          typeof link.externalReference !== 'string' ||
+          (reference && reference !== link.externalReference) ||
+          (typeof link.value === 'number' && (typeof payment.value !== 'number' || Math.abs(link.value - payment.value) > 0.001))) {
+        return NextResponse.json({ error: 'Referência do link incompatível' }, { status: 422 })
+      }
+      reference = link.externalReference
+    }
     const parts = typeof reference === 'string' ? reference.split('|') : []
     if (parts.length !== 3) {
       return NextResponse.json({ error: 'Cobrança sem referência válida' }, { status: 422 })
