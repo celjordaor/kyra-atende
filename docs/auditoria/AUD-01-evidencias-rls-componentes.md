@@ -128,3 +128,11 @@ Avisos de desempenho oficiais: 14 chaves estrangeiras sem índices auxiliares e 
 - `push_subscriptions`: 1 registro, zero divergências entre proprietário do tenant e `user_id`. Políticas RLS verificam `user_id=auth.uid()`, porém existe FK composta `push_subscription_user_same_tenant` entre `(user_id,tenant_id)` e `profiles(id,tenant_id)`. Essa constraint também impede associação cruzada. Não há evidência de acesso cross-tenant no achado; não aplicar migração RLS baseada só na leitura isolada da policy.
 - Logs recentes incluem erros anteriores de carregamento de agendamentos em deployments antigos; correções das relações ambíguas já foram publicadas. Validar funcionalmente após cada release e rastrear erros novos isoladamente.
 - Nenhuma alteração de dados, tabelas, políticas ou índices executada nesta etapa.
+
+
+## AUD-01 — Revisão de fluxos públicos e conclusão de serviços (19/10/2026)
+
+- A rota `POST /api/public/bookings` enviava notificações por uma implementação local e antiga de `web-push`, com URL relativa `/agendamentos`, ignorando a correção de domínio aplicada a `lib/push.ts`. Commit `b9c2d5b2`: substituída pela função central `dispatchPush`, que gera URL do domínio canônico `https://www.kyraatende.com.br`. Nenhuma mudança na criação do agendamento, idempotência ou validações do banco.
+- A rota `POST /api/bookings/[id]/complete` exigia somente `payment_method`, permitindo enviar `price_charged` inválido, desconto superior ao preço ou método arbitrário diretamente à API. Commit `3b8dde10`: valida valores numéricos finitos, não negativos, duas casas decimais no preço, desconto até o valor cobrado e enum de métodos compatível com o componente `CompleteModal`. Dados financeiros e agendamentos existentes não foram modificados.
+- O handler WhatsApp armazena evento inbound antes do processamento de IA e captura falhas sem registrar estado reprocessável. Não implementar retentativa ingênua, pois a deduplicação por `external_id` bloqueia nova execução e retentativas após envio de resposta podem duplicar respostas. Projetar estado transacional/fila/outbox e teste end-to-end antes de alterar.
+- Os commits foram enviados à main e acionaram deployments Vercel; confirmação de READY e testes E2E específicos permanecem necessários.
