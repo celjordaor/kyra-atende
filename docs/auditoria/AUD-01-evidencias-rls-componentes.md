@@ -171,3 +171,36 @@ Avisos de desempenho oficiais: 14 chaves estrangeiras sem índices auxiliares e 
 - **Testes de aceite pendentes:** 1) número não cadastrado envia texto, fila mostra número mas nenhuma mensagem no histórico; 2) repetir mensagem pendente não cria item duplicado; 3) ignorar impede captura; 4) liberar manual registra somente mensagens futuras sem IA; 5) autorizar IA responde somente se habilitada no plano; 6) usuário de outra empresa não vê nem decide contatos; 7) validar fluxo de `@lid` no Evolution v2 e matching de telefone, antes de comercializar.
 - **Pendência de privacidade:** mensagens antigas já armazenadas antes da mudança não são apagadas retroativamente. Necessária política de retenção, exclusão e consentimento para conversas profissionais.
 - **Limite de segurança operacional:** a conexão Evolution webhook real ainda não está homologada; não afirmar funcionamento E2E antes de teste com celular externo. Nenhuma instância da VPS, Prontim ou n8n foi alterada.
+
+
+## AUD-01 — Reconciliação de migrations e qualidade de CI (19/10/2026)
+
+**Snapshot remoto:** `Supabase zrszytzlovthyezozqhj` contém 12 registros de migration:
+- `20261019025856` aud01_restrict_privileged_rpc_profile_updates_public_policies
+- `20261019030717` aud01_restrict_tenant_billing_and_owner_updates
+- `20261019031431` aud01_billing_events_append_only_backend
+- `20261019032003` aud01_booking_overlap_and_whatsapp_message_dedup
+- `20261019032033` aud01_atomic_idempotent_signup
+- `20261019032120` aud01_asaas_verified_payment_reconciliation
+- `20261019033514` aud01_revoke_truncate_profile_tenant_mutation_public_catalog
+- `20261019033935` aud01_enforce_same_tenant_relational_integrity
+- `20261019034252` aud01_restrict_financial_usage_whatsapp_direct_mutations
+- `20261019040412` aud01_revoke_client_schema_modification_privileges
+- `20261019040630` aud01_pin_function_search_paths
+- `20261019181854` whatsapp_contact_privacy_queue
+
+**Snapshot local:** `supabase/migrations` na branch main contém seis arquivos:
+`20261019000600_aud01_restrict_table_destruction_and_public_catalog.sql`,
+`20261019000700_aud01_same_tenant_relational_integrity.sql`,
+`20261019000800_aud01_lock_billing_usage_whatsapp_writes.sql`,
+`20261019000900_aud01_revoke_client_schema_privileges.sql`,
+`20261019001000_aud01_pin_function_search_paths.sql`,
+`20261019181500_whatsapp_contact_privacy_queue.sql`.
+
+**Interpretação:** versões/nomenclaturas não correspondem 1:1; os 11 passos históricos de hardening e o passo novo precisam ser reconciliados por conteúdo e ordem, não apenas por nome. Não fazer `supabase db push`, `migration repair`, reaplicação nem exclusão sem preservar o DDL exato e confirmar equivalência. Os arquivos SQL fora de `supabase/migrations` também não constituem histórico de migrations aplicado.
+
+**Qualidade de CI:** `.github/workflows/aud-01-static-checks.yml` define `pnpm install --frozen-lockfile`, `pnpm exec tsc --noEmit` e `pnpm exec next lint`. Entretanto `next.config.mjs` tem `typescript.ignoreBuildErrors=true` e `eslint.ignoreDuringBuilds=true`: Vercel READY não comprova qualidade estática. Consulta de status do commit `0188e66f` retornou apenas `Vercel: success`; consulta de workflow runs associados não encontrou execuções PR; **isso não prova ausência de todos os runs push**. Verificar execução do job AUD-01 e publicar comprovação antes de liberar gate de build. Não endurecer `next.config.mjs` antes de um baseline de falhas e correções.
+
+**Segurança atual:** Security Advisor 2 INFO (`rls_enabled_no_policy`, incluindo tabela de fila intencionalmente inacessível a papéis públicos), 2 WARN (`btree_gist` no schema public; leaked-password protection desativado). Tabela da fila tem 0 solicitações pendentes; não houve teste de inbound.
+
+**Próximas ações:** (1) obter SQL exato/assinaturas das 12 migrations aplicadas e conciliar inventário local; (2) executar CI estático com logs e corrigir erros de maneira incremental; (3) só então tornar checks bloqueantes; (4) observar produção após retestes E2E. Nenhum DDL, alteração de Auth, índice ou configuração de Vercel executado nesta revisão.
