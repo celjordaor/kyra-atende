@@ -1,16 +1,23 @@
 /**
  * app/auth/callback/route.ts
- * Supabase redireciona aqui após confirmação de e-mail, OAuth, reset de senha, etc.
- * Troca o `code` por uma sessão e redireciona ao destino final.
+ * Troca o code por uma sessão, garante o provisionamento do tenant e redireciona.
  */
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse, type NextRequest } from 'next/server'
+import { ensureTenantForUser } from '@/lib/provision-tenant'
+
+function safeNextPath(value: string | null): string {
+  if (!value || !value.startsWith('/') || value.startsWith('//') || value.includes('\\')) {
+    return '/dashboard'
+  }
+  return value
+}
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
-  const next = searchParams.get('next') ?? '/dashboard'
+  const next = safeNextPath(searchParams.get('next'))
 
   if (code) {
     const cookieStore = cookies()
@@ -32,10 +39,22 @@ export async function GET(request: NextRequest) {
     const { error } = await supabase.auth.exchangeCodeForSession(code)
 
     if (!error) {
-      return NextResponse.redirect(`${origin}${next}`)
+      const { data: { user }, error: userError } = await supabase.auth.getUser()
+
+      if (!userError && user) {
+        try {
+          await ensureTenantForUser(user)
+          return NextResponse.redirect(`${origin}${next}`)
+        } catch (provisionError) {
+          console.error(
+            '[auth/callback] provision',
+            provisionError instanceof Error ? provisionError.message : 'Falha de provisionamento',
+          )
+          return NextResponse.redirect(`${origin}/login?error=provision_failed`)
+        }
+      }
     }
   }
 
-  // Código inválido ou expirado → volta ao login com erro
   return NextResponse.redirect(`${origin}/login?error=link_invalido`)
 }
