@@ -381,3 +381,13 @@ Autorização recebida para utilizar contas de teste existentes. Ensaios executa
 - `app/api/bookings/route.ts` e `app/api/bookings/[id]/route.ts`: exigem `requireSession()`, usam o cliente de sessão e restringem consultas/alterações por `tenant_id`; no cancelamento lógico a atualização depende também de status permitido. Há retorno de `error.message` bruto na falha de GET de bookings; revisar exposição e padronizar erros sem mascarar o diagnóstico interno.
 - Estado do deployment após o commit `f3c90cbc` na consulta: **BUILDING**, não declarar READY nem homologado em produção até confirmação. Precedente `ac336cf2` encontrava-se READY.
 - Escopo desta rodada: revisão estática e alteração de log; nenhuma alteração de dados ou migrations. Testes HTTP reais por sessões de usuários e operações service_role continuam pendentes.
+
+
+## AUD-01 — Retomada do backend e proteção de erros na listagem (19/10/2026)
+
+- Revisão de `lib/route-helpers.ts`: `requireSession()` valida token com `auth.getUser()`, extrai `tenant_id` de `user.app_metadata` e reconfirma o vínculo na tabela `profiles` sob RLS, retornando 403 em caso de divergência. O código suporta Bearer e cookie, mas não houve teste HTTP real neste bloco.
+- Revisão de `app/api/bookings/route.ts`: GET exige sessão, utiliza cliente autenticado e `.eq('tenant_id',tenantId)`. Identificada exposição de `error.message` bruto do Supabase na resposta HTTP 500.
+- Commit `f6fdc1f4`: GET agora retorna mensagem genérica para cliente e registra somente `tenantId` e `error.code` no servidor. Fonte relida antes da atualização. Sem alteração de contrato de sucesso nem de dados.
+- A observação anterior sobre regras de disponibilidade, duração e slots mantém-se adiada para mecanismo futuro, não é escopo desta rodada.
+- Na consulta inicial à Vercel: `fb8f5386` estava QUEUED, `f3c90cbc` BUILDING e `ac336cf2` READY. O novo commit requer nova confirmação de deployment e testes de integração; não afirmar homologação só pelo commit.
+- Não foram feitos testes HTTP com sessões reais nesta rodada. Continuam pendentes provas de autenticação dos diversos perfis via HTTP, revisão das rotas privilegiadas restantes e eventuais controles de auditoria administrativa.
