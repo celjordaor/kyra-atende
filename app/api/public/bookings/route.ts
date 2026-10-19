@@ -184,6 +184,13 @@ export async function POST(request: NextRequest) {
       .select('id, client_name, start_at, services(name)')
       .single()
 
+    if (insertError?.code === '23P01') {
+      return NextResponse.json(
+        { message: 'Este horário acabou de ser reservado. Escolha outro horário.' },
+        { status: 409 },
+      )
+    }
+
     if (insertError || !booking) {
       console.error('[public/bookings] insert erro:', insertError)
       return NextResponse.json({ message: 'Não foi possível criar o agendamento.' }, { status: 500 })
