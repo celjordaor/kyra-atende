@@ -157,10 +157,16 @@ export default function IAChatPage() {
     setInput('')
     setSending(true)
 
-    const history = [...messages, userMsg].map(m => ({
-      role: m.role,
-      content: m.content,
-    }))
+    // Não reenviar histórico ilimitado: manter as mensagens recentes
+    // respeitando os limites da API e preservando o turno atual.
+    const history: Array<{ role: Role; content: string }> = []
+    let remaining = 20000
+    for (const msg of [...messages, userMsg].slice(-30).reverse()) {
+      const content = msg.content.slice(0, 4000)
+      if (!content.trim() || content.length > remaining) break
+      history.unshift({ role: msg.role, content })
+      remaining -= content.length
+    }
 
     try {
       const { reply } = await api.post<{ reply: string }>('\/ai\/chat', { messages: history })
@@ -278,6 +284,7 @@ export default function IAChatPage() {
         <textarea
           ref={textareaRef}
           value={input}
+          maxLength={4000}
           onChange={e => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Digite sua mensagem... (Enter para enviar, Shift+Enter para nova linha)"
