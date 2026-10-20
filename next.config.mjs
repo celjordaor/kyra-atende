@@ -13,9 +13,9 @@ const nextConfig = {
     optimizePackageImports: [
       'recharts',
       'react-markdown',
-      '@supabase/supabase-js',
-      '@anthropic-ai/sdk',
     ],
+    // SDKs de servidor (Supabase e Anthropic) não precisam de transformação de imports.
+    // Mantê-los fora evita trabalho extra por rota no compilador.
     // web-push tem código nativo — não bundlar em cada Lambda reduz o tracing
     serverComponentsExternalPackages: ['web-push'],
 
