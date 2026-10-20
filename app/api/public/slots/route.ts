@@ -26,6 +26,13 @@ export async function GET(request: NextRequest) {
     { slots: [], engine: true, needsConfiguration: true },
     { headers: { 'Cache-Control': 'no-store' } },
   )
+  const { data: assignments, error: assignmentError } = await admin.from('professional_services')
+    .select('professional_id').eq('tenant_id', tenantId).eq('service_id', serviceId)
+  if (assignmentError) return NextResponse.json({ error: 'Falha ao consultar profissionais habilitados.' }, { status: 503 })
+  const allowed = new Set((assignments ?? []).map(a => a.professional_id))
+  if (allowed.size === 0 || (professionalId && !allowed.has(professionalId))) {
+    return NextResponse.json({ slots: [], engine: true }, { headers: { 'Cache-Control': 'no-store' } })
+  }
   const { data, error } = await admin.rpc('get_available_slots', {
     p_tenant: tenantId, p_service: serviceId, p_date: date, p_professional: professionalId,
   })
@@ -33,5 +40,5 @@ export async function GET(request: NextRequest) {
     console.error('[public/slots]', { code: error.code })
     return NextResponse.json({ error: 'Falha ao calcular disponibilidade.' }, { status: 503 })
   }
-  return NextResponse.json({ slots: data ?? [], engine: true }, { headers: { 'Cache-Control': 'no-store' } })
+  return NextResponse.json({ slots: (data ?? []).filter((s: { professional_id: string }) => allowed.has(s.professional_id)), engine: true }, { headers: { 'Cache-Control': 'no-store' } })
 }
