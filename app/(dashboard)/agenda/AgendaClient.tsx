@@ -56,6 +56,7 @@ function getDayAvailability(day:Date,hours:BusinessHour[],blocks:AvailabilityBlo
  })
  if(!relevant.length)return {label:'',state:'open'}
  const company=relevant.filter(b=>!b.professional_id)
+ if(company.some(b=>b.category==='holiday'))return {label:'Feriado',state:'blocked',note:'Bloqueio de feriado registrado pela empresa'}
  if(company.length){
   // Se houver bloqueio de dia inteiro, sinalizar indisponibilidade.
   const full=company.some(b=>{
@@ -217,7 +218,7 @@ const DayCard = React.memo(function DayCard({ day, dayBks, loadId, onAction, onE
 
       {/* Cards do dia */}
       <div style={{ padding: '6px', display: 'flex', flexDirection: 'column', gap: '5px', background: 'var(--surface)', flex: 1, minHeight: '80px' }}>
-        {availability?.label && <div title={availability.note} style={{fontSize:11,fontWeight:600,color:availability.state==='open'?'var(--muted)':'var(--orange)',textAlign:'center',padding:'5px 3px'}}>{availability.label}</div>}
+        {availability?.label && dayBks.length>0 && <div title={availability.note} style={{fontSize:11,fontWeight:600,color:availability.state==='open'?'var(--muted)':'var(--orange)',textAlign:'center',padding:'5px 3px'}}>{availability.label}</div>}
         {dayBks.length === 0
           ? <p style={{ fontSize: '11px', color: 'var(--muted)', textAlign: 'center', margin: '18px 0' }}>{availability?.label || 'Sem agendamentos'}</p>
           : dayBks.map(b => {
