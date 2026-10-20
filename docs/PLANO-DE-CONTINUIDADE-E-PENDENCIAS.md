@@ -54,3 +54,17 @@ A pesquisa dos arquivos disponibilizados no contexto do Project não retornou o 
 - **Homologado:** fluxo ponta a ponta e evidência reproduzível aprovados.
 - **Adiado:** decisão de produto, fora do marco corrente.
 - **Não comprovado:** documentação ou evidência insuficiente; requer verificação antes de afirmar ausência.
+
+
+## Evolução iniciada — Revisão técnica Evolution/WhatsApp (19/10/2026)
+
+**Arquivos inspecionados:** `lib/whatsapp.ts` e `app/api/whatsapp/webhook/route.ts`.
+
+- **Controle existente confirmado:** o endpoint compara o segredo do webhook em tempo constante, exige segredo com pelo menos 32 caracteres e valida tipo do evento e identificador da instância. A implantação ainda requer configuração real do segredo no provedor e na Vercel.
+- **Controle existente confirmado:** mensagens sem permissão `manual` ou `ai` não entram no histórico/IA; contatos novos geram solicitação `pending`; `external_id` evita repetição simples do mesmo inbound.
+- **Correção pontual nesta rodada:** o handler deixou de imprimir a exceção completa recebida do processamento externo, registrando apenas o tipo do erro (commit `1ab4f5ba`). Isso reduz vazamento involuntário em logs; ainda depende de deploy.
+- **Risco funcional confirmado por leitura de código:** após envio bem-sucedido na Evolution, a inserção do outbound em `whatsapp_messages` não verifica `error` antes de chamar `incrementUsage`. Pode haver mensagem entregue sem histórico confiável. A atualização de uso também não é uma transação conjunta com o evento externo; não adicionar retry automático ingênuo porque pode duplicar o envio.
+- **Risco operacional confirmado por leitura de código:** a mensagem inbound é gravada antes da IA; se a IA ou o envio falhar, não há estado durável de reprocessamento e um reenvio pelo provedor encontra `external_id` duplicado. A notificação push não equivale a fila persistente.
+- **Pré-requisitos de homologação:** instância de teste exclusiva, segredo de webhook válido, URL HTTPS, permissões da conta, provedor compatível e confirmação de não impacto em números já em uso.
+- **Próxima entrega técnica recomendada (não implantada):** migração com fila/outbox e estados `pending/processing/done/failed`, chave idempotente, tentativas com backoff e reconciliação manual de envios ambíguos; cobrir por testes de concorrência, falha após envio, indisponibilidade da IA e duplicidade do webhook.
+- **Limites da rodada:** sem webhook real, sem conexão com número externo, sem alterações de esquema e sem disparar mensagens. Não chamar integração Evolution de homologada.
