@@ -291,3 +291,10 @@ A pesquisa dos arquivos disponibilizados no contexto do Project não retornou o 
 - UI `ProfissionaisHorarios.tsx` integrada em `/configuracoes/horarios` permite escolher profissional, herdar expediente ou editar faixas próprias e marcar múltiplos serviços.
 - Teste SQL em transação revertida testou registro de horário e vínculo; usuário `authenticated` sem permissão direta da RPC. Nenhum dado real de horário/vínculo permaneceu após teste.
 - **Ainda não ativo em agendamentos ou links públicos**: associação N:N, bloqueios e expediente individual aguardam motor central e validação de reservas. Não forçar associações nos tenants antigos sem ativação explícita.
+
+## Feriados e bloqueios de disponibilidade (20/10/2026)
+
+- Migration `20261020103000_manage_availability_blocks.sql` aplicada e versionada; RPCs restritas a service_role para salvar/remover bloqueios gerais ou individuais, com validação do tenant, do profissional, limites de intervalo e categoria.
+- Endpoint autenticado `GET/POST/DELETE /api/settings/availability/blocks` e tela em `/configuracoes/horarios` para cadastrar feriados, ausências, indisponibilidade e inatividade; remoção sob confirmação do servidor.
+- Teste de inserção e remoção no PostgreSQL executado com `ROLLBACK`, sem resíduos; privilégios diretos negados a `authenticated` confirmados.
+- Pendências: motor central para aplicar os bloqueios aos slots; não foi ativada nenhuma restrição de agendamento nesta rodada. Feriados recorrentes/calendário nacional automático e exceções permissivas ainda não implementados. HTTP E2E e publicação requerem verificação.
