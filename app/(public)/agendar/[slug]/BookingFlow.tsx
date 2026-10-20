@@ -35,6 +35,7 @@ interface Props {
   services:      Service[]
   professionals: Professional[]
   prefill?:      Prefill
+  invitationToken?: string
 }
 
 type Step = 'service' | 'professional' | 'datetime' | 'confirm' | 'success'
@@ -337,7 +338,7 @@ function DataRow({ icon, label, value }: { icon: string; label: string; value: s
 
 // ─── BookingFlow ──────────────────────────────────────────────────────────────
 
-export default function BookingFlow({ tenantId, services, professionals, prefill }: Props) {
+export default function BookingFlow({ tenantId, services, professionals, prefill, invitationToken }: Props) {
   const hasMultipleProfs = professionals.length > 1
 
   const [step,          setStep]          = useState<Step>('service')
@@ -413,6 +414,7 @@ export default function BookingFlow({ tenantId, services, professionals, prefill
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          convite:         invitationToken,
           tenant_id:       tenantId,
           service_id:      service.id,
           professional_id: professional?.id ?? null,
