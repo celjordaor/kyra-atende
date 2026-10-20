@@ -14,13 +14,14 @@ export default async function AssinaturasPage(){
  const admin=createAdminClient()
  const {data:profile,error:profileError}=await admin.from('profiles').select('role').eq('id',user.id).maybeSingle()
  if(profileError||profile?.role!=='superadmin')redirect('/superadmin')
- const [subs,tenants,payments,events]=await Promise.all([
+ const [subs,tenants,payments,events,attempts]=await Promise.all([
   admin.from('subscriptions').select('tenant_id,plan,status,billing_cycle,amount,current_period_end,trial_ends_at').order('current_period_end',{ascending:true}).limit(500),
   admin.from('tenants').select('id,name,plan_status').limit(500),
   admin.from('asaas_processed_payments').select('payment_id,tenant_id,plan,period,amount,processed_at').order('processed_at',{ascending:false}).limit(250),
   admin.from('billing_events').select('id,tenant_id,event_type,amount,created_at').order('created_at',{ascending:false}).limit(250),
+  admin.from('asaas_checkout_attempts').select('id,tenant_id,plan,period,amount,status,created_at').order('created_at',{ascending:false}).limit(100),
  ])
- if(subs.error||tenants.error||payments.error||events.error) return <main><h1>Assinaturas</h1><p role="alert">Não foi possível consultar os dados financeiros.</p></main>
+ if(subs.error||tenants.error||payments.error||events.error||attempts.error) return <main><h1>Assinaturas</h1><p role="alert">Não foi possível consultar os dados financeiros.</p></main>
  const names=Object.fromEntries((tenants.data??[]).map(t=>[t.id,{name:t.name,status:t.plan_status}]))
  const now=Date.now(),week=now+7*86400000
  const rows=(subs.data??[]).map(s=>{
@@ -67,6 +68,14 @@ export default async function AssinaturasPage(){
     </tr>)}</tbody>
    </table>
    {(events.data??[]).length===0&&<p>Nenhum evento financeiro registrado na amostra consultada.</p>}
+  </section>
+  <section style={{padding:16,border:'1px solid var(--border)',borderRadius:10,overflowX:'auto'}}>
+   <h2 style={{fontSize:18}}>Tentativas de checkout Asaas</h2>
+   <p style={{fontSize:13,color:'var(--muted)'}}>Tentativas incertas exigem conferência no Asaas antes de criar outro link. Registro iniciado não significa que houve cobrança.</p>
+   <table style={{width:'100%',minWidth:720,borderCollapse:'collapse',fontSize:13}}>
+    <thead><tr>{['Cliente','Plano','Ciclo','Valor','Resultado','Data'].map(h=><th key={h} style={{textAlign:'left',padding:8,borderBottom:'1px solid var(--border)'}}>{h}</th>)}</tr></thead>
+    <tbody>{(attempts.data??[]).map(a=><tr key={a.id}><td style={{padding:8}}>{names[a.tenant_id]?.name??'Cliente não localizado'}</td><td>{a.plan}</td><td>{a.period}</td><td>{money(a.amount)}</td><td>{a.status==='uncertain'?'Exige conciliação':a.status==='started'?'Em processamento / verificar':a.status==='link_created'?'Link criado':'Recusada'}</td><td>{date(a.created_at)}</td></tr>)}</tbody>
+   </table>
   </section>
   <p style={{fontSize:12,color:'var(--muted)'}}>Pagamentos e eventos limitados aos 250 registros mais recentes de cada fonte. Para estornos, cancelamentos e cobranças não liquidadas, é obrigatória consulta ao provedor; esta tela não altera assinaturas.</p>
  </main>
