@@ -362,6 +362,8 @@ export default function BookingFlow({ tenantId, services, professionals, prefill
   const [bookingId,     setBookingId]     = useState<string | null>(null)
   const [takenSlots,    setTakenSlots]    = useState<TakenSlot[]>([])
   const [loadingSlots,  setLoadingSlots]  = useState(false)
+  const [engineSlots, setEngineSlots] = useState<{professional_id:string;starts_at:string;ends_at:string}[] | null>(null)
+  const [slotsError, setSlotsError] = useState(false)
 
   // Próximos 14 dias úteis (sem domingo)
   const availableDays: Date[] = Array.from({ length: 21 }, (_, i) => {
@@ -370,7 +372,7 @@ export default function BookingFlow({ tenantId, services, professionals, prefill
     return d
   }).filter(d => d.getDay() !== 0).slice(0, 14)
 
-  const slots = generateSlots(selectedDay)
+  const slots = engineSlots ? Array.from(new Set(engineSlots.map(s => s.starts_at))) : generateSlots(selectedDay)
 
   // Carrega slots ocupados ao entrar na etapa de datetime ou ao mudar dia/profissional
   useEffect(() => {
@@ -379,19 +381,25 @@ export default function BookingFlow({ tenantId, services, professionals, prefill
     async function loadTakenSlots() {
       setLoadingSlots(true)
       setSelectedSlot(null)
+      setEngineSlots(null)
+      setSlotsError(false)
       try {
         const dateStr   = selectedDay.toISOString().split('T')[0]
         const profParam = professional?.id ? `&professionalId=${professional.id}` : ''
+        const serviceParam = service?.id ? `&serviceId=${service.id}` : ''
         const res = await fetch(
-          `/api/public/slots?tenantId=${tenantId}&date=${dateStr}${profParam}`,
+          `/api/public/slots?tenantId=${tenantId}&date=${dateStr}${serviceParam}${profParam}`,
         )
         if (res.ok) {
           const json = await res.json()
-          setTakenSlots(json.slots ?? [])
+          if(json.engine) { setEngineSlots(json.slots ?? []); setTakenSlots([]) }
+          else { setEngineSlots(null); setTakenSlots(json.slots ?? []) }
         } else {
+          setSlotsError(true)
           setTakenSlots([])
         }
       } catch {
+        setSlotsError(true)
         setTakenSlots([])
       } finally {
         setLoadingSlots(false)
@@ -399,7 +407,7 @@ export default function BookingFlow({ tenantId, services, professionals, prefill
     }
 
     loadTakenSlots()
-  }, [step, selectedDay, professional, tenantId])
+  }, [step, selectedDay, professional, tenantId, service])
 
   async function handleConfirm() {
     if (!service || !selectedSlot || !clientName.trim() || !clientPhone) return
@@ -408,6 +416,7 @@ export default function BookingFlow({ tenantId, services, professionals, prefill
 
     const startAt = new Date(selectedSlot)
     const endAt   = addMinutes(startAt, service.duration_minutes)
+    const chosenProfessional = engineSlots ? engineSlots.find(s=>s.starts_at===selectedSlot)?.professional_id : professional?.id
 
     try {
       const res = await fetch('/api/public/bookings', {
@@ -417,7 +426,7 @@ export default function BookingFlow({ tenantId, services, professionals, prefill
           convite:         invitationToken,
           tenant_id:       tenantId,
           service_id:      service.id,
-          professional_id: professional?.id ?? null,
+          professional_id: chosenProfessional ?? null,
           client_name:     clientName.trim(),
           client_phone:    clientPhone,
           client_email:    clientEmail.trim() || null,
@@ -606,6 +615,7 @@ export default function BookingFlow({ tenantId, services, professionals, prefill
       </div>
 
       {/* Grade de slots */}
+      {slotsError && <p role="alert">Não foi possível consultar horários. Tente outra data.</p>}
       {loadingSlots ? (
         <div style={{
           textAlign: 'center', padding: '32px 0',
@@ -619,7 +629,7 @@ export default function BookingFlow({ tenantId, services, professionals, prefill
           gap: '8px', marginBottom: '24px',
         }}>
           {slots.map(slot => {
-            const taken      = service ? isSlotTaken(slot, service.duration_minutes, takenSlots) : false
+            const taken = slotsError || (service ? isSlotTaken(slot, service.duration_minutes, takenSlots) : false)
             const isSelected = slot === selectedSlot
             return (
               <button
@@ -656,7 +666,7 @@ export default function BookingFlow({ tenantId, services, professionals, prefill
         </Button>
         <Button
           variant="primary" fullWidth
-          disabled={!selectedSlot || loadingSlots}
+          disabled={!selectedSlot || loadingSlots || slotsError}
           onClick={() => setStep('confirm')}
         >
           Continuar
