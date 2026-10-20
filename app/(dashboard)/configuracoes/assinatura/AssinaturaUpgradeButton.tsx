@@ -6,9 +6,10 @@ import type { Plan } from '@/components/organisms/PlanModal'
 
 interface Props {
   currentPlan: Plan
+  isTrial?: boolean
 }
 
-export function AssinaturaUpgradeButton({ currentPlan }: Props) {
+export function AssinaturaUpgradeButton({ currentPlan, isTrial = false }: Props) {
   const [open, setOpen] = useState(false)
 
   return (
@@ -27,7 +28,7 @@ export function AssinaturaUpgradeButton({ currentPlan }: Props) {
           cursor: 'pointer',
         }}
       >
-        Ver planos →
+        {isTrial ? 'Assinar plano →' : 'Ver planos →'}
       </button>
 
       <PlanModal
@@ -35,6 +36,7 @@ export function AssinaturaUpgradeButton({ currentPlan }: Props) {
         onClose={() => setOpen(false)}
         currentPlan={currentPlan}
         mode="upgrade"
+        isTrial={isTrial}
       />
     </>
   )
