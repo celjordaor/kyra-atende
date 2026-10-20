@@ -5,6 +5,7 @@
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { requireSession } from '@/lib/route-helpers'
+import { checkConfiguredAvailability } from '@/lib/availability-validation'
 
 interface RouteParams { params: { id: string } }
 
@@ -49,6 +50,21 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
         { message: 'Informe início e fim válidos, futuros e com duração máxima de 8 horas.' },
         { status: 400 },
       )
+    }
+  }
+
+  // Só revalidar disponibilidade quando houver mudança de serviço, horário ou profissional.
+  if(start_at!==undefined||end_at!==undefined||service_id!==undefined||professional_id!==undefined){
+    const {data:original,error:originalError}=await supabase.from('bookings')
+      .select('service_id,professional_id,start_at,end_at,status').eq('id',params.id).eq('tenant_id',tenantId).maybeSingle()
+    if(originalError)return NextResponse.json({message:'Não foi possível consultar o agendamento.'},{status:503})
+    if(!original)return NextResponse.json({message:'Agendamento não encontrado.'},{status:404})
+    if(!['pending','confirmed'].includes(original.status))return NextResponse.json({message:'Agendamento encerrado não pode ser remarcado.'},{status:409})
+    const desired={serviceId:service_id??original.service_id,professionalId:professional_id!==undefined?professional_id:original.professional_id,startAt:start_at??original.start_at,endAt:end_at??original.end_at}
+    if(desired.startAt!==original.start_at||desired.endAt!==original.end_at||desired.serviceId!==original.service_id||desired.professionalId!==original.professional_id){
+      const check=await checkConfiguredAvailability({tenantId,...desired,excludeBookingId:params.id})
+      if(check==='error')return NextResponse.json({message:'Não foi possível verificar disponibilidade.'},{status:503})
+      if(check==='unavailable')return NextResponse.json({message:'Novo horário indisponível para este serviço ou profissional.'},{status:409})
     }
   }
 
