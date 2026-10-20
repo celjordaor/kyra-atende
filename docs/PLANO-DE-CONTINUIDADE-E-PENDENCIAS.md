@@ -196,3 +196,10 @@ A pesquisa dos arquivos disponibilizados no contexto do Project não retornou o 
 - Ambas as tabelas são consultadas via service role apenas no servidor, depois de verificar o papel `superadmin`; não há ação de cancelamento, cobrança, estorno ou suspensão.
 - A visualização mostra até 250 pagamentos confirmados e 250 eventos internos; não representa todos os lançamentos, faturas abertas ou status atual do Asaas. Vencimentos continuam sendo sinalizadores operacionais, não provas de atraso.
 - Próxima pendência: mecanismo de reconciliação autorizado com a API do Asaas para situações de reembolso, chargeback e cancelamento, com validação do vínculo da cobrança ao tenant e decisão de negócio antes de alterar acesso.
+
+## Asaas: conferência sob demanda no Superadmin (19/10/2026)
+
+- Endpoint somente GET `api/superadmin/asaas-payment-status`: exige sessão e perfil superadmin, aceita apenas `paymentId` válido e previamente registrado em `asaas_processed_payments`. Consulta a cobrança na API do Asaas conforme ambiente configurado, verifica identidade, valor e referência tenant/plano/ciclo; caso tenha paymentLink, também valida o link autenticado. Não grava dados nem altera contratos.
+- Botão `Consultar Asaas` adicionado a cada pagamento confirmado em `superadmin/assinaturas`, com indicador de status atual e identificação do ambiente sandbox/produção.
+- Escopo: somente pagamentos previamente conciliados no Kyra Atende; não lista cobranças abertas que nunca chegaram ao webhook. Respostas com estorno, cancelamento ou status divergente são informativas e devem levar à conferência manual, nunca alteração automática de acesso.
+- Pendente homologação HTTP real com Superadmin, resposta de sandbox e chamadas não autorizadas; não foram criadas cobranças nem executados estornos.
