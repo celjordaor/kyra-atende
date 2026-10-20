@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
       id, tenant_id, client_id, professional_id, service_id,
       client_name, client_phone, client_email,
       start_at, end_at,
-      status, notes, created_at,
+      status, notes, created_at, price_charged, discount, payment_method, paid_at,
       professionals!bookings_professional_id_fkey(id, name),
       services!bookings_service_id_fkey(id, name, duration_minutes, price)
     `)
