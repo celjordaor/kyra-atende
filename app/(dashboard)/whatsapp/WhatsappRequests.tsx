@@ -15,6 +15,7 @@ export function WhatsappRequests() {
   const [loading, setLoading] = useState(true)
   const [busyId, setBusyId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [notice, setNotice] = useState<string | null>(null)
 
   async function refresh() {
     setError(null)
@@ -35,6 +36,7 @@ export function WhatsappRequests() {
   async function decide(contact: Contact, status: Contact['status']) {
     setBusyId(contact.id)
     setError(null)
+    setNotice(null)
     try {
       const res = await fetch('/api/whatsapp/requests', {
         method: 'PATCH',
@@ -42,6 +44,9 @@ export function WhatsappRequests() {
         body: JSON.stringify({ id: contact.id, status }),
       })
       if (!res.ok) throw new Error('Não foi possível atualizar este contato.')
+      const result = await res.json()
+      if (typeof result.warning === 'string') setNotice(result.warning)
+      else if (status === 'ai' && contact.status === 'pending') setNotice('Contato autorizado. A primeira mensagem foi encaminhada para processamento pela IA; confira o histórico.')
       setContacts(prev => prev.map(c => c.id === contact.id ? { ...c, status } : c))
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Erro de conexão.')
@@ -85,6 +90,7 @@ export function WhatsappRequests() {
       </div>
       <p style={{ color: 'var(--muted)', margin: '0 0 12px', fontSize: 13 }}>Números desconhecidos aparecem aqui sem o conteúdo de suas mensagens. Nenhuma conversa é armazenada ou respondida pela IA antes da sua autorização.</p>
       {error && <p role="alert" style={{ color: 'var(--red)', fontSize: 13 }}>{error}</p>}
+      {notice && <p role="status" style={{ color: 'var(--ink)', fontSize: 13 }}>{notice}</p>}
       {loading ? <p style={{ fontSize: 13, color: 'var(--muted)' }}>Carregando solicitações…</p> : pending.length === 0 ? <p style={{ fontSize: 13, color: 'var(--muted)' }}>Nenhuma solicitação pendente.</p> : pending.map(renderContact)}
       {other.length > 0 && (
         <details style={{ marginTop: 14 }}>
