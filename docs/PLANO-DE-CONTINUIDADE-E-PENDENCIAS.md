@@ -330,3 +330,10 @@ A pesquisa dos arquivos disponibilizados no contexto do Project não retornou o 
 - Endpoint autenticado `POST /api/portal/claim` recebe apenas slug e token, deriva a identidade do `getUser()` e verifica a empresa antes de chamar RPC. Frontend `/portal` recebe campo para colar convite utilizado após confirmar agendamento.
 - Validações: função negada ao papel `authenticated`; cenário sem identidade verificada não cria vínculo; teste SQL revertido. Nenhum cliente foi vinculado artificialmente.
 - Pendências: validar e configurar template de código OTP no Supabase Auth, garantir verificação de sessão HTTP E2E e proteção antiabuso, possibilitar ativação de clientes sem convite individual, histórico e agendamento autenticado por tenant, tratamento de expiração e revogação, além de experiência de resgatar convite sem copiar token. O portal ainda não deve ser considerado homologado.
+
+## Portal central — consulta dos próprios agendamentos (20/10/2026)
+
+- Implementados `GET /api/portal/overview` e `PortalOverview` dentro de `/portal`: seleção da empresa, listagem dos agendamentos do cliente autenticado e link público para novo agendamento.
+- A API exige usuário autenticado com e-mail verificado; `customer_memberships` restringe exatamente os pares `tenant_id + client_id` a consultar. Nenhum filtro por telefone ou e-mail digitado dá acesso ao histórico. Resultado privado `no-store`.
+- O botão de novo agendamento abre o link público existente; **não há ainda preenchimento automático por sessão do portal**. Cancelamento/remarcação e integração dos slots públicos continuam pendentes.
+- Nesta etapa não é necessária nova migration; schema `customer_memberships` da etapa anterior reaproveitado. Confirmar CI do último commit, deploy e teste HTTP real multitenant antes de homologar.
