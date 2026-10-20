@@ -50,12 +50,16 @@ export default async function PublicBookingPage({ params, searchParams }: PagePr
     const tokenHash = createHash('sha256').update(token).digest('hex')
     const { data: invitation } = await supabase.from('booking_invitations')
       .select('client_id').eq('tenant_id',tenant.id).eq('token_hash',tokenHash)
-      .is('revoked_at',null).gt('expires_at',new Date().toISOString()).maybeSingle()
+      .is('revoked_at',null).is('consumed_at',null).gt('expires_at',new Date().toISOString()).maybeSingle()
     if (invitation) {
       const { data: client } = await supabase.from('clients')
         .select('name,email,phone').eq('id',invitation.client_id).eq('tenant_id',tenant.id).maybeSingle()
       if (client) prefill={nome:client.name,email:client.email??'',tel:client.phone??''}
     }
+  }
+
+  if (searchParams.convite && !prefill) {
+    return <PublicBookingLayout companySlug={tenant.slug} companyName={tenant.name} companyLogoUrl={tenant.logo_url ?? undefined}><p role="alert">Este convite foi utilizado, expirou ou foi revogado. Solicite um novo convite à empresa.</p></PublicBookingLayout>
   }
 
   return (
