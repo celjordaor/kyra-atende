@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { dispatchPush } from '@/lib/push'
+import { checkConfiguredAvailability } from '@/lib/availability-validation'
 import { createHash } from 'node:crypto'
 
 function adminClient() {
@@ -111,6 +112,10 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ message: 'Profissional não disponível.' }, { status: 400 })
       }
     }
+
+    const availability = await checkConfiguredAvailability({tenantId:tenant_id,serviceId:service_id,professionalId:professional_id,startAt:start_at,endAt:end_at})
+    if(availability==='error')return NextResponse.json({message:'Não foi possível verificar a disponibilidade.'},{status:503})
+    if(availability==='unavailable')return NextResponse.json({message:'Horário indisponível para esse serviço ou profissional.'},{status:409})
 
     // ── Verificar conflito se tem profissional selecionado ───────────────────
     if (professional_id) {
