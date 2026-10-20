@@ -363,6 +363,7 @@ export default function BookingFlow({ tenantId, services, professionals, prefill
   const [loadingSlots,  setLoadingSlots]  = useState(false)
   const [engineSlots, setEngineSlots] = useState<{professional_id:string;starts_at:string;ends_at:string}[] | null>(null)
   const [slotsError, setSlotsError] = useState(false)
+  const [needsConfiguration, setNeedsConfiguration] = useState(false)
 
   const eligibleProfessionals = service ? professionals.filter(p => p.serviceIds.includes(service.id)) : []
   const hasMultipleProfs = eligibleProfessionals.length > 1
@@ -385,6 +386,7 @@ export default function BookingFlow({ tenantId, services, professionals, prefill
       setSelectedSlot(null)
       setEngineSlots(null)
       setSlotsError(false)
+      setNeedsConfiguration(false)
       try {
         const dateStr   = selectedDay.toISOString().split('T')[0]
         const profParam = professional?.id ? `&professionalId=${professional.id}` : ''
@@ -394,7 +396,7 @@ export default function BookingFlow({ tenantId, services, professionals, prefill
         )
         if (res.ok) {
           const json = await res.json()
-          if(json.engine) { setEngineSlots(json.slots ?? []); setTakenSlots([]) }
+          if(json.engine) { setEngineSlots(json.slots ?? []); setTakenSlots([]); setNeedsConfiguration(Boolean(json.needsConfiguration)) }
           else { setEngineSlots([]); setTakenSlots([]); setSlotsError(true) }
         } else {
           setSlotsError(true)
@@ -527,8 +529,9 @@ export default function BookingFlow({ tenantId, services, professionals, prefill
         Escolha o profissional
       </h2>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
+        {eligibleProfessionals.length === 0 && <p role="alert">Nenhum profissional está habilitado para este serviço. Entre em contato com a empresa.</p>}
         {/* Opção: qualquer profissional elegível */}
-        <button
+        {eligibleProfessionals.length > 0 && <button
           onClick={() => { setProfessional(null); setStep('datetime') }}
           style={{
             padding: '16px', borderRadius: 'var(--r-md)', cursor: 'pointer', textAlign: 'left',
@@ -551,7 +554,7 @@ export default function BookingFlow({ tenantId, services, professionals, prefill
             </div>
             <div style={{ fontSize: '13px', color: 'var(--muted)' }}>Primeira disponibilidade</div>
           </div>
-        </button>
+        </button>}
 
         {/* Lista de profissionais */}
         {eligibleProfessionals.map(p => (
@@ -618,7 +621,9 @@ export default function BookingFlow({ tenantId, services, professionals, prefill
       </div>
 
       {/* Grade de slots */}
-      {slotsError && <p role="alert">Não foi possível consultar horários. Tente outra data.</p>}
+      {slotsError && <p role="alert">Não foi possível consultar a disponibilidade. Tente novamente.</p>}
+      {needsConfiguration && <p role="alert">A empresa ainda não configurou o expediente para agendamentos online.</p>}
+      {!loadingSlots && !slotsError && !needsConfiguration && engineSlots !== null && slots.length === 0 && <p>Não há horários disponíveis para essa combinação de serviço, profissional e data.</p>}
       {loadingSlots ? (
         <div style={{
           textAlign: 'center', padding: '32px 0',
