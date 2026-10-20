@@ -275,3 +275,11 @@ A pesquisa dos arquivos disponibilizados no contexto do Project não retornou o 
 - Teste SQL em transação revertida: inserção de associação e expediente seguida de rollback; conferidas sete tabelas remotas. Não foram criados horários, feriados ou vínculos reais.
 - **Próximas entregas necessárias antes da ativação:** endpoints de configuração protegidos e UI; validação de sobreposição de intervalos; definição de como feriados recorrentes e exceções especiais serão cadastrados; motor único de slots respeitando duração do serviço, fuso, expediente efetivo, bloqueios, profissionais habilitados e conflito de reservas; enforcement no POST/PUT de bookings e no link público; testes concorrentes e HTTP autenticados.
 - Não confundir fundação de schema com motor de disponibilidade ou seletor de profissionais homologado. A vinculação N:N já está prevista para evitar retrabalho quando se ativar o filtro nas telas.
+
+## Configuração inicial de expediente da empresa (20/10/2026)
+
+- Adicionada a página `/configuracoes/horarios` para cadastrar múltiplas faixas semanais por dia e link nas configurações.
+- `GET /api/settings/availability` consulta dados do tenant autenticado, incluindo expediente, lista de profissionais/serviços e vínculos N:N; `PUT` salva as faixas de expediente com verificação de horários e sobreposição.
+- Migration `20261020101000_save_company_working_hours.sql` versionada e aplicada; RPC `save_company_working_hours` substitui as faixas numa transação, valida o ator vinculado ao tenant e é executável somente via service role. Tabelas continuam fechadas para acesso direto.
+- SQL transacional de cadastro de duas faixas (08h–12h e 13h–18h) executado e revertido, sem alterar expedientes reais. Endpoint HTTP autenticado e interface publicada ainda requerem teste de homologação.
+- **Importante:** esta é a primeira configuração de expediente, ainda não o motor de disponibilidade. Horários configurados não interferem em reservas existentes ou novos agendamentos até integração posterior. Também faltam UI de bloqueios, cadastro de faixas próprias, vínculo N:N editável e validação de agenda pública.
