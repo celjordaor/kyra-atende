@@ -6,6 +6,7 @@ import { DataTable, Modal } from '@/components/organisms'
 import { SearchBar } from '@/components/molecules'
 import { Button, StatusBadge, FormField, Avatar } from '@/components/atoms'
 import { api, ApiError } from '@/lib/api'
+import { BookingDetailModal } from '@/components/organisms/BookingDetailModal'
 import type { Column } from '@/components/organisms'
 
 const ESTADOS = [
@@ -841,6 +842,7 @@ export default function AgendamentosClient({ initialBookings, professionals, ser
   const [editRow, setEditRow]                 = useState<BookingRow | null>(null)
   const [clientModal, setClientModal]         = useState(false)
   const [completeRow, setCompleteRow]         = useState<BookingRow | null>(null)
+  const [detailRow, setDetailRow] = useState<BookingRow | null>(null)
   const [form, setForm]                       = useState<BookingForm>(() => blankBookingForm(services.filter(s => (s as any).is_active !== false)))
   const [saving, setSaving]                   = useState(false)
   const [deleting, setDeleting]               = useState(false)
@@ -997,6 +999,8 @@ export default function AgendamentosClient({ initialBookings, professionals, ser
       label: '',
       render: (_v: unknown, row: BookingRow) => (
         <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end', alignItems: 'center' }}>
+          {row.status === 'completed' && <button type="button" title="Visualizar ficha de finalização" aria-label="Visualizar ficha de finalização" onClick={() => setDetailRow(row)}
+            style={{width:32,height:32,borderRadius:'50%',border:'none',background:'var(--surface-3)',color:'var(--ink-soft)',cursor:'pointer'}}>◉</button>}
           {/* Editar */}
           {(row.status === 'pending' || row.status === 'confirmed') && (
             <button
@@ -1208,6 +1212,8 @@ export default function AgendamentosClient({ initialBookings, professionals, ser
           <FormField label="Observações" type="textarea" value={form.notes} onChange={v => setF('notes', v)} placeholder="Informações adicionais sobre o agendamento…" />
         </div>
       </Modal>
+
+      <BookingDetailModal booking={detailRow} onClose={() => setDetailRow(null)} />
 
       {/* Complete service modal */}
       <CompleteModal
