@@ -85,6 +85,8 @@ export default function ConfiguracoesClient({
           Assinatura
         </Link>
 
+        <Link href="/configuracoes/horarios" style={tabStyle(false)}>Horários</Link>
+
         <Link href="/configuracoes/notificacoes" style={tabStyle(false)}>
           Notificações
         </Link>
