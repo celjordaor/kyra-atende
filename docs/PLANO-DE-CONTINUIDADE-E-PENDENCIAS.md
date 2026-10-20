@@ -189,3 +189,10 @@ A pesquisa dos arquivos disponibilizados no contexto do Project não retornou o 
 - Nenhuma operacao de pagamento, cancelamento ou suspensao e oferecida na interface. Fim do periodo nao implica inadimplencia verificada; conciliacao Asaas segue obrigatoria.
 - Consulta limitada a 500 assinaturas e empresas: a tela deve sinalizar ampliacao/paginacao antes de escalar. Nao representa reconciliacao financeira completa.
 - Proxima rodada: validacao automatizada, publicacao e verificacao autenticada do painel; depois projetar fila de conciliacao segura para cancelamentos e estornos.
+
+## Financeiro — visão de conciliação no Superadmin (19/10/2026)
+
+- A página `/superadmin/assinaturas` agora inclui os pagamentos conciliados de `asaas_processed_payments` e eventos recentes de `billing_events`, reutilizando a autenticação de Superadmin e a lista de empresas. Commit `1604c5f0`.
+- Ambas as tabelas são consultadas via service role apenas no servidor, depois de verificar o papel `superadmin`; não há ação de cancelamento, cobrança, estorno ou suspensão.
+- A visualização mostra até 250 pagamentos confirmados e 250 eventos internos; não representa todos os lançamentos, faturas abertas ou status atual do Asaas. Vencimentos continuam sendo sinalizadores operacionais, não provas de atraso.
+- Próxima pendência: mecanismo de reconciliação autorizado com a API do Asaas para situações de reembolso, chargeback e cancelamento, com validação do vínculo da cobrança ao tenant e decisão de negócio antes de alterar acesso.
