@@ -181,7 +181,7 @@ export default async function AssinaturaPage() {
       </div>
 
       {/* Upgrade */}
-      {nextPlan && (
+      {(nextPlan || isTrial) && (
         <div style={{
           background: 'var(--brand-faint)',
           border: '1px solid var(--brand-dim)',
@@ -195,13 +195,13 @@ export default async function AssinaturaPage() {
         }}>
           <div>
             <p style={{ fontSize: 15, fontWeight: 600, color: 'var(--brand)', margin: '0 0 4px' }}>
-              Faça upgrade para {PLAN_LABELS[nextPlan]}
+              {isTrial ? 'Contrate o plano que está experimentando ou escolha outro' : `Faça upgrade para ${PLAN_LABELS[nextPlan]}`}
             </p>
             <p style={{ fontSize: 13, color: 'var(--ink-soft)', margin: 0 }}>
-              {(PLAN_FEATURES[nextPlan] ?? []).slice(0, 3).join(' · ')}
+              {(PLAN_FEATURES[isTrial ? plan : nextPlan] ?? []).slice(0, 3).join(' · ')}
             </p>
           </div>
-          <AssinaturaUpgradeButton currentPlan={plan as Plan} />
+          <AssinaturaUpgradeButton currentPlan={plan as Plan} isTrial={isTrial} />
         </div>
       )}
     </div>
