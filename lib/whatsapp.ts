@@ -190,7 +190,7 @@ async function sendViaEvolution(msg: OutboundMessage): Promise<void> {
     .from('whatsapp_outbox')
     .insert({
       tenant_id: msg.tenantId,
-      to_number: msg.to.replace(/\\D/g, ''),
+      to_number: msg.to.replace(/\D/g, ''),
       body_sha256: createHash('sha256').update(msg.body).digest('hex'),
       status: 'sending',
     })
@@ -211,7 +211,7 @@ async function sendViaEvolution(msg: OutboundMessage): Promise<void> {
     res = await fetch(`${url}/message/sendText/${msg.tenantId}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', apikey: key },
-      body: JSON.stringify({ number: msg.to.replace(/\\D/g, ''), text: msg.body }),
+      body: JSON.stringify({ number: msg.to.replace(/\D/g, ''), text: msg.body }),
     })
   } catch {
     await supabase.from('whatsapp_outbox')
