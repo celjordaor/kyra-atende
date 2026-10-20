@@ -6,9 +6,10 @@
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { requireSession } from '@/lib/route-helpers'
-import { getLimit, getUsage, incrementUsage } from '@/lib/entitlements'
+import { incrementUsage } from '@/lib/entitlements'
 import { chat, type ChatMessage } from '@/lib/ai'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { randomUUID } from 'node:crypto'
 
 export async function POST(request: NextRequest) {
   const session = await requireSession()
@@ -42,51 +43,67 @@ export async function POST(request: NextRequest) {
     content: m.content,
   }))
 
-  // Verifica limite de tokens de IA
-  const limit = await getLimit(tenantId, 'ai_chat_monthly_limit')
-  if (limit !== 'unlimited') {
-    const used = await getUsage(tenantId, 'ai_chat_tokens_used')
-    if (used >= (limit as number)) {
-      return NextResponse.json(
-        { statusCode: 402, message: 'Limite de uso de IA atingido. Faça upgrade do seu plano.', upgradeRequired: true },
-        { status: 402 },
-      )
+  // Orçamento monetário: recurso habilitado explicitamente após configuração de câmbio.
+  // Antes da ativação, preservar o fluxo existente para não interromper clientes.
+  const monetaryEnabled = process.env.AI_MONETARY_ENFORCEMENT_ENABLED === 'true'
+  const fx = Number(process.env.AI_USD_BRL_RATE ?? '')
+  const admin = createAdminClient()
+  if (monetaryEnabled) {
+    if (!Number.isFinite(fx) || fx <= 0 || fx > 100) {
+      return NextResponse.json({ error: 'Orçamento de IA indisponível: câmbio não configurado.' }, { status: 503 })
     }
+    // Reserva conservadora: até 25k input e 1024 output, em USD convertidos.
+    // A entrada real deve ser observada na homologação antes de reduzir a margem.
+    const reservedBrl = Math.ceil((((25000 * 1 + 1024 * 5) / 1000000) * fx) * 100000000) / 100000000
+    const id = randomUUID()
+    const reservation = await admin.rpc('reserve_ai_monetary', {
+      p_tenant: tenantId, p_id: id, p_reserved_brl: reservedBrl,
+    })
+    if (reservation.error) {
+      console.error('[ai/chat] reserva financeira indisponível', { code: reservation.error.code })
+      return NextResponse.json({ error: 'Não foi possível verificar o orçamento de IA.' }, { status: 503 })
+    }
+    if (!reservation.data) {
+      return NextResponse.json({
+        statusCode: 402, message: 'Limite financeiro mensal de IA atingido. Consulte seu plano.',
+        upgradeRequired: true,
+      }, { status: 402 })
+    }
+    let result: Awaited<ReturnType<typeof chat>>
+    try {
+      result = await chat(messages)
+    } catch {
+      const release = await admin.rpc('finish_ai_monetary', { p_id: id, p_success: false, p_input: 0, p_output: 0, p_fx: fx })
+      if (release.error) console.error('[ai/chat] liberação pendente', { code: release.error.code, id })
+      return NextResponse.json({ error: 'Erro ao processar mensagem.' }, { status: 500 })
+    }
+    const settlement = await admin.rpc('finish_ai_monetary', {
+      p_id: id, p_success: true, p_input: result.inputTokens,
+      p_output: result.outputTokens, p_fx: fx, p_model: 'claude-haiku-4-5-20251001',
+    })
+    if (settlement.error || settlement.data !== true) {
+      console.error('[ai/chat] conciliação financeira pendente', { code: settlement.error?.code, id })
+      return NextResponse.json({ error: 'Resposta gerada, mas o registro financeiro precisa de conciliação.' }, { status: 503 })
+    }
+    return NextResponse.json({ reply: result.reply })
   }
 
+  // Fluxo legado enquanto a reserva financeira não for habilitada.
+  // Os números abaixo são comerciais (interações), por isso não devem ser
+  // comparados com tokens. Não ativar bloqueio de tokens por esses valores.
   try {
     const { reply, tokensUsed, inputTokens, outputTokens } = await chat(messages)
-
-    // Aguardar persistência do uso antes de responder como concluído.
-    // Em caso de falha de banco, a chamada ao provedor pode já ter gerado custo.
-    if (tokensUsed > 0) {
-      await incrementUsage(tenantId, 'ai_chat_tokens_used', tokensUsed)
-    }
-
-    // Registro financeiro separado da franquia comercial. Sem cotação
-    // configurada não inventar valores em BRL nem inferir custos históricos.
-    const fx = Number(process.env.AI_USD_BRL_RATE ?? '')
+    if (tokensUsed > 0) await incrementUsage(tenantId, 'ai_chat_tokens_used', tokensUsed)
     if (Number.isFinite(fx) && fx > 0) {
-      const { error: ledgerError } = await createAdminClient().from('ai_cost_ledger').insert({
-        tenant_id: tenantId,
-        source: 'dashboard_chat',
-        model: 'claude-haiku-4-5-20251001',
-        input_tokens: inputTokens,
-        output_tokens: outputTokens,
-        input_usd_per_million: 1,
-        output_usd_per_million: 5,
-        usd_to_brl: fx,
+      const { error } = await admin.from('ai_cost_ledger').insert({
+        tenant_id: tenantId, source: 'dashboard_chat', model: 'claude-haiku-4-5-20251001',
+        input_tokens: inputTokens, output_tokens: outputTokens,
+        input_usd_per_million: 1, output_usd_per_million: 5, usd_to_brl: fx,
       })
-      if (ledgerError) {
-        console.error('[ai/chat] falha no registro financeiro', { code: ledgerError.code })
-      }
-    } else {
-      console.warn('[ai/chat] AI_USD_BRL_RATE ausente: custo em BRL não contabilizado')
+      if (error) console.error('[ai/chat] falha no registro financeiro', { code: error.code })
     }
-
     return NextResponse.json({ reply })
-  } catch (err) {
-    console.error('[ai/chat]', err)
+  } catch {
     return NextResponse.json({ error: 'Erro ao processar mensagem.' }, { status: 500 })
   }
 }
