@@ -8,7 +8,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { createHash } from 'node:crypto'
 import { canUse, assertWithinLimit, incrementUsage, getLimit, getUsage } from '@/lib/entitlements'
 import { dispatchPush } from '@/lib/push'
-import { processWhatsappMessage } from '@/lib/ai'
+// A IA é necessária somente no processamento de mensagem inbound autorizada.
 
 const evolutionUrl = () => (process.env.EVOLUTION_API_URL ?? '').replace(/\/$/, '')
 const evolutionKey = () => process.env.EVOLUTION_API_KEY ?? ''
@@ -128,6 +128,7 @@ export async function handleWebhook(payload: EvolutionWebhookPayload): Promise<v
 
   if (permission.status === 'ai' && hasAiScheduling) {
     try {
+      const { processWhatsappMessage } = await import('@/lib/ai')
       const reply = await processWhatsappMessage(tenantId, from, body, messageId)
       if (reply) {
         await sendMessage({ to: from, body: reply, tenantId })
