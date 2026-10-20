@@ -579,3 +579,12 @@ Autorização recebida para utilizar contas de teste existentes. Ensaios executa
 - Vercel Production `dpl_93Qr8sQGs35K9FKTJnF73iyz794s` em `READY`, correspondente ao commit `9472e2b1`. Não é prova de operação HTTP autenticada.
 - Escopo de continuidade mínimo: validar HTTP com sessões legítimas de superadmin e administradores de tenants distintos, e confirmar um registro de auditoria persistido com fixture controlada. Não ampliar controles de saúde/consumo, não alterar disponibilidade e não promover DDL de auditoria IA antes de reconciliar o histórico de migrations.
 - Rodada exclusivamente de leitura e atualização documental; nenhuma mudança de dados persistentes, permissões, código de negócio ou disponibilidade.
+
+
+## AUD-01 — Smoke HTTP ampliado sem novos controles (20/10/2026)
+
+- Supabase revalidado como projeto `zrszytzlovthyezozqhj` em `ACTIVE_HEALTHY`; GitHub `main` e último deployment anterior `cc1f1b1a` READY conferidos antes da alteração.
+- Commit `3b5d6d2e9ea012b3f384d05a57d77debd4cfb580` acrescentou, **no mesmo workflow existente** `.github/workflows/aud-01-quality.yml`, cenários HTTP sem cookie/JWT para `GET/PATCH/DELETE /api/superadmin/ai-budgets`, `POST /api/superadmin/asaas-payment-reviews`, `GET /api/superadmin/asaas-payment-status` e `GET /api/superadmin/whatsapp-reconciliation`. Mantidos os três testes prévios de empresas/templates. O teste exige HTTP 401 JSON da aplicação; não envia token nem escreve dados sob fluxo corretamente autorizado.
+- A nova versão do workflow foi relida na `main`. GitHub Actions iniciou `AUD-01 Quality Gates` (run `39485667113`) e `AUD-01 Static Security & Quality Checks` (run `39485667125`); ambos ainda `in_progress` na consulta desta etapa. **Não considerar aprovado até conclusão verde.**
+- O smoke 401 negativo comprova apenas bloqueio sem sessão; ainda faltam 403 de usuário comum, operações 2xx de superadmin, teste real cross-tenant e evidência auditável persistida em ambiente controlado.
+- Decisão mantida: sem novos controles ou métricas de saúde/consumo, sem DDL, sem alterações de disponibilidade. Alteração limitada à cobertura do workflow já existente e documentação.
