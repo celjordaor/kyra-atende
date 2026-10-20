@@ -225,3 +225,11 @@ A pesquisa dos arquivos disponibilizados no contexto do Project não retornou o 
 - A página consulta `admin_audit_events` com filtros por `resource_type='asaas_payment'` e `action='asaas.payment.review'`, após validar Superadmin. A consulta limita a 1.000 eventos e a fila a 500 análises; ambos são amostras recentes, não histórico completo garantido.
 - Somente leitura: nenhum status financeiro ou acesso é alterado; ausência de evento na janela consultada não significa ausência de auditoria antiga.
 - Commits `5bd03257`, `55c6d82a`, `420d42ee`. Aguardar Quality Gates e deploy, além de teste autenticado da interface.
+
+## Fechamento financeiro — rastreabilidade do checkout Asaas (19/10/2026)
+
+- Criada `asaas_checkout_attempts` com RLS restrita ao service role; registra início, sucesso, rejeição e resultado incerto de cada criação de link. Migration aplicada ao Supabase e versionada em `20261020052000_asaas_checkout_attempts.sql`.
+- Checkout agora salva tentativa antes de chamar Asaas e registra ID/link/status ao retornar. Falhas de rede, timeout, resposta 5xx ou link inválido são marcados como incertos para conferência, sem disparar cobrança automática adicional.
+- Superadmin > Assinaturas exibe até 100 tentativas recentes, destacando as de resultado incerto.
+- **Limitação deliberada:** não há prevenção completa de duplicidade entre múltiplas requisições de checkout nem renovação recorrente automática; a nova tabela é rastreabilidade, não chave idempotente garantida no Asaas. Não criar automaticamente links de substituição para casos incertos.
+- Nenhum link real foi criado nesta implementação. Necessária homologação em sandbox e conferência de migração/deploy antes de declarar o checkout pronto para cobrança de produção.
