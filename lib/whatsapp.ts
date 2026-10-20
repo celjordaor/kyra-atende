@@ -190,20 +190,30 @@ async function sendViaEvolution(msg: OutboundMessage): Promise<void> {
   })
 
   if (!res.ok) {
-    const err = await res.text().catch(() => res.statusText)
-    throw new Error(`Evolution API error ${res.status}: ${err}`)
+    // A resposta externa pode conter telefone, identificadores e conteúdo da mensagem.
+    throw new Error(`Evolution API rejeitou o envio (HTTP ${res.status})`)
   }
 
   const supabase = createAdminClient()
 
-  // Salva no histórico
-  await supabase.from('whatsapp_messages').insert({
+  // A entrega externa pode já ter ocorrido. Falhas posteriores NÃO devem
+  // disparar um novo envio automático, sob risco de duplicidade.
+  const { error: historyError } = await supabase.from('whatsapp_messages').insert({
     tenant_id:   msg.tenantId,
     from_number: msg.tenantId,
     to_number:   msg.to,
     body:        msg.body,
     direction:   'outbound',
   })
+
+  if (historyError) {
+    console.error('[whatsapp] entrega externa confirmada, histórico não persistido', {
+      tenantId: msg.tenantId,
+      code: historyError.code,
+    })
+    // Não repetir o envio: a entrega já pode ter ocorrido.
+    throw new Error('Mensagem enviada ao provedor, mas o registro no histórico falhou; requer conciliação manual.')
+  }
 
   // Incrementa contador
   await incrementUsage(msg.tenantId, 'whatsapp_messages_sent')
