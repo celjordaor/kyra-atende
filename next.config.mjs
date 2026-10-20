@@ -17,7 +17,7 @@ const nextConfig = {
       '@anthropic-ai/sdk',
     ],
     // web-push tem código nativo — não bundlar em cada Lambda reduz o tracing
-    serverComponentsExternalPackages: ['web-push'],
+    serverComponentsExternalPackages: ['web-push', '@anthropic-ai/sdk'],
 
     // Next.js 14.2: esta opção pertence à seção experimental.
     outputFileTracingExcludes: {
