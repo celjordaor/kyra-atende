@@ -8,7 +8,7 @@ export default async function CustomerPortal(){
  const db=createAdminClient()
  const {data:memberships,error}=await db.from('customer_memberships').select('tenant_id,client_id').eq('identity_id',user.id).limit(100)
  if(error)return <main><h1>Portal do Cliente</h1><p>Não foi possível carregar os vínculos. Tente novamente.</p></main>
- const tenantIds=[...new Set((memberships??[]).map(m=>m.tenant_id))]
+ const tenantIds=Array.from(new Set((memberships??[]).map(m=>m.tenant_id)))
  const {data:tenants}=tenantIds.length?await db.from('tenants').select('id,name,slug').in('id',tenantIds):{data:[] as {id:string;name:string;slug:string}[]}
  return <main style={{maxWidth:780,margin:'48px auto',padding:24}}><h1>Portal do Cliente</h1><p>Conta verificada: {user.email}</p>
  {(memberships??[]).length===0?<p>Seu acesso foi verificado, mas ainda não há empresas vinculadas à sua identidade. A ativação do vínculo exigirá confirmação de titularidade; nenhum cadastro de cliente é associado apenas por e-mail ou telefone.</p>:<>
