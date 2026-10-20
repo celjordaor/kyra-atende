@@ -100,3 +100,11 @@ A pesquisa dos arquivos disponibilizados no contexto do Project não retornou o 
 - **CI comprovado:** workflow `AUD-01 Quality Gates` no commit `b90a011d` finalizado com `success` ([run 39349444741](https://github.com/celjordaor/kyra-atende/actions/runs/39349444741)); workflow `AUD-01 Static Security & Quality Checks` também `success` ([run 39349444780](https://github.com/celjordaor/kyra-atende/actions/runs/39349444780)). No commit `3a44cd59`, Quality Gates também apresentou `success` ([run 39350229633](https://github.com/celjordaor/kyra-atende/actions/runs/39350229633)). O CI está comprovado nesses commits, mas permanece a obrigação de testar HTTP com sessões legítimas antes de homologação integral.
 - Sem envio de WhatsApp, sem mutações de outbox pela tela; não há conciliação de estado nem retries.
 - Após deploy READY, homologar a tela com sessão real de Superadmin e negar acesso a tenant admin; nenhuma operação de envio é oferecida na UI.
+
+## Consumo de IA — primeira correção (19/10/2026)
+
+- **Achado confirmado:** `POST /api/ai/chat` validava o consumo com `getUsage` antes de chamar Anthropic, mas executava `incrementUsage` em `fire-and-forget`. Assim, respostas poderiam concluir sem que a contabilização fosse comprovada.
+- **Correção versionada:** `lib/entitlements.ts` agora trata explicitamente o erro retornado pela RPC `increment_usage_counter` (commit `dcfde3a5`). `app/api/ai/chat/route.ts` aguarda `incrementUsage` antes de responder ao cliente (commit `5c3916f3`).
+- **Limitação importante:** isso **não equivale a quota atômica**. Duas requisições simultâneas ainda podem observar saldo disponível antes da chamada à Anthropic, e uma falha de registro após a chamada pode gerar custo do provedor com resposta 500. Não considerar cobrança exata, reserva nem teto financeiro rígido homologados.
+- **Próxima entrega P1:** especificar e implementar reserva atômica no Postgres com orçamento máximo de tokens por requisição, controle de concorrência, expiração e liberação de reserva em falha, considerando consumo real informado pelo modelo e política de tratamento de excedente. Priorizar testes concorrentes e de falha do provedor.
+- **Evidência pendente:** GitHub Actions e deploy dos commits acima; não houve chamadas reais à Anthropic durante esta correção.
