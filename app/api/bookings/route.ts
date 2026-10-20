@@ -8,6 +8,7 @@ import { requireSession } from '@/lib/route-helpers'
 import { getLimit } from '@/lib/entitlements'
 import { paymentRequired } from '@/lib/route-helpers'
 import { dispatchPush } from '@/lib/push'
+import { checkConfiguredAvailability } from '@/lib/availability-validation'
 
 export async function GET(request: NextRequest) {
   const session = await requireSession()
@@ -97,6 +98,10 @@ export async function POST(request: NextRequest) {
       { status: 400 },
     )
   }
+
+  const availability=await checkConfiguredAvailability({tenantId,serviceId:service_id,professionalId:professional_id,startAt:start_at,endAt:end_at})
+  if(availability==='error')return NextResponse.json({error:'Não foi possível verificar a disponibilidade.'},{status:503})
+  if(availability==='unavailable')return NextResponse.json({error:'Horário indisponível para esse serviço ou profissional.'},{status:409})
 
   // Busca nome, telefone e e-mail do cliente para preencher os campos snapshot
   const { data: clientData } = await supabase
