@@ -1,0 +1,66 @@
+name: Diagnose Next.js function traces
+on:
+  push:
+    branches: [perf/trace-functions-report]
+permissions:
+  contents: read
+jobs:
+  trace:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Build without production secrets (diagnostic only)
+        continue-on-error: true
+        run: pnpm build
+      - name: Read Next.js file tracing manifests
+        run: |
+          node <<'NODE'
+          const fs=require('fs'),path=require('path')
+          const root='.next/server'
+          let manifests=[]
+          function walk(dir){
+            if(!fs.existsSync(dir))return
+            for(const ent of fs.readdirSync(dir,{withFileTypes:true})){
+              const p=path.join(dir,ent.name)
+              if(ent.isDirectory())walk(p)
+              else if(p.endsWith('.nft.json'))manifests.push(p)
+            }
+          }
+          walk(root)
+          const rows=[]
+          for(const file of manifests){
+            const data=JSON.parse(fs.readFileSync(file,'utf8'))
+            const files=data.files||[]
+            const breakdown={}
+            for(const f of files){
+              const match=f.match(/(?:^|\/)node_modules\/(?:\.pnpm\/([^/]+)\/node_modules\/)?((?:@[^/]+\/)?[^/]+)/)
+              const key=match?(match[1]||match[2]):'(app/source)'
+              breakdown[key]=(breakdown[key]||0)+1
+            }
+            rows.push({manifest:file,files:files.length,top:Object.entries(breakdown).sort((a,b)=>b[1]-a[1]).slice(0,15)})
+          }
+          rows.sort((a,b)=>b.files-a.files)
+          fs.mkdirSync('trace-report',{recursive:true})
+          const result={generatedAt:new Date().toISOString(),manifests:rows.length,functions:rows}
+          fs.writeFileSync('trace-report/next-tracing.json',JSON.stringify(result,null,2))
+          const lines=['# Next.js trace inventory','','Manifests found: '+rows.length,'','| Manifest | Files traced |','| --- | ---: |',...rows.slice(0,80).map(x=>'| '+x.manifest.replace(/\|/g,'/')+' | '+x.files+' |')]
+          fs.writeFileSync('trace-report/summary.md',lines.join('\n'))
+          console.log(lines.join('\n'))
+          if(!rows.length){
+            console.error('No Next .nft.json manifests present: this diagnostic cannot attribute files per function.')
+            process.exitCode=1
+          }
+          NODE
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: next-trace-report
+          path: trace-report/
+          if-no-files-found: warn
