@@ -25,17 +25,26 @@ function addDay(key:string,offset:number){
  return date.toISOString().slice(0,10)
 }
 function weekday(key:string){return new Date(key+'T12:00:00Z').getUTCDay()}
+function localTime(date:Date,tz:string){
+ return new Intl.DateTimeFormat('en-GB',{timeZone:tz,hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(date)
+}
 function isAvailableDay(key:string,hours:Hours[],blocks:Block[],tz:string){
- const intervals=hours.filter(h=>h.weekday===weekday(key)).map(h=>({start:h.start,end:h.end}))
- if(intervals.length===0)return false
- const global=blocks.filter(b=>!b.professional_id&&dayKey(new Date(b.starts_at),tz)<=key&&dayKey(new Date(b.ends_at),tz)>=key)
- if(global.length===0)return true
- // Bloqueios parciais não tornam o dia inteiro indisponível.
- const covered=global.some(b=>{
-  const start=dayKey(new Date(b.starts_at),tz),end=dayKey(new Date(b.ends_at),tz)
-  return start<key&&end>key
+ const shifts=hours.filter(h=>h.weekday===weekday(key))
+ if(shifts.length===0)return false
+ const first=shifts.map(h=>h.start).sort()[0]
+ const last=shifts.map(h=>h.end).sort().at(-1)!
+ // Apenas bloqueios gerais que cobrem todo o expediente impedem o dia seguinte.
+ const wholeDay=blocks.some(b=>{
+  if(b.professional_id)return false
+  const start=new Date(b.starts_at),end=new Date(b.ends_at)
+  const startDay=dayKey(start,tz),endDay=dayKey(end,tz)
+  if(startDay>key||endDay<key)return false
+  if(b.category==='holiday')return true
+  const startsBefore=startDay<key||(startDay===key&&localTime(start,tz)<=first)
+  const endsAfter=endDay>key||(endDay===key&&localTime(end,tz)>=last)
+  return startsBefore&&endsAfter
  })
- return !covered
+ return !wholeDay
 }
 export default async function DashboardPage(){
  const supabase=createClient()
@@ -76,15 +85,16 @@ export default async function DashboardPage(){
  })
  const todayBookings=todayBookingsRaw.sort((a,b)=>a.start_at.localeCompare(b.start_at)).map(toBooking)
  const pendingBookings=bookings.filter(b=>b.status==='pending').sort((a,b)=>a.start_at.localeCompare(b.start_at)).slice(0,5).map(toBooking)
- let nextKey=addDay(today,1)
+ let nextKey:string|null=null
  if(availability){
   for(let offset=1;offset<=30;offset++){
    const candidate=addDay(today,offset)
    if(isAvailableDay(candidate,availability.hours??[],blocks,tz)){nextKey=candidate;break}
   }
  }
- const nextBookings=eligible.filter(b=>dayKey(new Date(b.start_at),tz)===nextKey).sort((a,b)=>a.start_at.localeCompare(b.start_at)).map(toBooking)
- const nextLabel=new Date(nextKey+'T12:00:00Z').toLocaleDateString('pt-BR',{timeZone:'UTC',weekday:'long',day:'2-digit',month:'long'})
+ const nextBookings=nextKey?eligible.filter(b=>dayKey(new Date(b.start_at),tz)===nextKey).sort((a,b)=>a.start_at.localeCompare(b.start_at)).map(toBooking):[]
+ const nextLabel=nextKey?new Date(nextKey+'T12:00:00Z').toLocaleDateString('pt-BR',{timeZone:'UTC',weekday:'long',day:'2-digit',month:'long'}):'Nenhum próximo dia com expediente configurado'
+ const nextTitle=nextKey===addDay(today,1)?'Agenda de amanhã':'Agenda do próximo dia disponível'
  const svcMap:Record<string,{count:number;revenue:number}>={}
  for(const b of completed){
   const name=b.services?.name??'Outros'
@@ -110,6 +120,6 @@ export default async function DashboardPage(){
    <StatTile label="Receita este mês" value={brl(revenueMonth)} icon="dollar" color="blue" formatNumber={false} compact/>
    <StatTile label="Taxa de confirmação" value={taxaConfirmacao} icon="check" color="blue" suffix="%" compact/>
   </div>
-  <div id="dashboard-content"><DashboardBookingsSection todayBookings={todayBookings} nextBookings={nextBookings} nextLabel={nextLabel} pendingBookings={pendingBookings} newClients={newClients} topServices={topServices}/></div>
+  <div id="dashboard-content"><DashboardBookingsSection todayBookings={todayBookings} nextBookings={nextBookings} nextLabel={nextLabel} nextTitle={nextTitle} pendingBookings={pendingBookings} newClients={newClients} topServices={topServices}/></div>
  </div>
 }
