@@ -68,3 +68,12 @@ A pesquisa dos arquivos disponibilizados no contexto do Project não retornou o 
 - **Pré-requisitos de homologação:** instância de teste exclusiva, segredo de webhook válido, URL HTTPS, permissões da conta, provedor compatível e confirmação de não impacto em números já em uso.
 - **Próxima entrega técnica recomendada (não implantada):** migração com fila/outbox e estados `pending/processing/done/failed`, chave idempotente, tentativas com backoff e reconciliação manual de envios ambíguos; cobrir por testes de concorrência, falha após envio, indisponibilidade da IA e duplicidade do webhook.
 - **Limites da rodada:** sem webhook real, sem conexão com número externo, sem alterações de esquema e sem disparar mensagens. Não chamar integração Evolution de homologada.
+
+
+## Continuidade WhatsApp — detecção de falha após envio (19/10/2026)
+
+- **Commit `35a24e27`:** `lib/whatsapp.ts` agora verifica explicitamente `error` do INSERT de mensagens outbound. Quando a Evolution já aceitou a mensagem, mas a gravação falha, o erro é registrado apenas com `tenantId` e código técnico, e a operação retorna uma mensagem de **conciliação manual**. O código não envia automaticamente outra mensagem.
+- Respostas HTTP de erro da Evolution não são mais incluídas integralmente nas exceções, reduzindo exposição acidental de conteúdos e identificadores.
+- **Ainda não resolvido:** em falha depois da confirmação HTTP do provedor, o sistema não possui outbox persistente para conciliar os envios ambíguos; incrementos de consumo e persistência não são transacionais com o provedor. Uma repetição manual da chamada HTTP poderá reenviar, portanto não classificar esta correção como idempotência ponta a ponta.
+- **Próxima implementação recomendada:** desenho e migração da outbox com ID externo imutável, estado `pending/processing/sent/failed/unknown`, leases, retentativas somente quando comprovadamente seguras, reconciliação com o provedor e testes de concorrência. Revisar os fluxos chamadores antes de alterar o tratamento da exceção.
+- Não foram disparadas mensagens nem feitos testes na instância real nesta rodada. A correção depende da confirmação de deploy e de teste controlado.
