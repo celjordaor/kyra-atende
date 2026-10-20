@@ -588,3 +588,14 @@ Autorização recebida para utilizar contas de teste existentes. Ensaios executa
 - A nova versão do workflow foi relida na `main`. GitHub Actions iniciou `AUD-01 Quality Gates` (run `39485667113`) e `AUD-01 Static Security & Quality Checks` (run `39485667125`); ambos ainda `in_progress` na consulta desta etapa. **Não considerar aprovado até conclusão verde.**
 - O smoke 401 negativo comprova apenas bloqueio sem sessão; ainda faltam 403 de usuário comum, operações 2xx de superadmin, teste real cross-tenant e evidência auditável persistida em ambiente controlado.
 - Decisão mantida: sem novos controles ou métricas de saúde/consumo, sem DDL, sem alterações de disponibilidade. Alteração limitada à cobertura do workflow já existente e documentação.
+
+
+## AUD-01 — Homologação dos checks ampliados e deploy (20/10/2026)
+
+- Reconsulta da `main`: commit `1d5d06fcdaa45fb04413d2c65620f8c957e426db` e documento de evidências lido antes da atualização.
+- Os workflows disparados por este commit terminaram com `completed/success`: `AUD-01 Quality Gates` run `39485754818` e `AUD-01 Static Security & Quality Checks` run `39485754738`. Assim, a extensão de smoke HTTP sem autenticação está validada no CI, sem necessidade de novo workflow ou controle.
+- A execução anterior de Static Security & Quality Checks do commit `3b5d6d2e` constou `cancelled`, mas não equivale a erro: o commit posterior `1d5d06fc` passou com sucesso nos dois workflows.
+- Vercel confirmou deployment de Production `dpl_2AeqxGEoZJHV2sfBLdDYG6jdXbjc` em `READY` para `1d5d06fc`. Supabase `zrszytzlovthyezozqhj` confirmado `ACTIVE_HEALTHY`.
+- **Critério atendido:** as nove chamadas HTTP sem sessão no workflow de Quality Gates rejeitam requisições com 401 JSON da aplicação, compreendendo status de tenant, templates, orçamento IA, conciliação WhatsApp e consultas/revisões Asaas. Não confundir com ensaio de 403 para usuário autenticado comum ou 2xx para superadmin.
+- **Pendências reais de encerramento:** sessões de teste legítimas para 403/2xx, cenários BOLA/IDOR HTTP entre tenants e verificação de um evento administrativo persistido via API. Não criar novos controles de saúde/consumo nem alterar disponibilidade.
+- Sem schema, migrations, regras de negócio ou dados alterados nesta rodada. Registro somente documental.
