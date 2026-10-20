@@ -652,3 +652,11 @@ Autorização recebida para utilizar contas de teste existentes. Ensaios executa
 
 - Commit exclusivamente documental para verificar se a configuração de Ignored Build Step na Vercel deixa de compilar mudanças restritas a documentação. Os checks GitHub Actions permanecem independentes. Nenhum dado, schema, rota ou configuração do aplicativo foi alterado.
 - Resultado do teste de skip deve ser verificado no painel da Vercel; o envio deste commit por si só não prova o comportamento.
+
+
+## Performance — divergência Next/SWC e rede indisponível (20/10/2026)
+
+- Após validar o Ignored Build Step da Vercel no commit documental `e0f5e092` (a execução de deploy foi cancelada corretamente por exit 0), foi feita uma nova inspeção do lockfile na `main`.
+- `package.json` mantém `next=14.2.35`, enquanto `pnpm-lock.yaml` ainda referencia pacotes `@next/swc-* @14.2.33` tanto em `packages` como em `snapshots` de `next@14.2.35`. Os avisos de lockfile SWC incompleto que aparecem no build têm causa reprodutível nesse desalinhamento.
+- O ambiente de execução tentou ler a integridade oficial de `@next/swc-linux-x64-gnu@14.2.35` no registry NPM e recebeu `EAI_AGAIN` (falha DNS). Assim, não foi possível produzir lockfile corrigido validado por gerenciador de pacotes. **Não editar integridades/hashes à mão, nem alterar versões do projeto ou usar instalação não determinística em produção.**
+- Ação pendente: executar `pnpm install --lockfile-only --no-frozen-lockfile` com PNPM 9 e acesso ao registry, verificar que o snapshot de `next@14.2.35` usa SWC `14.2.35`; commitar apenas `pnpm-lock.yaml`, validar CI com `pnpm install --frozen-lockfile` e medir logs Vercel posteriores, verificando desaparecimento dos warnings. Não reduzir checks TypeScript/ESLint nem alterar disponibilidade.
