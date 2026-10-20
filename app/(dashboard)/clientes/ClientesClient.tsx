@@ -5,6 +5,7 @@ import { DataTable, Modal } from '@/components/organisms'
 import { Button, Avatar, FormField } from '@/components/atoms'
 import { SearchBar } from '@/components/molecules'
 import { api, ApiError } from '@/lib/api'
+import { BookingDetailModal, type BookingDetail } from '@/components/organisms/BookingDetailModal'
 import type { Column } from '@/components/organisms'
 import type { ClientRow } from './page'
 
@@ -277,6 +278,7 @@ function SendEmailBadge({ clientId, hasEmail }: { clientId: string; hasEmail: bo
 function buildColumns(
   onEdit:   (r: ClientRow) => void,
   onDelete: (r: ClientRow) => void,
+  onHistory: (r: ClientRow) => void,
 ): Column<ClientRow>[] {
   return [
     {
@@ -331,6 +333,7 @@ function buildColumns(
       label: '',
       render: (_v, row) => (
         <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end', alignItems: 'center' }}>
+          <button type="button" title="Histórico de agendamentos" aria-label="Histórico de agendamentos" onClick={() => onHistory(row)} style={{ ...BADGE_BASE, color: 'var(--ink-soft)' }}>◉</button>
           {/* Editar */}
           <button
             type="button"
@@ -448,6 +451,13 @@ export function ClientesClient({ rows: initialRows }: { rows: ClientRow[] }) {
   const [formError,    setFormError]    = useState<string | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<ClientRow | null>(null)
   const [deleting,     setDeleting]     = useState(false)
+  const [historyClient, setHistoryClient] = useState<ClientRow | null>(null)
+  const [historyRows, setHistoryRows] = useState<BookingDetail[]>([])
+  const [historyTotal, setHistoryTotal] = useState(0)
+  const [historyPage, setHistoryPage] = useState(1)
+  const [historyLoading, setHistoryLoading] = useState(false)
+  const [historyError, setHistoryError] = useState('')
+  const [bookingDetail, setBookingDetail] = useState<BookingDetail | null>(null)
 
   // ── Filtro local ──────────────────────────────────────────────────────────
   const filtered = useMemo(() => {
@@ -533,9 +543,21 @@ export function ClientesClient({ rows: initialRows }: { rows: ClientRow[] }) {
     }
   }, [deleteTarget])
 
+  const loadHistory = useCallback(async (client: ClientRow, page: number) => {
+    setHistoryLoading(true); setHistoryError('')
+    try {
+      const response = await api.get<{bookings:BookingDetail[];total:number}>(`/clients/${client.id}/bookings?page=${page}`)
+      setHistoryRows(response.bookings); setHistoryTotal(response.total); setHistoryPage(page)
+    } catch (err) { setHistoryError(err instanceof ApiError ? err.message : 'Não foi possível carregar o histórico.') }
+    finally { setHistoryLoading(false) }
+  }, [])
+  const openHistory = useCallback((client: ClientRow) => {
+    setHistoryClient(client); setHistoryRows([]); setHistoryTotal(0); void loadHistory(client,1)
+  }, [loadHistory])
+
   const COLUMNS = useMemo(
-    () => buildColumns(openEdit, r => setDeleteTarget(r)),
-    [openEdit],
+    () => buildColumns(openEdit, r => setDeleteTarget(r), openHistory),
+    [openEdit, openHistory],
   )
 
   // ── Render ────────────────────────────────────────────────────────────────
@@ -575,6 +597,25 @@ export function ClientesClient({ rows: initialRows }: { rows: ClientRow[] }) {
         }
         pagination={{ page: 1, pageSize: 25, total: filtered.length }}
       />
+
+      <Modal open={!!historyClient} onClose={() => setHistoryClient(null)} title={historyClient ? `Histórico de agendamentos — ${historyClient.name}` : 'Histórico'} size="lg">
+        <div style={{display:'flex',flexDirection:'column',gap:12}}>
+          {historyLoading && <p>Carregando agendamentos…</p>}
+          {historyError && <p role="alert" style={{color:'var(--red)'}}>{historyError}</p>}
+          {!historyLoading && !historyError && historyRows.length===0 && <p>Nenhum agendamento encontrado para este cliente.</p>}
+          {!historyLoading && historyRows.map(row => <button key={row.id} type="button" onClick={() => setBookingDetail(row)}
+            style={{padding:14,textAlign:'left',background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:8,cursor:'pointer',color:'var(--ink)'}}>
+            <strong>{new Date(row.start_at).toLocaleString('pt-BR')}</strong> · {row.service} · {row.professional??'Sem profissional'}
+            <div style={{fontSize:12,color:'var(--muted)',marginTop:4}}>{({completed:'Concluído',confirmed:'Confirmado',pending:'Pendente',cancelled:'Cancelado'} as Record<string,string>)[row.status]??row.status} · Visualizar detalhes</div>
+          </button>)}
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:8}}>
+            <Button variant="secondary" disabled={historyLoading||historyPage<=1} onClick={() => historyClient && void loadHistory(historyClient,historyPage-1)}>Anterior</Button>
+            <span style={{fontSize:12,color:'var(--muted)'}}>Página {historyPage} de {Math.max(1,Math.ceil(historyTotal/20))}</span>
+            <Button variant="secondary" disabled={historyLoading||historyPage*20>=historyTotal} onClick={() => historyClient && void loadHistory(historyClient,historyPage+1)}>Próxima</Button>
+          </div>
+        </div>
+      </Modal>
+      <BookingDetailModal booking={bookingDetail} onClose={() => setBookingDetail(null)}/>
 
       {/* ── Modal criar / editar ─────────────────────────────────────── */}
       <Modal
