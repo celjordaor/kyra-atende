@@ -47,20 +47,6 @@ function addMinutes(date: Date, minutes: number): Date {
   return new Date(date.getTime() + minutes * 60000)
 }
 
-// Gera slots de 08:00 até 18:00 de 30 em 30 min
-function generateSlots(date: Date): string[] {
-  const slots: string[] = []
-  const base = new Date(date)
-  base.setHours(8, 0, 0, 0)
-  const end = new Date(date)
-  end.setHours(18, 0, 0, 0)
-  while (base < end) {
-    slots.push(base.toISOString())
-    base.setMinutes(base.getMinutes() + 30)
-  }
-  return slots
-}
-
 function formatTime(iso: string) {
   return new Date(iso).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
 }
