@@ -5,6 +5,7 @@
  * Webhooks recebidos são aguardados pelo handler HTTP para reduzir perda de eventos.
  */
 import { createAdminClient } from '@/lib/supabase/admin'
+import { createHash } from 'node:crypto'
 import { canUse, assertWithinLimit, incrementUsage, getLimit, getUsage } from '@/lib/entitlements'
 import { dispatchPush } from '@/lib/push'
 import { processWhatsappMessage } from '@/lib/ai'
@@ -183,36 +184,83 @@ async function sendViaEvolution(msg: OutboundMessage): Promise<void> {
     throw new Error('Evolution API não configurada. Envio não realizado.')
   }
 
-  const res = await fetch(`${url}/message/sendText/${msg.tenantId}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', apikey: key },
-    body: JSON.stringify({ number: msg.to.replace(/\D/g, ''), text: msg.body }),
-  })
+  const supabase = createAdminClient()
+  // Persistir a intenção ANTES de contactar o provedor. Se falhar, não enviar.
+  const { data: tracking, error: trackingError } = await supabase
+    .from('whatsapp_outbox')
+    .insert({
+      tenant_id: msg.tenantId,
+      to_number: msg.to.replace(/\\D/g, ''),
+      body_sha256: createHash('sha256').update(msg.body).digest('hex'),
+      status: 'sending',
+    })
+    .select('id')
+    .single()
+  if (trackingError || !tracking) {
+    console.error('[whatsapp] não foi possível registrar intenção de envio', {
+      tenantId: msg.tenantId,
+      code: trackingError?.code,
+    })
+    throw new Error('Registro de envio indisponível. Mensagem não enviada.')
+  }
+
+  // Um timeout pode acontecer depois de a Evolution entregar a mensagem.
+  // Portanto, resultado ambíguo fica "unknown", sem retry automático.
+  let res: Response
+  try {
+    res = await fetch(`${url}/message/sendText/${msg.tenantId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', apikey: key },
+      body: JSON.stringify({ number: msg.to.replace(/\\D/g, ''), text: msg.body }),
+    })
+  } catch {
+    await supabase.from('whatsapp_outbox')
+      .update({ status: 'unknown', updated_at: new Date().toISOString() })
+      .eq('id', tracking.id)
+    throw new Error('Resultado do envio incerto. Verificar na Evolution antes de reenviar.')
+  }
 
   if (!res.ok) {
-    // A resposta externa pode conter telefone, identificadores e conteúdo da mensagem.
+    await supabase.from('whatsapp_outbox')
+      .update({ status: 'rejected', provider_http_status: res.status, updated_at: new Date().toISOString() })
+      .eq('id', tracking.id)
     throw new Error(`Evolution API rejeitou o envio (HTTP ${res.status})`)
   }
 
-  const supabase = createAdminClient()
+  const { error: acceptedError } = await supabase.from('whatsapp_outbox')
+    .update({ status: 'accepted', provider_http_status: res.status, updated_at: new Date().toISOString() })
+    .eq('id', tracking.id)
+  if (acceptedError) {
+    console.error('[whatsapp] falha no status de aceite', { tenantId: msg.tenantId, code: acceptedError.code })
+  }
 
-  // A entrega externa pode já ter ocorrido. Falhas posteriores NÃO devem
-  // disparar um novo envio automático, sob risco de duplicidade.
-  const { error: historyError } = await supabase.from('whatsapp_messages').insert({
+  const { data: history, error: historyError } = await supabase.from('whatsapp_messages').insert({
     tenant_id:   msg.tenantId,
     from_number: msg.tenantId,
     to_number:   msg.to,
     body:        msg.body,
     direction:   'outbound',
-  })
+  }).select('id').single()
 
-  if (historyError) {
-    console.error('[whatsapp] entrega externa confirmada, histórico não persistido', {
+  if (historyError || !history) {
+    await supabase.from('whatsapp_outbox')
+      .update({ status: 'reconcile', updated_at: new Date().toISOString() })
+      .eq('id', tracking.id)
+    console.error('[whatsapp] envio aceito, histórico falhou', {
       tenantId: msg.tenantId,
-      code: historyError.code,
+      code: historyError?.code,
+      trackingId: tracking.id,
     })
-    // Não repetir o envio: a entrega já pode ter ocorrido.
-    throw new Error('Mensagem enviada ao provedor, mas o registro no histórico falhou; requer conciliação manual.')
+    throw new Error('Envio aceito pelo provedor, mas histórico falhou; conciliação manual necessária.')
+  }
+
+  const { error: recordedError } = await supabase.from('whatsapp_outbox')
+    .update({ status: 'recorded', history_message_id: history.id, updated_at: new Date().toISOString() })
+    .eq('id', tracking.id)
+  if (recordedError) {
+    console.error('[whatsapp] histórico gravado, status de controle pendente', {
+      tenantId: msg.tenantId, trackingId: tracking.id, code: recordedError.code,
+    })
   }
 
   // Incrementa contador
