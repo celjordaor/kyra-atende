@@ -43,7 +43,7 @@ export interface ChatMessage {
  */
 export async function chat(
   messages: ChatMessage[],
-): Promise<{ reply: string; tokensUsed: number }> {
+): Promise<{ reply: string; tokensUsed: number; inputTokens: number; outputTokens: number }> {
   const client   = getClient()
   const response = await client.messages.create({
     model:      MODEL,
@@ -58,7 +58,7 @@ export async function chat(
   const reply      = response.content[0]?.type === 'text' ? response.content[0].text : ''
   const tokensUsed = (response.usage?.input_tokens ?? 0) + (response.usage?.output_tokens ?? 0)
 
-  return { reply, tokensUsed }
+  return { reply, tokensUsed, inputTokens: response.usage?.input_tokens ?? 0, outputTokens: response.usage?.output_tokens ?? 0 }
 }
 
 // ── IA de agendamento via WhatsApp ────────────────────────────────────────────
