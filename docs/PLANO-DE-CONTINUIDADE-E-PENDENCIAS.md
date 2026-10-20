@@ -263,3 +263,15 @@ A pesquisa dos arquivos disponibilizados no contexto do Project não retornou o 
 - `PlanModal` recebe `isTrial`; páginas Configurações > Plano e Assinatura passam a indicar claramente `Assinar plano`. Bloqueio por pagamento em aberto continua independente do trial.
 - Migration `20261020058000_asaas_trial_conversion_immediate.sql` versionada e aplicada: quando `tenants.plan_status='trial'`, a RPC `apply_verified_asaas_payment` define início da assinatura paga em `now()` na confirmação verificada pelo Asaas; mantém regra de extensão do período para assinaturas fora do trial. `plan_status` passa a `active` na mesma transação existente.
 - Validar ponta a ponta com conta em trial e pagamento sandbox, inclusive webhook idempotente. Nenhuma cobrança foi criada nesta rodada. Confirmar resultado final dos workflows/deploy.
+
+## Motor de disponibilidade e vínculo profissionais × serviços — fundação (20/10/2026)
+
+**Regra aprovada:** expediente-base da empresa; profissional herda expediente ou define intervalos próprios. Bloqueios gerais (feriados, inatividade, horários fechados) prevalecem sobre horários particulares, salvo exceção autorizada em futura modelagem. Serviços podem ser executados por vários profissionais, e profissionais podem executar vários serviços (N:N). Links públicos, agendamento interno e canais futuros devem consultar a mesma disponibilidade.
+
+- Schema aplicado e versionado: `20261020100000_availability_and_professional_services_foundation.sql`.
+- `availability_settings`: fuso da empresa, antecedência e horizonte; `company_working_hours`: múltiplas faixas semanais; `professional_availability_settings`: herança ou agenda particular; `professional_working_hours`: faixas individuais; `availability_blocks`: feriados, ausências e bloqueios gerais/individuais; `professional_services`: relação N:N com FKs compostas que impedem vínculos entre tenants; `service_assignment_settings`: flag de ativação gradual.
+- Todas as sete tabelas têm RLS habilitada e acesso direto negado a usuários comuns; administração deverá passar por API autenticada com validação de tenant.
+- Por segurança, **nenhum filtro de profissionais foi ativado nesta etapa** e `enforce_links` inicia `false`: clientes antigos e agendas atuais não devem ficar sem opções só porque os vínculos ainda não foram cadastrados.
+- Teste SQL em transação revertida: inserção de associação e expediente seguida de rollback; conferidas sete tabelas remotas. Não foram criados horários, feriados ou vínculos reais.
+- **Próximas entregas necessárias antes da ativação:** endpoints de configuração protegidos e UI; validação de sobreposição de intervalos; definição de como feriados recorrentes e exceções especiais serão cadastrados; motor único de slots respeitando duração do serviço, fuso, expediente efetivo, bloqueios, profissionais habilitados e conflito de reservas; enforcement no POST/PUT de bookings e no link público; testes concorrentes e HTTP autenticados.
+- Não confundir fundação de schema com motor de disponibilidade ou seletor de profissionais homologado. A vinculação N:N já está prevista para evitar retrabalho quando se ativar o filtro nas telas.
