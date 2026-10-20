@@ -41,6 +41,33 @@ function sameDay(a: Date, b: Date) {
          a.getDate()     === b.getDate()
 }
 
+type BusinessHour = {weekday:number;start:string;end:string}
+type AvailabilityBlock = {starts_at:string;ends_at:string;professional_id:string|null;category:string;reason:string|null}
+type DayAvailability = {label:string;state:'closed'|'blocked'|'partial'|'open';note?:string}
+function getDayAvailability(day:Date,hours:BusinessHour[],blocks:AvailabilityBlock[],timezone:string):DayAvailability {
+ const date=day.toLocaleDateString('en-CA',{timeZone:timezone,year:'numeric',month:'2-digit',day:'2-digit'})
+ const weekday=new Date(date+'T12:00:00Z').getUTCDay()
+ const shifts=hours.filter(h=>h.weekday===weekday)
+ if(!shifts.length)return {label:'Fechado',state:'closed',note:'Fora do expediente da empresa'}
+ const relevant=blocks.filter(b=>{
+  const first=new Date(b.starts_at).toLocaleDateString('en-CA',{timeZone:timezone})
+  const last=new Date(b.ends_at).toLocaleDateString('en-CA',{timeZone:timezone})
+  return first<=date&&last>=date
+ })
+ if(!relevant.length)return {label:'',state:'open'}
+ const company=relevant.filter(b=>!b.professional_id)
+ if(company.length){
+  // Se houver bloqueio de dia inteiro, sinalizar indisponibilidade.
+  const full=company.some(b=>{
+   const startDay=new Date(b.starts_at).toLocaleDateString('en-CA',{timeZone:timezone})
+   const endDay=new Date(b.ends_at).toLocaleDateString('en-CA',{timeZone:timezone})
+   return startDay<date&&endDay>date
+  })
+  if(full)return {label:'Indisponível',state:'blocked',note:'Bloqueio integral da empresa'}
+ }
+ return {label:'Com bloqueios',state:'partial',note:'Existem bloqueios neste dia; consulte os horários disponíveis'}
+}
+
 // ── Status helpers ────────────────────────────────────────────
 const STATUS_COLOR: Record<string, string> = {
   confirmed: 'var(--green)',
@@ -159,9 +186,10 @@ interface DayCardProps {
   onAction: (id: string, status: 'confirmed' | 'cancelled' | 'completed') => void
   onEdit:   (b: Booking) => void
   compact?: boolean
+  availability?:DayAvailability
 }
 
-const DayCard = React.memo(function DayCard({ day, dayBks, loadId, onAction, onEdit }: DayCardProps) {
+const DayCard = React.memo(function DayCard({ day, dayBks, loadId, onAction, onEdit, availability }: DayCardProps) {
   const isToday = sameDay(day, new Date())
   return (
     <div style={{
@@ -189,8 +217,9 @@ const DayCard = React.memo(function DayCard({ day, dayBks, loadId, onAction, onE
 
       {/* Cards do dia */}
       <div style={{ padding: '6px', display: 'flex', flexDirection: 'column', gap: '5px', background: 'var(--surface)', flex: 1, minHeight: '80px' }}>
+        {availability?.label && <div title={availability.note} style={{fontSize:11,fontWeight:600,color:availability.state==='open'?'var(--muted)':'var(--orange)',textAlign:'center',padding:'5px 3px'}}>{availability.label}</div>}
         {dayBks.length === 0
-          ? <p style={{ fontSize: '11px', color: 'var(--muted)', textAlign: 'center', margin: '18px 0' }}>livre</p>
+          ? <p style={{ fontSize: '11px', color: 'var(--muted)', textAlign: 'center', margin: '18px 0' }}>{availability?.label || 'Sem agendamentos'}</p>
           : dayBks.map(b => {
             const loading     = loadId === b.id
             const statusColor = STATUS_COLOR[b.status] ?? 'var(--muted)'
@@ -394,10 +423,14 @@ function BookingDetailModal({ booking, loadId, onClose, onAction, onEdit }: {
 interface Props {
   bookings: Booking[]
   services: ServiceRef[]
+  hours:BusinessHour[]
+  blocks:AvailabilityBlock[]
+  timezone:string
+  availabilityLoaded:boolean
 }
 
 // ── Componente principal ──────────────────────────────────────
-export default function AgendaClient({ bookings, services }: Props) {
+export default function AgendaClient({ bookings, services, hours, blocks, timezone, availabilityLoaded }: Props) {
   const [viewMode,       setViewMode]       = useState<ViewMode>('4dias')
   const [anchor,         setAnchor]         = useState(() => new Date())
   const [selDay,         setSelDay]         = useState(() => new Date())
@@ -622,6 +655,7 @@ export default function AgendaClient({ bookings, services }: Props) {
               <DayCard
                 key={day.toISOString()}
                 day={day}
+                availability={availabilityLoaded?getDayAvailability(day,hours,blocks,timezone):undefined}
                 dayBks={filtered.filter(b => sameDay(new Date(b.startAt), day))}
                 loadId={loadId}
                 onAction={handleAction}
@@ -634,6 +668,7 @@ export default function AgendaClient({ bookings, services }: Props) {
         {/* ══ DIA ══ */}
         {viewMode === 'dia' && (() => {
           const dayBks = filtered.filter(b => sameDay(new Date(b.startAt), selDay))
+          const dayAvailability = availabilityLoaded?getDayAvailability(selDay,hours,blocks,timezone):undefined
           return (
             <div>
               <p style={{ fontSize: '14px', fontWeight: 600, color: 'var(--ink)', margin: '0 0 16px', textTransform: 'capitalize' }}>
@@ -642,10 +677,11 @@ export default function AgendaClient({ bookings, services }: Props) {
                   · {dayBks.length} agendamento{dayBks.length !== 1 ? 's' : ''}
                 </span>
               </p>
+              {dayAvailability?.label && <p title={dayAvailability.note} style={{color:'var(--orange)',fontSize:13,fontWeight:600}}>{dayAvailability.label} — {dayAvailability.note}</p>}
               {dayBks.length === 0
                 ? (
                   <div style={{ padding: '32px', textAlign: 'center', background: 'var(--surface-2)', borderRadius: 'var(--r-lg)', border: '1px solid var(--border)', color: 'var(--muted)', fontSize: '14px' }}>
-                    Nenhum agendamento para este dia.
+                    {dayAvailability?.label??'Nenhum agendamento para este dia.'}
                   </div>
                 )
                 : (
