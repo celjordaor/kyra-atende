@@ -9,6 +9,7 @@ import { createHash } from 'node:crypto'
 import { canUse, assertWithinLimit, incrementUsage, getLimit, getUsage } from '@/lib/entitlements'
 import { dispatchPush } from '@/lib/push'
 // A IA é necessária somente no processamento de mensagem inbound autorizada.
+// Experimento de repetibilidade: mantém a mesma lógica e dependências.
 
 const evolutionUrl = () => (process.env.EVOLUTION_API_URL ?? '').replace(/\/$/, '')
 const evolutionKey = () => process.env.EVOLUTION_API_KEY ?? ''
