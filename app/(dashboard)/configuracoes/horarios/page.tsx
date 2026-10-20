@@ -3,6 +3,7 @@ import {createClient} from '@/lib/supabase/server'
 import {redirect} from 'next/navigation'
 import HorariosClient from './HorariosClient'
 import ProfissionaisHorarios from './ProfissionaisHorarios'
+import BloqueiosClient from './BloqueiosClient'
 export const metadata={title:'Horários e disponibilidade — Kyra Atende'}
 export default async function HorariosPage(){
  const {data:{user}}=await createClient().auth.getUser()
@@ -12,5 +13,6 @@ export default async function HorariosPage(){
   <h1 style={{fontSize:24}}>Horários de atendimento</h1>
   <HorariosClient/>
   <ProfissionaisHorarios/>
+  <BloqueiosClient/>
  </main>
 }
