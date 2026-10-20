@@ -11,7 +11,7 @@ type RawBooking = {
  status:string;price_charged:number|null;discount:number|null;
  services:{name:string;price:number|null}|null;
 }
-type Hours = {weekday:number;start:string;end:string}
+type Hours = {weekday:number;starts_at:string;ends_at:string}
 type Block = {professional_id:string|null;starts_at:string;ends_at:string;category:string}
 type Availability = {settings:{timezone?:string}|null;hours:Hours[]}
 type BlocksResult = {blocks:Block[]}
@@ -31,8 +31,8 @@ function localTime(date:Date,tz:string){
 function isAvailableDay(key:string,hours:Hours[],blocks:Block[],tz:string){
  const shifts=hours.filter(h=>h.weekday===weekday(key))
  if(shifts.length===0)return false
- const first=shifts.map(h=>h.start).sort()[0]
- const last=shifts.map(h=>h.end).sort().at(-1)!
+ const first=shifts.map(h=>h.starts_at.slice(0,5)).sort()[0]
+ const last=shifts.map(h=>h.ends_at.slice(0,5)).sort().at(-1)!
  // Apenas bloqueios gerais que cobrem todo o expediente impedem o dia seguinte.
  const wholeDay=blocks.some(b=>{
   if(b.professional_id)return false
@@ -72,12 +72,13 @@ export default async function DashboardPage(){
  const monthBookings=eligible.filter(b=>dayKey(new Date(b.start_at),tz).slice(0,7)===month)
  const completed=monthBookings.filter(b=>b.status==='completed')
  const revenue=(records:RawBooking[])=>records.reduce((sum,b)=>sum+Math.max(0,(b.price_charged??0)-(b.discount??0)),0)
- const revenueMonth=revenue(completed)
- const revenueToday=revenue(todayBookingsRaw.filter(b=>b.status==='completed'))
+ const withPayment=completed.filter(b=>b.price_charged!=null)
+ const revenueMonth=revenue(withPayment)
+ const revenueToday=revenue(todayBookingsRaw.filter(b=>b.status==='completed'&&b.price_charged!=null))
  const countPending=bookings.filter(b=>b.status==='pending').length
  const countConfirmed=monthBookings.filter(b=>b.status==='confirmed'||b.status==='completed').length
  const taxaConfirmacao=monthBookings.length?Math.round(countConfirmed/monthBookings.length*100):0
- const ticketMedio=completed.length?revenueMonth/completed.length:0
+ const ticketMedio=withPayment.length?revenueMonth/withPayment.length:0
  const toBooking=(b:RawBooking):Booking=>({
   id:b.id,clientName:b.client_name,clientPhone:b.client_phone??'',
   service:b.services?.name??'Serviço',price:b.services?.price??undefined,
@@ -93,10 +94,10 @@ export default async function DashboardPage(){
   }
  }
  const nextBookings=nextKey?eligible.filter(b=>dayKey(new Date(b.start_at),tz)===nextKey).sort((a,b)=>a.start_at.localeCompare(b.start_at)).map(toBooking):[]
- const nextLabel=nextKey?new Date(nextKey+'T12:00:00Z').toLocaleDateString('pt-BR',{timeZone:'UTC',weekday:'long',day:'2-digit',month:'long'}):'Nenhum próximo dia com expediente configurado'
+ const nextLabel=nextKey?new Date(nextKey+'T12:00:00Z').toLocaleDateString('pt-BR',{timeZone:'UTC',weekday:'long',day:'2-digit',month:'long'}):availability?'Nenhum próximo dia com expediente configurado':'Disponibilidade não carregada'
  const nextTitle=nextKey===addDay(today,1)?'Agenda de amanhã':'Agenda do próximo dia disponível'
  const svcMap:Record<string,{count:number;revenue:number}>={}
- for(const b of completed){
+ for(const b of withPayment){
   const name=b.services?.name??'Outros'
   if(!svcMap[name])svcMap[name]={count:0,revenue:0}
   svcMap[name].count++;svcMap[name].revenue+=Math.max(0,(b.price_charged??0)-(b.discount??0))
