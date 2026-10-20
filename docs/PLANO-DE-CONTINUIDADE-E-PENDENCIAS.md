@@ -305,3 +305,11 @@ A pesquisa dos arquivos disponibilizados no contexto do Project não retornou o 
 - API `GET /api/availability/slots?serviceId=...&date=...&professionalId=...` exige sessão vinculada ao tenant, consulta RPC por service role e retorna slots apenas para visualização.
 - Validação SQL transacional com `ROLLBACK`: configuração temporária de expediente gera horários futuros; bloqueio geral temporário elimina os slots; nenhuma configuração nem bloqueio de teste persistidos.
 - **Não ativado:** agendamento interno e link público ainda não consomem o motor, nem a inserção/edição fazem enforcement. Não apresentar prévia como garantia de reserva; banco continua protegendo sobreposição. Próximos passos: validação de duração e disponibilidade em POST/PUT com travamento transacional, proteção de fusos/DST, profissão sem vínculo e E2E de links públicos; conferir regras de preço e permissões.
+
+## Convites de agendamento sem dados pessoais na URL (20/10/2026)
+
+- Regra confirmada: link público de empresa mantém formulário em branco; convite individual enviado ao cliente preserva pré-preenchimento de nome, telefone e e-mail.
+- Migration `20261020105000_booking_invitation_tokens.sql`: `booking_invitations` por tenant/cliente, hash SHA-256 do token randômico de 32 bytes, vencimento de sete dias e campo de revogação. RLS ativa, usuário comum sem acesso direto.
+- Endpoint de envio gera convite e envia URL contendo somente slug e token opaco (`?convite=`), sem PII. Página pública valida hash, tenant, vencimento e revogação antes de carregar os três campos do cliente. Parâmetros legados de nome/e-mail/telefone não são mais aceitos como pré-preenchimento. Página marca política no-referrer e noindex.
+- Verificações: migration aplicada, tabela confirmada, leitura direta por authenticated negada; Quality Gates da implementação inicial passaram. **Faltam** prova HTTP de envio/abertura com Resend em sandbox, limpeza de convites gerados cujo e-mail falhar, interface de revogação e política de rate-limit contra tentativas de acesso; evitar afirmar E2E homologado. Links antigos ainda podem conter PII em históricos/logs externos — não são apagados pela correção.
+- Motor de disponibilidade permanece separado e sem enforcement sobre o formulário público até completar validação transacional do salvamento.
