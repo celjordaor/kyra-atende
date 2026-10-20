@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireSession } from '@/lib/route-helpers'
 import { checkConfiguredAvailability } from '@/lib/availability-validation'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 interface RouteParams { params: { id: string } }
 
@@ -51,6 +52,29 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
         { status: 400 },
       )
     }
+  }
+
+  // Agendamento remarcado: validação e escrita dentro da mesma transação.
+  if(start_at!==undefined||end_at!==undefined||service_id!==undefined||professional_id!==undefined){
+    const {data:old,error:oldError}=await supabase.from('bookings')
+      .select('client_id,professional_id,service_id,start_at,end_at,notes,status').eq('id',params.id).eq('tenant_id',tenantId).maybeSingle()
+    if(oldError)return NextResponse.json({message:'Falha ao consultar agendamento.'},{status:503})
+    if(!old)return NextResponse.json({message:'Agendamento não encontrado.'},{status:404})
+    if(!['pending','confirmed'].includes(old.status))return NextResponse.json({message:'Agendamento encerrado.'},{status:409})
+    const target={clientId:client_id??old.client_id,professionalId:professional_id!==undefined?professional_id:old.professional_id,serviceId:service_id??old.service_id,startAt:start_at??old.start_at,endAt:end_at??old.end_at,notes:notes!==undefined?notes:old.notes}
+    if(!target.clientId||!target.professionalId)return NextResponse.json({message:'Cliente e profissional são obrigatórios na remarcação.'},{status:400})
+    const {error:rpcError}=await createAdminClient().rpc('reschedule_booking_atomic',{
+      p_tenant:tenantId,p_actor:session.userId,p_booking:params.id,p_client:target.clientId,p_professional:target.professionalId,p_service:target.serviceId,p_start:target.startAt,p_end:target.endAt,p_notes:target.notes??null,
+    })
+    if(rpcError){
+      if(rpcError.code==='23P01')return NextResponse.json({message:'Horário indisponível. Escolha outro.'},{status:409})
+      if(rpcError.code==='P0002'||rpcError.code==='23514')return NextResponse.json({message:'Agendamento indisponível para alteração.'},{status:409})
+      console.error('[bookings/reschedule]',{code:rpcError.code})
+      return NextResponse.json({message:'Não foi possível atualizar o agendamento.'},{status:400})
+    }
+    const {data:updated,error:readError}=await supabase.from('bookings').select('*').eq('id',params.id).eq('tenant_id',tenantId).single()
+    if(readError)return NextResponse.json({message:'Reserva atualizada; atualize a agenda para consultar os detalhes.'},{status:200})
+    return NextResponse.json(updated)
   }
 
   // Só revalidar disponibilidade quando houver mudança de serviço, horário ou profissional.
