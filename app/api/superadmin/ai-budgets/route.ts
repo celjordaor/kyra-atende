@@ -17,20 +17,28 @@ export async function GET(){
  const a=await authorized();if(a.error)return a.error
  const admin=a.admin!
  const begin=new Date();begin.setUTCDate(1);begin.setUTCHours(0,0,0,0)
- const [p,o,t,c]=await Promise.all([
+ const [p,o,t,c,r]=await Promise.all([
  admin.from('ai_budget_plans').select('plan,monthly_budget_cents'),
  admin.from('ai_budget_tenant_overrides').select('tenant_id,monthly_budget_cents'),
  admin.from('tenants').select('id,name,plan').order('name').limit(500),
  admin.from('ai_cost_ledger').select('tenant_id,cost_brl,input_tokens,output_tokens').gte('created_at',begin.toISOString()).limit(10000),
+ admin.from('ai_monetary_reservations').select('tenant_id,reserved_brl,created_at').eq('status','reserved').limit(10000),
  ])
- if(p.error||o.error||t.error||c.error)return NextResponse.json({error:'Falha ao consultar orçamento e consumo'},{status:500})
+ if(p.error||o.error||t.error||c.error||r.error)return NextResponse.json({error:'Falha ao consultar orçamento e consumo'},{status:500})
  const usage:Record<string,{cost_brl:number;input_tokens:number;output_tokens:number;calls:number}>={}
  for(const x of c.data??[]){
   const row=usage[x.tenant_id]??{cost_brl:0,input_tokens:0,output_tokens:0,calls:0}
   row.cost_brl+=Number(x.cost_brl);row.input_tokens+=x.input_tokens;row.output_tokens+=x.output_tokens;row.calls++
   usage[x.tenant_id]=row
  }
- return NextResponse.json({plans:p.data,overrides:o.data,tenants:t.data,usage,month:begin.toISOString().slice(0,7),usageLimited:(c.data??[]).length===10000})
+ const reservations:Record<string,{reserved_brl:number;pending:number;stale:number}>={}
+ for(const x of r.data??[]){
+  const row=reservations[x.tenant_id]??{reserved_brl:0,pending:0,stale:0}
+  row.reserved_brl+=Number(x.reserved_brl);row.pending++
+  if(Date.now()-new Date(x.created_at).getTime()>15*60*1000)row.stale++
+  reservations[x.tenant_id]=row
+ }
+ return NextResponse.json({plans:p.data,overrides:o.data,tenants:t.data,usage,reservations,month:begin.toISOString().slice(0,7),usageLimited:(c.data??[]).length===10000|| (r.data??[]).length===10000})
 }
 export async function PATCH(req:NextRequest){
  const a=await authorized();if(a.error)return a.error
