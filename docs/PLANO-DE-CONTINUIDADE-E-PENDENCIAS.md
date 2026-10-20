@@ -256,3 +256,10 @@ A pesquisa dos arquivos disponibilizados no contexto do Project não retornou o 
 - Criado estado `paid` no ledger de tentativas (`20261020057000_asaas_checkout_paid_state.sql`). Webhook validado e idempotente passa a fechar o checkout correspondente pelo identificador do paymentLink quando o pagamento é confirmado. Sem vínculo de paymentLink a pendência permanece para conciliação manual; nunca presumir pagamento por data.
 - Teste SQL revertido: checkout inicial aceito; outra contratação de plano diferente bloqueada; status `paid` permitiu nova tentativa. Sem dados de teste persistidos.
 - **Limitação:** interface sinaliza pagamento/checkout pendente, não equivale a consulta de status financeiro em tempo real a todos os pagamentos no Asaas; links externos sem processamento do webhook exigem conciliação.
+
+## Trial → assinatura paga: opção A aprovada (19/10/2026)
+
+- Durante o trial, a seleção do plano que está sendo experimentado passa a permitir contratação, inclusive do mesmo plano. Os quatro ciclos existentes continuam disponíveis. A condição de assinatura ativa mantém a restrição de checkout idêntico.
+- `PlanModal` recebe `isTrial`; páginas Configurações > Plano e Assinatura passam a indicar claramente `Assinar plano`. Bloqueio por pagamento em aberto continua independente do trial.
+- Migration `20261020058000_asaas_trial_conversion_immediate.sql` versionada e aplicada: quando `tenants.plan_status='trial'`, a RPC `apply_verified_asaas_payment` define início da assinatura paga em `now()` na confirmação verificada pelo Asaas; mantém regra de extensão do período para assinaturas fora do trial. `plan_status` passa a `active` na mesma transação existente.
+- Validar ponta a ponta com conta em trial e pagamento sandbox, inclusive webhook idempotente. Nenhuma cobrança foi criada nesta rodada. Confirmar resultado final dos workflows/deploy.
