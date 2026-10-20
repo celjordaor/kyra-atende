@@ -1,0 +1,2 @@
+alter table public.asaas_checkout_attempts drop constraint if exists asaas_checkout_attempts_status_check;
+alter table public.asaas_checkout_attempts add constraint asaas_checkout_attempts_status_check check(status in ('started','link_created','uncertain','rejected','paid'));
