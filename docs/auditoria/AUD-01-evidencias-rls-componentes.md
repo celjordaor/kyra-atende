@@ -568,3 +568,14 @@ Autorização recebida para utilizar contas de teste existentes. Ensaios executa
 - Baseline atual do banco: `admin_audit_events` com 0 registros persistidos na consulta desta rodada, consistente com os testes anteriores com ROLLBACK, mas sem comprovação HTTP E2E.
 - Histórico de migrations: `scripts/check-migration-lineage.mjs` protege mirrors históricos por hash e bloqueia reuso de versões; a própria mensagem alerta que esse guard **não concilia** o histórico remoto. `list_migrations` remoto confirmou continuidade do histórico até `20261020140622_whatsapp_inbound_processing_audit`. Não executar `supabase db push` nem DDL apenas para auditoria de consumo sem avaliação coordenada.
 - As pendências necessárias para encerramento seguem sendo testes HTTP reais com perfis e tenants distintos e confirmação end-to-end da auditoria de alterações administrativas. Nenhum módulo de disponibilidade, schema, API, dado de negócio ou configuração foi modificado nesta etapa.
+
+
+## AUD-01 — Revalidação objetiva de CI, ACL e deploy (20/10/2026)
+
+- Repositório `celjordaor/kyra-atende`, branch `main`, commit de referência `9472e2b141ec7f68c9c277101329ced45958b7fa` reconsultado antes de qualquer gravação.
+- Os dois workflows GitHub Actions `AUD-01 Quality Gates` e `AUD-01 Static Security & Quality Checks` foram localizados no histórico de `push/main` do commit `9472e2b1`, ambos `completed/success`. A pendência de CI verde está encerrada para esse commit; não confundir com autenticação positiva de perfis reais.
+- Supabase Kyra Atende `zrszytzlovthyezozqhj` reconsultado como `ACTIVE_HEALTHY`. SQL somente leitura confirmou `count(public.admin_audit_events)=0` no instante da consulta. Isso não prova falha das RPCs, previamente ensaiadas com rollback.
+- ACL atual consultada por `has_function_privilege('authenticated',oid,'EXECUTE')`: `false` para `audit_update_tenant_status`, `audit_save_email_template`, `audit_delete_email_template` e `save_asaas_payment_review`. Cobertura limitada a EXECUTE direto do papel; rotas que usam `service_role` ainda requerem testes autenticados reais.
+- Vercel Production `dpl_93Qr8sQGs35K9FKTJnF73iyz794s` em `READY`, correspondente ao commit `9472e2b1`. Não é prova de operação HTTP autenticada.
+- Escopo de continuidade mínimo: validar HTTP com sessões legítimas de superadmin e administradores de tenants distintos, e confirmar um registro de auditoria persistido com fixture controlada. Não ampliar controles de saúde/consumo, não alterar disponibilidade e não promover DDL de auditoria IA antes de reconciliar o histórico de migrations.
+- Rodada exclusivamente de leitura e atualização documental; nenhuma mudança de dados persistentes, permissões, código de negócio ou disponibilidade.
