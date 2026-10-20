@@ -4,7 +4,7 @@ type Plan={plan:string;monthly_budget_cents:number}
 type Tenant={id:string;name:string;plan:string}
 type Override={tenant_id:string;monthly_budget_cents:number}
 type Usage={cost_brl:number;input_tokens:number;output_tokens:number;calls:number}
-type Data={plans:Plan[];tenants:Tenant[];overrides:Override[];usage:Record<string,Usage>;month:string;usageLimited:boolean}
+type Data={plans:Plan[];tenants:Tenant[];overrides:Override[];usage:Record<string,Usage>;reservations:Record<string,{reserved_brl:number;pending:number;stale:number}>;month:string;usageLimited:boolean}
 const brl=(v:number)=>v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})
 const names:Record<string,string>={essencial:'Essencial',cresce:'Cresce',expande:'Expande',enterprise:'Enterprise'}
 export default function AiBudgetsPage(){
@@ -60,20 +60,22 @@ export default function AiBudgetsPage(){
    <h2 style={{fontSize:17}}>Consumo e saldo por cliente — {data?.month??'mês atual'}</h2>
    {data?.usageLimited&&<p role="alert">Consulta limitada a 10.000 eventos; os totais podem estar incompletos.</p>}
    <table style={{borderCollapse:'collapse',width:'100%',minWidth:760,fontSize:13}}>
-    <thead><tr>{['Cliente','Plano','Orçamento','Consumo registrado','Saldo estimado','Uso','Interações registradas','Configuração'].map(v=><th key={v} style={{textAlign:'left',padding:9,borderBottom:'1px solid var(--border)'}}>{v}</th>)}</tr></thead>
+    <thead><tr>{['Cliente','Plano','Orçamento','Consumo registrado','Reservado','Saldo estimado','Uso','Interações registradas','Configuração'].map(v=><th key={v} style={{textAlign:'left',padding:9,borderBottom:'1px solid var(--border)'}}>{v}</th>)}</tr></thead>
     <tbody>{(data?.tenants??[]).map(t=>{
       const limit=overrides[t.id]??plans[t.plan]??0
       const used=data?.usage[t.id]?.cost_brl??0
-      const pct=limit>0?used/(limit/100)*100:0
+      const held=data?.reservations?.[t.id]?.reserved_brl??0
+      const stale=data?.reservations?.[t.id]?.stale??0
+      const pct=limit>0?(used+held)/(limit/100)*100:0
       return <tr key={t.id}>
        <td style={{padding:9}}>{t.name}</td><td>{names[t.plan]??t.plan}</td><td>{brl(limit/100)}{overrides[t.id]!==undefined?' (individual)':''}</td>
-       <td>{brl(used)}*</td><td>{brl(Math.max(0,limit/100-used))}*</td>
+       <td>{brl(used)}*</td><td>{brl(held)}{stale>0?' ⚠ '+stale+' pendente(s) há mais de 15 min':''}</td><td>{brl(Math.max(0,limit/100-used-held))}*</td>
        <td>{pct.toFixed(1)}%*</td><td>{data?.usage[t.id]?.calls??0}*</td>
        <td style={{padding:9}}>{editor('tenant',t.id,limit)}{overrides[t.id]!==undefined&&<button type="button" disabled={busy} onClick={()=>void reset(t.id)} style={{marginLeft:6}}>Usar plano</button>}</td>
       </tr>
     })}</tbody>
    </table>
-   <p style={{fontSize:12,color:'var(--muted)'}}> * Valores e contagens são apenas do ledger disponível. Não equivalem ao custo total anterior nem a saldo contratual auditado.</p>
+   <p style={{fontSize:12,color:'var(--muted)'}}> * Valores incluem reservas abertas no saldo. Pendências com mais de 15 minutos exigem conciliação manual; não liberar automaticamente. Histórico anterior ao ledger não está incluído.</p>
   </section>
  </main>
 }
