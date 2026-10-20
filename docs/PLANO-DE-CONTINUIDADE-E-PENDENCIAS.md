@@ -337,3 +337,11 @@ A pesquisa dos arquivos disponibilizados no contexto do Project não retornou o 
 - A API exige usuário autenticado com e-mail verificado; `customer_memberships` restringe exatamente os pares `tenant_id + client_id` a consultar. Nenhum filtro por telefone ou e-mail digitado dá acesso ao histórico. Resultado privado `no-store`.
 - O botão de novo agendamento abre o link público existente; **não há ainda preenchimento automático por sessão do portal**. Cancelamento/remarcação e integração dos slots públicos continuam pendentes.
 - Nesta etapa não é necessária nova migration; schema `customer_memberships` da etapa anterior reaproveitado. Confirmar CI do último commit, deploy e teste HTTP real multitenant antes de homologar.
+
+## Portal do Cliente — novo agendamento autenticado (20/10/2026)
+
+- Rota `GET/POST /api/portal/bookings` permite ao cliente autenticado consultar serviços/profissionais/slots de empresa com vínculo verificado e criar agendamento sem enviar dados pessoais pelo navegador.
+- RPC `create_portal_booking` versionada em `supabase/migrations/20261020112000_create_portal_booking.sql` e aplicada remotamente: valida o par exato identidade/tenant/cliente; busca nome, telefone e e-mail diretamente do cadastro; consulta slots na mesma transação, protegida por advisory lock por empresa/profissional e restrição existente de conflito no banco. Não concede acesso ao portal por telefone ou e-mail digitado.
+- UI `PortalNewBooking` integrada a `PortalOverview`: seleção de serviço, profissional opcional, data e slot disponível, com atribuição concreta de profissional no momento da reserva.
+- Teste transacional (ROLLBACK): identidade sem vínculo não cria agendamento; papel authenticated sem execução direta da RPC. Não houve reserva real criada.
+- Pendências: teste HTTP E2E com identidade/empresa e horários reais, publicação Vercel, política de feriados/DST em fusos, qualidade visual, paginação e rate limiting. A agenda pública e a agenda interna ainda não exigem o novo motor. Alterações/cancelamentos no portal não foram liberados. Não chamar fluxo comercial homologado até E2E.
