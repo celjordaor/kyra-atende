@@ -163,6 +163,17 @@ export async function POST(request: NextRequest) {
       console.error('[billing/webhook] conciliação transacional falhou', { code: error.code })
       return NextResponse.json({ error: 'Falha ao registrar pagamento' }, { status: 503 })
     }
+    if (payment.paymentLink) {
+      const settled = await supabase.from('asaas_checkout_attempts')
+        .update({status:'paid',updated_at:new Date().toISOString()})
+        .eq('tenant_id',tenantId).eq('payment_link_id',payment.paymentLink)
+        .eq('plan',plan).eq('period',period).eq('amount',payment.value)
+        .eq('status','link_created')
+      if (settled.error) {
+        console.error('[billing/webhook] pagamento aplicado, checkout pendente', {code:settled.error.code})
+        return NextResponse.json({error:'Pendente de conciliação do checkout'},{status:503})
+      }
+    }
     return NextResponse.json({ received: true })
   } catch (err) {
     console.error('[billing/webhook] indisponibilidade de conciliação', { errorType: err instanceof Error ? err.name : 'unknown' })
