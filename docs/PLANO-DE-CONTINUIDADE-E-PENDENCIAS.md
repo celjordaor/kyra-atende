@@ -218,3 +218,10 @@ A pesquisa dos arquivos disponibilizados no contexto do Project não retornou o 
 - Permissão Superadmin conferida no servidor antes de consultar dados com service role. Não oferece estorno, cancelamento, emissão de cobrança ou suspensão.
 - A fila apresenta até 500 revisões recentes e é um retrato da última revisão, não um extrato vivo do Asaas; conferir pagamento individualmente na tela Assinaturas para status atual. Auditoria de alterações fica no banco.
 - Pendente teste autenticado da tela e confirmação do deploy/Quality Gates; não houve mudanças financeiras nesta etapa.
+
+## Fila financeira — filtros e histórico auditado (19/10/2026)
+
+- A tela `/superadmin/pendencias-financeiras` passou a oferecer filtros por cliente, andamento e datas de última atualização, mantendo estado local no navegador. Componente `ReviewQueue.tsx` mostra histórico de alterações de cada pagamento ao expandir a linha.
+- A página consulta `admin_audit_events` com filtros por `resource_type='asaas_payment'` e `action='asaas.payment.review'`, após validar Superadmin. A consulta limita a 1.000 eventos e a fila a 500 análises; ambos são amostras recentes, não histórico completo garantido.
+- Somente leitura: nenhum status financeiro ou acesso é alterado; ausência de evento na janela consultada não significa ausência de auditoria antiga.
+- Commits `5bd03257`, `55c6d82a`, `420d42ee`. Aguardar Quality Gates e deploy, além de teste autenticado da interface.
