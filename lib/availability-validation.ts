@@ -6,6 +6,9 @@ export async function checkConfiguredAvailability(input:{tenantId:string;service
  if(hoursError)return 'error'
  if(!count)return 'unavailable'
  if(!input.professionalId)return 'unavailable'
+ const {data:assignment,error:assignmentError}=await db.from('professional_services').select('professional_id').eq('tenant_id',input.tenantId).eq('service_id',input.serviceId).eq('professional_id',input.professionalId).maybeSingle()
+ if(assignmentError)return 'error'
+ if(!assignment)return 'unavailable'
  const {data:settings,error:settingsError}=await db.from('availability_settings').select('timezone').eq('tenant_id',input.tenantId).maybeSingle()
  if(settingsError)return 'error'
  let date:string
