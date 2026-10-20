@@ -11,7 +11,7 @@ export async function GET() {
   .in('status',['started','uncertain','link_created'])
   .order('created_at',{ascending:false}).limit(1).maybeSingle()
  if(error)return NextResponse.json({error:'Não foi possível consultar pagamento pendente'},{status:503})
- const pending=!!data&&(data.status!=='link_created'||Date.now()-new Date(data.created_at).getTime()<24*60*60*1000)
+ const pending=!!data
  return NextResponse.json({
   pending,
   status:pending?(data!.status==='started'?'processing':data!.status==='uncertain'?'reconciliation':'payment_open'):null,
