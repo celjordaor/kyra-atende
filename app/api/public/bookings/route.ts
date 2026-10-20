@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { dispatchPush } from '@/lib/push'
+import { createHash } from 'node:crypto'
 
 function adminClient() {
   return createClient(
@@ -27,6 +28,7 @@ function formatDateTime(iso: string): string {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json() as {
+      convite?:          string
       tenant_id:        string
       service_id:       string
       professional_id?: string | null
@@ -128,6 +130,30 @@ export async function POST(request: NextRequest) {
           { status: 409 },
         )
       }
+    }
+
+    // Convite individual: a RPC bloqueia o token e cria o agendamento na mesma
+    // transação. Não confiar nos dados pessoais alteráveis enviados pelo navegador.
+    if (body.convite !== undefined) {
+      if (typeof body.convite !== 'string' || !/^[a-f0-9]{64}$/.test(body.convite)) {
+        return NextResponse.json({ message: 'Convite inválido.' }, { status: 400 })
+      }
+      const tokenHash = createHash('sha256').update(body.convite).digest('hex')
+      const { data: invitedBookingId, error: inviteError } = await supabase.rpc('create_booking_from_invitation', {
+        p_tenant: tenant_id, p_token_hash: tokenHash, p_service: service_id,
+        p_professional: professional_id ?? null, p_start: start_at, p_end: end_at,
+        p_notes: notes?.trim() || null,
+      })
+      if (inviteError) {
+        return NextResponse.json({
+          message: inviteError.code === 'P0002'
+            ? 'Convite já utilizado, expirado ou inválido. Solicite um novo convite.'
+            : inviteError.code === '23P01'
+              ? 'Este horário acabou de ser reservado. Escolha outro horário.'
+              : 'Não foi possível confirmar o agendamento com este convite.',
+        }, { status: 409 })
+      }
+      return NextResponse.json({ id: invitedBookingId }, { status: 201 })
     }
 
     // ── Deduplicação de cliente por telefone ─────────────────────────────────
