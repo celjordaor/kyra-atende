@@ -211,3 +211,10 @@ A pesquisa dos arquivos disponibilizados no contexto do Project não retornou o 
 - API `POST /api/superadmin/asaas-payment-reviews` valida sessão/papel e dados. No componente de consulta de status do Asaas, resultados divergentes expõem formulário de análise para estorno, contestação, cancelamento ou outro motivo.
 - A interface não executa ação financeira nem mudança de plano. Revisões de pagamentos não conciliados originalmente ainda não estão incluídas; consulta HTTP autenticada e teste de persistência com pagamento de homologação ainda são necessários.
 - Testes de permissão RPC e consulta sem criação de revisões executados; nenhuma cobrança real modificada. Sem automação de suspensão, reembolso ou cancelamento.
+
+## Superadmin — fila de pendências financeiras (19/10/2026)
+
+- Nova página `/superadmin/pendencias-financeiras` reaproveita `asaas_payment_reviews`, tenants e perfis, exibindo casos em análise, encaminhados e total analisado, com último responsável e data. Commits `b39b6a0b` e `8905579f`.
+- Permissão Superadmin conferida no servidor antes de consultar dados com service role. Não oferece estorno, cancelamento, emissão de cobrança ou suspensão.
+- A fila apresenta até 500 revisões recentes e é um retrato da última revisão, não um extrato vivo do Asaas; conferir pagamento individualmente na tela Assinaturas para status atual. Auditoria de alterações fica no banco.
+- Pendente teste autenticado da tela e confirmação do deploy/Quality Gates; não houve mudanças financeiras nesta etapa.
