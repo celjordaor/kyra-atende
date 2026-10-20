@@ -10,6 +10,7 @@ interface PageProps {
 }
 
 export default async function PublicBookingPage({ params, searchParams }: PageProps) {
+  // Não propagar tokens de convite a sites externos via cabeçalho Referer.
   // Consultar apenas pelo slug fornecido; nunca expor a chave service_role ao cliente.
   const supabase = createAdminClient()
 
