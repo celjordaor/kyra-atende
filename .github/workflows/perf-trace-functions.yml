@@ -39,18 +39,25 @@ jobs:
             const data=JSON.parse(fs.readFileSync(file,'utf8'))
             const files=data.files||[]
             const breakdown={}
+            const bytesByPackage={}
+            let totalBytes=0, missing=0
             for(const f of files){
+              const resolved=path.resolve(path.dirname(file),f)
+              let bytes=0
+              try { bytes=fs.statSync(resolved).size } catch { missing++ }
+              totalBytes+=bytes
               const match=f.match(/(?:^|\/)node_modules\/(?:\.pnpm\/([^/]+)\/node_modules\/)?((?:@[^/]+\/)?[^/]+)/)
               const key=match?(match[1]||match[2]):'(app/source)'
               breakdown[key]=(breakdown[key]||0)+1
+              bytesByPackage[key]=(bytesByPackage[key]||0)+bytes
             }
-            rows.push({manifest:file,files:files.length,top:Object.entries(breakdown).sort((a,b)=>b[1]-a[1]).slice(0,15)})
+            rows.push({manifest:file,files:files.length,totalBytes,missing,top:Object.entries(bytesByPackage).sort((a,b)=>b[1]-a[1]).slice(0,15).map(([name,bytes])=>({name,bytes,files:breakdown[name]}))})
           }
-          rows.sort((a,b)=>b.files-a.files)
+          rows.sort((a,b)=>b.totalBytes-a.totalBytes)
           fs.mkdirSync('trace-report',{recursive:true})
           const result={generatedAt:new Date().toISOString(),manifests:rows.length,functions:rows}
           fs.writeFileSync('trace-report/next-tracing.json',JSON.stringify(result,null,2))
-          const lines=['# Next.js trace inventory','','Manifests found: '+rows.length,'','| Manifest | Files traced |','| --- | ---: |',...rows.slice(0,80).map(x=>'| '+x.manifest.replace(/\|/g,'/')+' | '+x.files+' |')]
+          const lines=['# Next.js trace inventory','','Manifests found: '+rows.length,'','| Manifest | Files | MB (uncompressed) | Missing | Largest package |','| --- | ---: | ---: | ---: | --- |',...rows.slice(0,80).map(x=>'| '+x.manifest.replace(/\|/g,'/')+' | '+x.files+' | '+(x.totalBytes/1048576).toFixed(2)+' | '+x.missing+' | '+(x.top[0]?.name||'')+' |')]
           fs.writeFileSync('trace-report/summary.md',lines.join('\n'))
           console.log(lines.join('\n'))
           if(!rows.length){
