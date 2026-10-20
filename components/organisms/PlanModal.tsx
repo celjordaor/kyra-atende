@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Button } from '@/components/atoms/Button'
 import { Modal } from '@/components/organisms/Modal'
 import { api } from '@/lib/api'
@@ -102,8 +102,16 @@ export function PlanModal({ open, onClose, currentPlan, mode = 'upgrade' }: Plan
   const [loading,  setLoading]  = useState(false)
   const [error,    setError]    = useState<string | null>(null)
 
+  const [pending, setPending] = useState<boolean | null>(null)
+  useEffect(() => {
+    if (!open || mode === 'view') return
+    let active = true
+    setPending(null)
+    fetch('/api/billing/pending', { cache: 'no-store' }).then(r => r.ok ? r.json() : Promise.reject()).then(d => { if(active)setPending(d.pending === true) }).catch(() => { if(active)setPending(true) })
+    return () => { active = false }
+  }, [open, mode])
   const isReadOnly = mode === 'view'
-  const canUpgrade = selected !== currentPlan && !isReadOnly
+  const canUpgrade = selected !== currentPlan && !isReadOnly && pending === false
 
   async function handleUpgrade() {
     if (!canUpgrade) return
@@ -128,6 +136,7 @@ export function PlanModal({ open, onClose, currentPlan, mode = 'upgrade' }: Plan
       title={isReadOnly ? 'Seu plano atual' : 'Escolha seu plano'}
       size="xl"
     >
+      {!isReadOnly && pending !== false && <p role="status">{pending === null ? 'Verificando pagamentos...' : 'Pagamento em aberto ou aguardando conciliação. Não é possível escolher outro plano até a confirmação.'}</p>}
       {/* Seletor de período */}
       {!isReadOnly && (
         <div style={{ display: 'flex', gap: 8, marginBottom: 24, flexWrap: 'wrap' }}>
@@ -176,8 +185,8 @@ export function PlanModal({ open, onClose, currentPlan, mode = 'upgrade' }: Plan
           return (
             <button
               key={plan.key}
-              onClick={() => { if (!isReadOnly) setSelected(plan.key) }}
-              disabled={isReadOnly && !isActive}
+              onClick={() => { if (!isReadOnly && pending === false) setSelected(plan.key) }}
+              disabled={(isReadOnly && !isActive) || (!isReadOnly && pending !== false)}
               style={{
                 textAlign: 'left', padding: 16, borderRadius: 'var(--r-lg)',
                 cursor: isReadOnly ? 'default' : 'pointer',
