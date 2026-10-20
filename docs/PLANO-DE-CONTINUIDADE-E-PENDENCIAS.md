@@ -233,3 +233,10 @@ A pesquisa dos arquivos disponibilizados no contexto do Project não retornou o 
 - Superadmin > Assinaturas exibe até 100 tentativas recentes, destacando as de resultado incerto.
 - **Limitação deliberada:** não há prevenção completa de duplicidade entre múltiplas requisições de checkout nem renovação recorrente automática; a nova tabela é rastreabilidade, não chave idempotente garantida no Asaas. Não criar automaticamente links de substituição para casos incertos.
 - Nenhum link real foi criado nesta implementação. Necessária homologação em sandbox e conferência de migração/deploy antes de declarar o checkout pronto para cobrança de produção.
+
+## Checkout Asaas — proteção contra requisições duplicadas (19/10/2026)
+
+- Nova RPC `claim_asaas_checkout` com trava transacional por tenant/plano/período, restrita ao `service_role`. Identifica tentativas `started` e `uncertain` anteriores e devolve link criado nos últimos 24 horas em vez de emitir outro. Commit SQL `6d207782`; rota `c00047c7`.
+- Tentativas em estado incerto ou iniciado exigem conciliação manual; não são automaticamente liberadas. Isso pode bloquear uma nova compra daquela combinação até correção administrativa e é uma decisão de segurança para evitar links duplicados.
+- Teste SQL com transação revertida: a primeira claim foi aceita e a segunda, reconhecida como repetida; permissão EXECUTE somente service_role. Sem cobrança e sem dados persistidos pelo teste.
+- **Limitação:** proteção vale a mesma combinação de tenant/plano/ciclo/valor; não substitui idempotência nativa do provedor para variações de pedido nem reconciliação de links criados sem resposta. Links bem-sucedidos são reutilizados até 24 horas, sem verificar automaticamente se foram pagos ou cancelados; essa checagem precisa integrar a próxima rodada.
