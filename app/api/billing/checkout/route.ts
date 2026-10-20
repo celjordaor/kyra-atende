@@ -52,6 +52,8 @@ export async function POST(request: NextRequest) {
     // Cria payment link
     const paymentRes = await fetch(`${asaasUrl}/paymentLinks`, {
       method:  'POST',
+      cache: 'no-store',
+      signal: AbortSignal.timeout(10000),
       headers: { 'Content-Type': 'application/json', 'User-Agent': 'KyraAtende/1.0', access_token: asaasKey },
       body:    JSON.stringify({
         name: `Kyra Atende — plano ${plan} (${period})`,
@@ -74,7 +76,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ paymentUrl: payment.url })
   } catch (err) {
-    console.error('[billing/checkout]', err)
+    console.error('[billing/checkout] chamada ao provedor falhou', { errorType: err instanceof Error ? err.name : 'unknown' })
     return NextResponse.json({ error: 'Erro ao criar link de pagamento.' }, { status: 500 })
   }
 }
