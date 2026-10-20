@@ -42,7 +42,13 @@ async function request<T>(
     let message = `API error ${res.status}`
     try {
       const err = await res.json()
-      const raw = err.message; message = Array.isArray(raw) ? raw.join("; ") : (raw ?? message)
+      const raw = typeof err?.message === 'string' || Array.isArray(err?.message)
+        ? err.message : err?.error
+      if (Array.isArray(raw)) message = raw.filter((part: unknown) => typeof part === 'string').join('; ') || message
+      else if (typeof raw === 'string' && raw.trim()) message = raw.trim()
+      else if (res.status === 409) message = 'Não foi possível concluir: existe um conflito com a agenda ou uma restrição de disponibilidade.'
+      else if (res.status === 400) message = 'Confira os dados informados e tente novamente.'
+      else if (res.status >= 500) message = 'Serviço temporariamente indisponível. Tente novamente.'
     } catch {}
     throw new ApiError(res.status, message)
   }
