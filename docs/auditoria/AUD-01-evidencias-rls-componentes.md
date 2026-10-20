@@ -627,3 +627,12 @@ Autorização recebida para utilizar contas de teste existentes. Ensaios executa
 - Commit `7b40dbee`: HTTP 409 de indisponibilidade no POST interno informa que horário pode conflitar com expediente, bloqueios da agenda ou serviço/profissional; conflito de reserva recebe mensagem específica para escolher outra data/hora. Não divulgar SQL ou erros internos.
 - O HTTP 409 observado é compatível com regra de disponibilidade ou conflito de agenda, mas **não foi comprovado** que um bloqueio específico causou aquela tentativa: essa causalidade exige inspeção de dados de bloqueio para profissional/data e reteste controlado.
 - O fluxo interno de criação e os controles de disponibilidade não foram alterados, somente textos de erro e sua leitura pelo cliente. CI e deployment dos dois commits exigem confirmação antes de homologação.
+
+
+## Homologação — correção UUID da consulta pública de disponibilidade (20/10/2026)
+
+- Sintoma reportado: formulário `/agendar/[slug]` apresenta `Não foi possível consultar a disponibilidade. Tente novamente` para todas as datas após o fluxo passar a depender da API `GET /api/public/slots`.
+- Causa identificada por inspeção direta: expressão `uuid` da API pública não respeitava os cinco grupos UUID `8-4-4-4-12`. O validador rejeitava `tenantId` e `serviceId` normais com HTTP 400 antes de consultar o banco; a UI convertia todo HTTP não-OK em erro genérico.
+- Correção pontual na mesma rota, sem alterar motor de cálculo: commit final `1d95255dd33df945abe9d23430ff8f0932320e43` ajusta a expressão regular para `8-4-4-4-12`, incluindo a posição dos hífens e variante UUID. A expressão foi relida no GitHub e testada com UUID válido e identificador truncado; validou/rejeitou respectivamente.
+- Supabase `zrszytzlovthyezozqhj`: a reconsulta de `company_working_hours` para o slug TDSoft agora retornou **5 registros** (fotografia atual), diferentemente do instante anterior com zero; nenhuma configuração foi modificada nesta auditoria. Não afirmar que todos os serviços/horários estão homologados apenas por essa contagem.
+- CI e Vercel do commit final ainda sujeitos à validação de sucesso/READY no momento desta documentação. Nenhuma migration, alteração de dados, agenda ou serviço efetuada neste ajuste.
