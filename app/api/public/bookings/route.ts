@@ -113,6 +113,18 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Convites e reservas públicas exigem expediente e vínculo explícito serviço-profissional.
+    const { count: configuredHours, error: hoursError } = await supabase.from('company_working_hours')
+      .select('id', { count: 'exact', head: true }).eq('tenant_id', tenant_id)
+    if (hoursError) return NextResponse.json({ message: 'Falha ao consultar o expediente.' }, { status: 503 })
+    if (!configuredHours) return NextResponse.json({ message: 'A empresa ainda não configurou o expediente para agendamentos online.' }, { status: 409 })
+    if (!professional_id) return NextResponse.json({ message: 'Selecione um profissional habilitado.' }, { status: 400 })
+    const { data: assignment, error: assignmentError } = await supabase.from('professional_services')
+      .select('professional_id').eq('tenant_id', tenant_id).eq('service_id', service_id)
+      .eq('professional_id', professional_id).maybeSingle()
+    if (assignmentError) return NextResponse.json({ message: 'Falha ao conferir o profissional.' }, { status: 503 })
+    if (!assignment) return NextResponse.json({ message: 'Profissional não habilitado para este serviço.' }, { status: 409 })
+
     const availability = await checkConfiguredAvailability({tenantId:tenant_id,serviceId:service_id,professionalId:professional_id,startAt:start_at,endAt:end_at})
     if(availability==='error')return NextResponse.json({message:'Não foi possível verificar a disponibilidade.'},{status:503})
     if(availability==='unavailable')return NextResponse.json({message:'Horário indisponível para esse serviço ou profissional.'},{status:409})
