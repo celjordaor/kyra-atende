@@ -646,3 +646,9 @@ Autorização recebida para utilizar contas de teste existentes. Ensaios executa
 - `app/(dashboard)/clientes/ClientesClient.tsx` (commit `12762059`) adiciona histórico acessível a partir da lista e utiliza a mesma ficha em cada agendamento. Não carrega histórico de todos os clientes antecipadamente.
 - `AUD-01 Quality Gates` de `12762059` terminou em `success`, incluindo TypeScript, ESLint e smoke HTTP sem sessão. Static Security & Quality Checks e deploy Vercel ainda precisavam de confirmação ao registrar este item. Homologação visual e funcional pendente, especialmente vínculos tenant/cliente, paginação, agendamentos com dados financeiros parciais e leitura de concluídos.
 - Não houve operação SQL de escrita, migração nem alteração no módulo de disponibilidade.
+
+
+## Otimização de build — teste de deploy documental (20/10/2026)
+
+- Commit exclusivamente documental para verificar se a configuração de Ignored Build Step na Vercel deixa de compilar mudanças restritas a documentação. Os checks GitHub Actions permanecem independentes. Nenhum dado, schema, rota ou configuração do aplicativo foi alterado.
+- Resultado do teste de skip deve ser verificado no painel da Vercel; o envio deste commit por si só não prova o comportamento.
