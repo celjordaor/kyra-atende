@@ -4,6 +4,7 @@ import { UsageBar } from '@/components/molecules/UsageBar'
 import { StatusBadge } from '@/components/atoms/StatusBadge'
 import Link from 'next/link'
 import { AssinaturaUpgradeButton } from './AssinaturaUpgradeButton'
+import { BillingPendingNotice } from '@/components/organisms/BillingPendingNotice'
 import type { Plan } from '@/components/organisms/PlanModal'
 
 export const metadata = { title: 'Assinatura — Kyra Atende' }
@@ -103,6 +104,7 @@ export default async function AssinaturaPage() {
         ))}
       </nav>
 
+      <BillingPendingNotice />
       {/* Plano atual */}
       <div id="assinatura-header" style={{
         background: 'var(--surface-2)',
