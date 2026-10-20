@@ -1,237 +1,115 @@
 import { createClient } from '@/lib/supabase/server'
-import { redirect }     from 'next/navigation'
+import { redirect } from 'next/navigation'
+import { apiGet } from '@/lib/api.server'
 import { StatTile } from '@/components/molecules'
 import { DashboardBookingsSection } from './DashboardBookingsSection'
 import type { Booking } from '@/components/organisms'
 import type { NewClient, ServiceRevenue } from './DashboardBookingsSection'
 
-function todayRange() {
-  const start = new Date(); start.setHours(0, 0, 0, 0)
-  const end   = new Date(); end.setHours(23, 59, 59, 999)
-  return { start: start.toISOString(), end: end.toISOString() }
+type RawBooking = {
+ id:string;client_name:string;client_phone:string|null;start_at:string;end_at:string;
+ status:string;price_charged:number|null;discount:number|null;
+ services:{name:string;price:number|null}|null;
 }
-
-function thisMonthRange() {
-  const now   = new Date()
-  const start = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
-  const end   = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59).toISOString()
-  return { start, end }
+type Hours = {weekday:number;start:string;end:string}
+type Block = {professional_id:string|null;starts_at:string;ends_at:string;category:string}
+type Availability = {settings:{timezone?:string}|null;hours:Hours[]}
+type BlocksResult = {blocks:Block[]}
+type Client = {id:string;name:string;created_at:string}
+const brl=(value:number)=>value.toLocaleString('pt-BR',{style:'currency',currency:'BRL',minimumFractionDigits:2})
+function dayKey(date:Date,tz:string){
+ return new Intl.DateTimeFormat('en-CA',{timeZone:tz,year:'numeric',month:'2-digit',day:'2-digit'}).format(date)
 }
-
-function fmtBRL(v: number) {
-  return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 })
+function addDay(key:string,offset:number){
+ const date=new Date(key+'T12:00:00Z');date.setUTCDate(date.getUTCDate()+offset)
+ return date.toISOString().slice(0,10)
 }
-
-export default async function DashboardPage() {
-  const supabase = createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
-
-  const tenantId = (user.app_metadata?.tenant_id ?? '') as string
-
-  if (!tenantId) {
-    return (
-      <div style={{
-        display: 'flex', flexDirection: 'column', alignItems: 'center',
-        justifyContent: 'center', minHeight: '60vh', gap: '16px', textAlign: 'center',
-      }}>
-        <h1 style={{ fontSize: '20px', fontWeight: 600, color: 'var(--ink)' }}>
-          Configuração necessária
-        </h1>
-        <p style={{ fontSize: '14px', color: 'var(--muted)', maxWidth: '360px' }}>
-          Sua conta foi criada mas a empresa ainda não foi configurada.
-          Entre em contato com o suporte ou crie uma nova conta em{' '}
-          <a href="/cadastro" style={{ color: 'var(--brand)' }}>/cadastro</a>.
-        </p>
-      </div>
-    )
+function weekday(key:string){return new Date(key+'T12:00:00Z').getUTCDay()}
+function isAvailableDay(key:string,hours:Hours[],blocks:Block[],tz:string){
+ const intervals=hours.filter(h=>h.weekday===weekday(key)).map(h=>({start:h.start,end:h.end}))
+ if(intervals.length===0)return false
+ const global=blocks.filter(b=>!b.professional_id&&dayKey(new Date(b.starts_at),tz)<=key&&dayKey(new Date(b.ends_at),tz)>=key)
+ if(global.length===0)return true
+ // Bloqueios parciais não tornam o dia inteiro indisponível.
+ const covered=global.some(b=>{
+  const start=dayKey(new Date(b.starts_at),tz),end=dayKey(new Date(b.ends_at),tz)
+  return start<key&&end>key
+ })
+ return !covered
+}
+export default async function DashboardPage(){
+ const supabase=createClient()
+ const {data:{user}}=await supabase.auth.getUser()
+ if(!user)redirect('/login')
+ const [bookingsResult,clientsResult,availabilityResult,blocksResult]=await Promise.allSettled([
+  apiGet<RawBooking[]>('/bookings'),
+  apiGet<Client[]>('/clients'),
+  apiGet<Availability>('/settings/availability'),
+  apiGet<BlocksResult>('/settings/availability/blocks'),
+ ])
+ if(bookingsResult.status!=='fulfilled'){
+  console.error('[DashboardPage] falha ao consultar agendamentos')
+  return <div role="alert" style={{padding:24,color:'var(--red)'}}>Não foi possível carregar os indicadores e a agenda. Atualize a página para tentar novamente.</div>
+ }
+ const bookings=bookingsResult.value??[]
+ const clients=clientsResult.status==='fulfilled'?clientsResult.value:[]
+ const availability=availabilityResult.status==='fulfilled'?availabilityResult.value:null
+ const blocks=blocksResult.status==='fulfilled'?(blocksResult.value.blocks??[]):[]
+ const tz=availability?.settings?.timezone||'America/Sao_Paulo'
+ const today=dayKey(new Date(),tz)
+ const month=today.slice(0,7)
+ const eligible=bookings.filter(b=>b.status!=='cancelled')
+ const todayBookingsRaw=eligible.filter(b=>dayKey(new Date(b.start_at),tz)===today)
+ const monthBookings=eligible.filter(b=>dayKey(new Date(b.start_at),tz).slice(0,7)===month)
+ const completed=monthBookings.filter(b=>b.status==='completed')
+ const revenue=(records:RawBooking[])=>records.reduce((sum,b)=>sum+Math.max(0,(b.price_charged??0)-(b.discount??0)),0)
+ const revenueMonth=revenue(completed)
+ const revenueToday=revenue(todayBookingsRaw.filter(b=>b.status==='completed'))
+ const countPending=bookings.filter(b=>b.status==='pending').length
+ const countConfirmed=monthBookings.filter(b=>b.status==='confirmed'||b.status==='completed').length
+ const taxaConfirmacao=monthBookings.length?Math.round(countConfirmed/monthBookings.length*100):0
+ const ticketMedio=completed.length?revenueMonth/completed.length:0
+ const toBooking=(b:RawBooking):Booking=>({
+  id:b.id,clientName:b.client_name,clientPhone:b.client_phone??'',
+  service:b.services?.name??'Serviço',price:b.services?.price??undefined,
+  startAt:b.start_at,endAt:b.end_at,status:b.status as Booking['status'],
+ })
+ const todayBookings=todayBookingsRaw.sort((a,b)=>a.start_at.localeCompare(b.start_at)).map(toBooking)
+ const pendingBookings=bookings.filter(b=>b.status==='pending').sort((a,b)=>a.start_at.localeCompare(b.start_at)).slice(0,5).map(toBooking)
+ let nextKey=addDay(today,1)
+ if(availability){
+  for(let offset=1;offset<=30;offset++){
+   const candidate=addDay(today,offset)
+   if(isAvailableDay(candidate,availability.hours??[],blocks,tz)){nextKey=candidate;break}
   }
-
-  const today     = todayRange()
-  const thisMonth = thisMonthRange()
-
-  // ── Busca dados em paralelo ────────────────────────────────────
-  const [
-    tenantRes,
-    todayRes,
-    monthRes,
-    pendingRes,
-    confirmedMonthRes,
-    revenueTodayRes,
-    revenueMonthRes,
-    bookingsTodayRes,
-    pendingListRes,
-    newClientsRes,
-    monthBookingsRes,
-  ] = await Promise.all([
-
-    // Tenant name
-    supabase.from('tenants').select('name').eq('id', tenantId).single(),
-
-    // Agendamentos hoje (não cancelados)
-    supabase.from('bookings').select('id', { count: 'exact', head: true })
-      .eq('tenant_id', tenantId)
-      .gte('start_at', today.start).lte('start_at', today.end)
-      .neq('status', 'cancelled'),
-
-    // Agendamentos este mês (não cancelados)
-    supabase.from('bookings').select('id', { count: 'exact', head: true })
-      .eq('tenant_id', tenantId)
-      .gte('start_at', thisMonth.start).lte('start_at', thisMonth.end)
-      .neq('status', 'cancelled'),
-
-    // Pendentes
-    supabase.from('bookings').select('id', { count: 'exact', head: true })
-      .eq('tenant_id', tenantId).eq('status', 'pending'),
-
-    // Confirmados + concluídos este mês (para taxa de confirmação)
-    supabase.from('bookings').select('id', { count: 'exact', head: true })
-      .eq('tenant_id', tenantId)
-      .gte('start_at', thisMonth.start).lte('start_at', thisMonth.end)
-      .in('status', ['confirmed', 'completed']),
-
-    // Receita hoje (serviços confirmados/concluídos)
-    supabase.from('bookings')
-      .select('services(price)')
-      .eq('tenant_id', tenantId)
-      .in('status', ['confirmed', 'completed'])
-      .gte('start_at', today.start).lte('start_at', today.end),
-
-    // Receita este mês
-    supabase.from('bookings')
-      .select('services(price)')
-      .eq('tenant_id', tenantId)
-      .in('status', ['confirmed', 'completed'])
-      .gte('start_at', thisMonth.start).lte('start_at', thisMonth.end),
-
-    // Agenda de hoje (lista completa)
-    supabase.from('bookings')
-      .select('id, client_name, client_phone, start_at, end_at, status, services(name, price)')
-      .eq('tenant_id', tenantId)
-      .gte('start_at', today.start).lte('start_at', today.end)
-      .neq('status', 'cancelled')
-      .order('start_at', { ascending: true }),
-
-    // Pendentes (lista para painel direito)
-    supabase.from('bookings')
-      .select('id, client_name, start_at, end_at, status, services(name)')
-      .eq('tenant_id', tenantId).eq('status', 'pending')
-      .order('start_at', { ascending: true }).limit(5),
-
-    // Novos clientes (últimos 5)
-    supabase.from('clients')
-      .select('id, name, created_at')
-      .eq('tenant_id', tenantId)
-      .order('created_at', { ascending: false }).limit(5),
-
-    // Agendamentos do mês com serviço + preço (para receita por serviço)
-    supabase.from('bookings')
-      .select('id, services(name, price)')
-      .eq('tenant_id', tenantId)
-      .gte('start_at', thisMonth.start).lte('start_at', thisMonth.end)
-      .in('status', ['confirmed', 'completed']),
-  ])
-
-  // ── Valores derivados ──────────────────────────────────────────
-  const tenantName    = tenantRes.data?.name ?? ''
-  const countToday    = todayRes.count    ?? 0
-  const countMonth    = monthRes.count    ?? 0
-  const countPending  = pendingRes.count  ?? 0
-  const countConfirmed = confirmedMonthRes.count ?? 0
-
-  const revenueToday = (revenueTodayRes.data ?? [])
-    .reduce((s: number, b: any) => s + (b.services?.price ?? 0), 0)
-  const revenueMonth = (revenueMonthRes.data ?? [])
-    .reduce((s: number, b: any) => s + (b.services?.price ?? 0), 0)
-
-  const ticketMedio      = countMonth > 0 ? revenueMonth / countMonth : 0
-  const taxaConfirmacao  = countMonth > 0 ? Math.round((countConfirmed / countMonth) * 100) : 0
-
-  // Receita por serviço (confirmados/concluídos este mês)
-  const svcMap: Record<string, { count: number; revenue: number }> = {}
-  for (const b of monthBookingsRes.data ?? []) {
-    const name  = (b as any).services?.name  ?? 'Outros'
-    const price = (b as any).services?.price ?? 0
-    if (!svcMap[name]) svcMap[name] = { count: 0, revenue: 0 }
-    svcMap[name].count++
-    svcMap[name].revenue += price
-  }
-  const topServices: ServiceRevenue[] = Object.entries(svcMap)
-    .sort((a, b) => b[1].revenue - a[1].revenue).slice(0, 5)
-    .map(([name, { count, revenue }]) => ({ name, count, revenue }))
-
-  // Bookings tipados
-  const todayBookings: Booking[] = (bookingsTodayRes.data ?? []).map((b: any) => ({
-    id:          b.id,
-    clientName:  b.client_name,
-    clientPhone: b.client_phone ?? '',
-    service:     b.services?.name ?? 'Serviço',
-    startAt:     b.start_at,
-    endAt:       b.end_at,
-    status:      b.status as Booking['status'],
-    price:       b.services?.price,
-  }))
-
-  const pendingBookings: Booking[] = (pendingListRes.data ?? []).map((b: any) => ({
-    id:          b.id,
-    clientName:  b.client_name,
-    service:     b.services?.name ?? 'Serviço',
-    startAt:     b.start_at,
-    endAt:       b.end_at,
-    status:      'pending' as const,
-  }))
-
-  const newClients: NewClient[] = (newClientsRes.data ?? []).map((c: any) => ({
-    id:         c.id,
-    name:       c.name,
-    created_at: c.created_at,
-  }))
-
-  const now      = new Date()
-  const greeting = now.getHours() < 12 ? 'Bom dia' : now.getHours() < 18 ? 'Boa tarde' : 'Boa noite'
-  const dateLabel = now.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })
-
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
-
-      {/* ── Cabeçalho: saudação ── */}
-      <div>
-        <h1 style={{ fontSize: '22px', fontWeight: 600, color: 'var(--ink)', margin: '0 0 4px' }}>
-          {greeting}, {tenantName} 👋
-        </h1>
-        <p style={{ fontSize: '14px', color: 'var(--muted)', margin: 0, textTransform: 'capitalize' }}>
-          {dateLabel}
-          {countPending > 0 && (
-            <>
-              {' · '}
-              <span style={{ color: 'var(--orange)', fontWeight: 500 }}>
-                {countPending} agendamento{countPending !== 1 ? 's' : ''} pendente{countPending !== 1 ? 's' : ''} aguardando confirmação
-              </span>
-            </>
-          )}
-        </p>
-      </div>
-
-      {/* ── KPI tiles (7) — linha única ── */}
-      <div id="stat-tiles" style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: '10px' }}>
-        <StatTile label="Agendamentos hoje"     value={countToday}              icon="calendar" color="blue"   compact />
-        <StatTile label="Agendamentos mês"      value={countMonth}              icon="chart"    color="green"  compact />
-        <StatTile label="Pendentes"             value={countPending}            icon="clock"    color="orange" compact />
-        <StatTile label="Ticket médio"          value={fmtBRL(ticketMedio)}     icon="dollar"   color="green"  formatNumber={false} compact />
-        <StatTile label="Receita hoje"          value={fmtBRL(revenueToday)}    icon="dollar"   color="green"  formatNumber={false} compact />
-        <StatTile label="Receita este mês"      value={fmtBRL(revenueMonth)}    icon="dollar"   color="blue"   formatNumber={false} compact />
-        <StatTile label="Taxa de confirmação"   value={taxaConfirmacao}         icon="check"    color="blue"   suffix="%" compact />
-      </div>
-
-      {/* ── Seção principal (agenda + pendentes) ── */}
-      <div id="dashboard-content">
-        <DashboardBookingsSection
-          todayBookings={todayBookings}
-          pendingBookings={pendingBookings}
-          newClients={newClients}
-          topServices={topServices}
-        />
-      </div>
-    </div>
-  )
+ }
+ const nextBookings=eligible.filter(b=>dayKey(new Date(b.start_at),tz)===nextKey).sort((a,b)=>a.start_at.localeCompare(b.start_at)).map(toBooking)
+ const nextLabel=new Date(nextKey+'T12:00:00Z').toLocaleDateString('pt-BR',{timeZone:'UTC',weekday:'long',day:'2-digit',month:'long'})
+ const svcMap:Record<string,{count:number;revenue:number}>={}
+ for(const b of completed){
+  const name=b.services?.name??'Outros'
+  if(!svcMap[name])svcMap[name]={count:0,revenue:0}
+  svcMap[name].count++;svcMap[name].revenue+=Math.max(0,(b.price_charged??0)-(b.discount??0))
+ }
+ const topServices:ServiceRevenue[]=Object.entries(svcMap).sort((a,b)=>b[1].revenue-a[1].revenue).slice(0,5).map(([name,v])=>({name,...v}))
+ const newClients:NewClient[]=clients.slice().sort((a,b)=>b.created_at.localeCompare(a.created_at)).slice(0,5).map(c=>({id:c.id,name:c.name,created_at:c.created_at}))
+ const now=new Date()
+ const localHour=Number(new Intl.DateTimeFormat('en-GB',{timeZone:tz,hour:'2-digit',hourCycle:'h23'}).format(now))
+ const greeting=localHour<12?'Bom dia':localHour<18?'Boa tarde':'Boa noite'
+ return <div style={{display:'flex',flexDirection:'column',gap:28}}>
+  <div>
+   <h1 style={{fontSize:22,fontWeight:600,color:'var(--ink)',margin:'0 0 4px'}}>{greeting} 👋</h1>
+   <p style={{fontSize:14,color:'var(--muted)',margin:0}}>{now.toLocaleDateString('pt-BR',{timeZone:tz,weekday:'long',day:'numeric',month:'long'})}{countPending>0?` · ${countPending} aguardando confirmação`:''}</p>
+  </div>
+  <div id="stat-tiles" style={{display:'grid',gridTemplateColumns:'repeat(7,minmax(0,1fr))',gap:10}}>
+   <StatTile label="Agendamentos hoje" value={todayBookings.length} icon="calendar" color="blue" compact/>
+   <StatTile label="Agendamentos mês" value={monthBookings.length} icon="chart" color="green" compact/>
+   <StatTile label="Pendentes" value={countPending} icon="clock" color="orange" compact/>
+   <StatTile label="Ticket médio realizado" value={brl(ticketMedio)} icon="dollar" color="green" formatNumber={false} compact/>
+   <StatTile label="Receita hoje" value={brl(revenueToday)} icon="dollar" color="green" formatNumber={false} compact/>
+   <StatTile label="Receita este mês" value={brl(revenueMonth)} icon="dollar" color="blue" formatNumber={false} compact/>
+   <StatTile label="Taxa de confirmação" value={taxaConfirmacao} icon="check" color="blue" suffix="%" compact/>
+  </div>
+  <div id="dashboard-content"><DashboardBookingsSection todayBookings={todayBookings} nextBookings={nextBookings} nextLabel={nextLabel} pendingBookings={pendingBookings} newClients={newClients} topServices={topServices}/></div>
+ </div>
 }
