@@ -19,6 +19,7 @@ export async function GET(request: NextRequest) {
   const tenantId      = searchParams.get('tenantId')
   const date          = searchParams.get('date')       // YYYY-MM-DD
   const professionalId = searchParams.get('professionalId') || null
+  const serviceId = searchParams.get('serviceId')
 
   if (!tenantId || !date) {
     return NextResponse.json({ error: 'Parâmetros obrigatórios: tenantId, date' }, { status: 400 })
@@ -27,6 +28,20 @@ export async function GET(request: NextRequest) {
   const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
   if (!uuidPattern.test(tenantId) || (professionalId && !uuidPattern.test(professionalId))) {
     return NextResponse.json({ error: 'Identificador inválido.' }, { status: 400 })
+  }
+
+  // Com serviço informado, oferecer os slots do motor central.
+  // O modo legado só permanece quando o expediente ainda não foi configurado.
+  if (serviceId) {
+    if (!uuidPattern.test(serviceId)) return NextResponse.json({error:'Serviço inválido.'},{status:400})
+    const admin = adminClient()
+    const {count,error:hoursError}=await admin.from('company_working_hours').select('id',{count:'exact',head:true}).eq('tenant_id',tenantId)
+    if(hoursError)return NextResponse.json({error:'Falha ao consultar expediente.'},{status:503})
+    if((count??0)>0){
+      const {data,error}=await admin.rpc('get_available_slots',{p_tenant:tenantId,p_service:serviceId,p_date:date,p_professional:professionalId})
+      if(error)return NextResponse.json({error:'Falha ao calcular disponibilidade.'},{status:503})
+      return NextResponse.json({slots:data??[],engine:true},{headers:{'Cache-Control':'no-store'}})
+    }
   }
 
   // Valida formato da data
