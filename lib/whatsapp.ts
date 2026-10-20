@@ -94,18 +94,34 @@ export async function handleWebhook(payload: EvolutionWebhookPayload): Promise<v
   if (permission.status !== 'manual' && permission.status !== 'ai') return
 
   // Salva no histórico exclusivamente em conversas autorizadas.
-  const { error: insertError } = await supabase.from('whatsapp_messages').insert({
+  const { data: inbound, error: insertError } = await supabase.from('whatsapp_messages').insert({
     tenant_id:   tenantId,
     from_number: from,
     to_number:   tenantId,
     body,
     direction:   'inbound',
     external_id: messageId,
-  })
+  }).select('id').single()
   // A constraint unique protege inclusive contra chamadas concorrentes.
   // Reenvios da Evolution não podem disparar outra resposta da IA.
   if (insertError?.code === '23505') return
   if (insertError) throw insertError
+
+  // Registrar processamento de forma idempotente antes da IA.
+  // Em falha posterior o registro fica para revisão humana; nunca reenviar automaticamente.
+  if (!inbound) throw new Error('Inbound não persistido')
+  const {data:claimed,error:claimError}=await supabase.rpc('claim_whatsapp_inbound',{
+    p_tenant:tenantId,p_external_id:messageId,p_message:inbound.id,
+  })
+  if(claimError)throw new Error('Não foi possível registrar processamento inbound')
+  if(!claimed)return
+
+  async function markProcessing(status:'done'|'needs_review',stage?:string){
+    const {error}=await supabase.rpc('complete_whatsapp_inbound',{
+      p_tenant:tenantId,p_external_id:messageId,p_status:status,p_stage:stage??null,
+    })
+    if(error)console.error('[whatsapp] falha ao finalizar rastreamento inbound',{tenantId,code:error.code})
+  }
 
   // Verifica entitlement de IA de agendamento
   const hasAiScheduling = await canUse(tenantId, 'has_ai_scheduling')
@@ -115,7 +131,9 @@ export async function handleWebhook(payload: EvolutionWebhookPayload): Promise<v
       const reply = await processWhatsappMessage(tenantId, from, body, messageId)
       if (reply) {
         await sendMessage({ to: from, body: reply, tenantId })
+        await markProcessing('done')
       } else {
+        await markProcessing('needs_review','empty_ai_reply')
         // Resposta vazia também precisa de acompanhamento humano.
         await dispatchPush(tenantId, 'whatsapp.unhandled', {
           title: 'WhatsApp precisa de atendimento',
@@ -126,6 +144,7 @@ export async function handleWebhook(payload: EvolutionWebhookPayload): Promise<v
         })
       }
     } catch (err) {
+      await markProcessing('needs_review','automatic_processing_error')
       // Persistência inbound já concluída: não reenviar a resposta
       // automaticamente, porque uma falha de rede pode ocorrer depois de
       // a Evolution ter entregue a mensagem.
@@ -146,6 +165,7 @@ export async function handleWebhook(payload: EvolutionWebhookPayload): Promise<v
       })
     }
   } else {
+    await markProcessing('done')
     // Sem IA: encaminha a mensagem para atendimento humano.
     await dispatchPush(tenantId, 'whatsapp.unhandled', {
       title: 'Nova mensagem no WhatsApp',
