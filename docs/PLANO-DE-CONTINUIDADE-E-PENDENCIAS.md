@@ -369,3 +369,10 @@ A pesquisa dos arquivos disponibilizados no contexto do Project não retornou o 
 - `PUT /api/bookings/[id]` chama a RPC para edições de horário, serviço ou profissional; atualizações de observações seguem fluxo atual. O horário antigo fica livre e o novo fica ocupado após commit, sem cache persistente.
 - Teste transacional revertido: profissional das 14h–18h apesar de expediente geral 08h–12h; remarcação 14h→15h liberou 14h e ocupou 15h. Nenhuma reserva real alterada.
 - Pendente: teste HTTP de remarcação com usuário real; revisão de concorrência envolvendo criação de bloqueio administrativo durante a transação; adequação de UI para expediente customizado e validação completa de Vercel; lógica de profissional sem expediente configurado e contrato de ausência de agenda devem ser explicitados antes da homologação.
+
+## Homologação de concorrência — bloqueios e reservas (20/10/2026)
+
+- Auditoria do schema confirmou que gravação/remoção de bloqueio geral não era serializada com validação de agendamento/alteração; havia janela de concorrência com alteração administrativa de disponibilidade.
+- Migration `20261020116000_serialize_availability_writes.sql` versionada e aplicada: `save_availability_block`, `delete_availability_block`, `create_portal_booking` e `reschedule_booking_atomic` agora usam `pg_advisory_xact_lock` da mesma empresa antes de ler/alterar disponibilidade. Todas quatro funções inspecionadas e confirmadas remotamente.
+- **Limitação:** novas reservas criadas pelas rotas públicas e internas legadas ainda usam INSERT direto, sem adquirir o mesmo lock. Elas contam com a restrição existente de sobreposição por profissional e checagem anterior à inserção; concorrência com bloqueios administrativos não está totalmente resolvida nelas. É necessário migrar criação pública, convites e criação interna para RPCs atômicas, além de concorrência real em múltiplas sessões.
+- Nenhuma agenda de cliente foi alterada nesta etapa. Homologação HTTP ponta a ponta, testes DST/fusos e UX do portal permanecem pendentes; não chamar o motor integralmente homologado.
