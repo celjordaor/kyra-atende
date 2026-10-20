@@ -197,35 +197,20 @@ export async function POST(request: NextRequest) {
     }
 
     // ── Inserir agendamento ──────────────────────────────────────────────────
-    const { data: booking, error: insertError } = await supabase
-      .from('bookings')
-      .insert({
-        tenant_id,
-        service_id,
-        professional_id: professional_id ?? null,
-        client_id:       clientId,
-        client_name:     client_name.trim(),
-        client_phone:    normalizedPhone,
-        client_email:    client_email?.trim() || null,
-        notes:           notes?.trim() || null,
-        start_at,
-        end_at,
-        status: 'pending',
-      })
-      .select('id, client_name, start_at, services!bookings_service_id_fkey(name)')
-      .single()
-
-    if (insertError?.code === '23P01') {
-      return NextResponse.json(
-        { message: 'Este horário acabou de ser reservado. Escolha outro horário.' },
-        { status: 409 },
-      )
+    if(!clientId)return NextResponse.json({message:'Não foi possível identificar o cadastro do cliente.'},{status:400})
+    const {data:bookingId,error:insertError}=await supabase.rpc('create_booking_checked',{
+      p_tenant:tenant_id,p_client:clientId,p_service:service_id,p_professional:professional_id??null,
+      p_start:start_at,p_end:end_at,p_notes:notes?.trim()||null,p_status:'pending',
+    })
+    if(insertError){
+      if(insertError.code==='23P01')return NextResponse.json({message:'Este horário não está mais disponível. Escolha outro.'},{status:409})
+      console.error('[public/bookings] atomic create failed',{code:insertError.code})
+      return NextResponse.json({message:'Não foi possível criar o agendamento.'},{status:400})
     }
-
-    if (insertError || !booking) {
-      console.error('[public/bookings] insert erro:', insertError)
-      return NextResponse.json({ message: 'Não foi possível criar o agendamento.' }, { status: 500 })
-    }
+    const {data:booking,error:bookingError}=await supabase.from('bookings')
+      .select('id,client_name,start_at,services!bookings_service_id_fkey(name)')
+      .eq('id',bookingId).eq('tenant_id',tenant_id).single()
+    if(bookingError||!booking)return NextResponse.json({id:bookingId},{status:201})
 
     // ── Push ao tenant (fire-and-forget) ────────────────────────────────────
     const serviceName = (booking.services as { name?: string } | null)?.name ?? 'Serviço'
