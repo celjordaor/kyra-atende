@@ -30,8 +30,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Identificador inválido.' }, { status: 400 })
   }
 
-  // Com serviço informado, oferecer os slots do motor central.
-  // O modo legado só permanece quando o expediente ainda não foi configurado.
+  // Não fornecer horários genéricos: disponibilidade depende de expediente e vínculo serviço-profissional.
   if (serviceId) {
     if (!uuidPattern.test(serviceId)) return NextResponse.json({error:'Serviço inválido.'},{status:400})
     const admin = adminClient()
@@ -96,4 +95,17 @@ export async function GET(request: NextRequest) {
       'Cache-Control': 'no-store',
     },
   })
+}  if (!serviceId || !uuidPattern.test(serviceId) || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    return NextResponse.json({ error: 'Serviço ou data inválida.' }, { status: 400 })
+  }
+  const admin = adminClient()
+  const { count, error: hoursError } = await admin.from('company_working_hours')
+    .select('id', { count: 'exact', head: true }).eq('tenant_id', tenantId)
+  if (hoursError) return NextResponse.json({ error: 'Falha ao consultar expediente.' }, { status: 503 })
+  if (!count) return NextResponse.json({ slots: [], engine: true, needsConfiguration: true }, { headers: { 'Cache-Control': 'no-store' } })
+  const { data, error } = await admin.rpc('get_available_slots', {
+    p_tenant: tenantId, p_service: serviceId, p_date: date, p_professional: professionalId,
+  })
+  if (error) return NextResponse.json({ error: 'Falha ao calcular disponibilidade.' }, { status: 503 })
+  return NextResponse.json({ slots: data ?? [], engine: true }, { headers: { 'Cache-Control': 'no-store' } })
 }
