@@ -86,3 +86,10 @@ A pesquisa dos arquivos disponibilizados no contexto do Project não retornou o 
 - **Limites críticos:** esta primeira versão é rastreamento, não outbox transacional completa. Não existe chave idempotente compartilhada com Evolution, claim/lease, reconciliador ou interface administrativa; invocações repetidas podem ainda reenviar. Falha do próprio UPDATE de estado pode manter a linha em estado anterior. Incremento de consumo e envio externo continuam não transacionais.
 - **Segurança:** armazenamento sem conteúdo da mensagem, isolamento por backend, nenhuma linha criada em dados reais nesta rodada. Não confundir a criação de tabela com teste E2E.
 - **Validação pendente:** build/TypeScript, testes com Evolution isolada, falha simulada após aceite HTTP, falha de histórico, recuperação de `sending` antigo e reconciliação operacional. Não ativar retry automático antes de determinar uma estratégia de idempotência ponta a ponta.
+
+## Visibilidade de conciliação WhatsApp — continuidade (20/10/2026)
+
+- **Implementado no código:** endpoint somente leitura `GET /api/superadmin/whatsapp-reconciliation` (commit `777310a1`). Exige autenticação e papel `superadmin` verificado no banco antes de usar `service_role`.
+- Lista no máximo 100 tentativas em estados `sending`, `accepted`, `unknown` e `reconcile`, exibindo tenant, sufixo do telefone, estado, timestamps e indicador de atenção após 10 minutos. Não retorna conteúdo nem hash das mensagens e não permite modificar estados.
+- **Não implementado:** interface visual de conciliação, autenticação HTTP E2E, paginação, fluxo de confirmação/reconciliação manual e reenvio idempotente. Nunca reenviar automaticamente mensagens `unknown`.
+- **Critério de aceite:** endpoint retorna 401 sem sessão, 403 para usuário não Superadmin; Superadmin enxerga somente os metadados previstos, sem dados do corpo; estado permanece inalterado após leitura. Requer testes autenticados controlados.
