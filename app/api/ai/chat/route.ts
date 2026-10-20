@@ -73,8 +73,8 @@ export async function POST(request: NextRequest) {
     try {
       result = await chat(messages)
     } catch {
-      const release = await admin.rpc('finish_ai_monetary', { p_id: id, p_success: false, p_input: 0, p_output: 0, p_fx: fx })
-      if (release.error) console.error('[ai/chat] liberação pendente', { code: release.error.code, id })
+      // Resultado do provedor pode ser incerto. Conservar reserva até conciliação.
+      console.error('[ai/chat] resultado de IA incerto; reserva mantida', { reservationId: id })
       return NextResponse.json({ error: 'Erro ao processar mensagem.' }, { status: 500 })
     }
     const settlement = await admin.rpc('finish_ai_monetary', {
