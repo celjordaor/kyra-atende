@@ -45,9 +45,11 @@ jobs:
               body: test.body ? JSON.stringify(test.body) : undefined,
               redirect: 'manual',
             })
+            const payload = await response.json().catch(() => null)
             console.log(test.method, test.path, response.status)
-            if (response.status !== 401) {
-              throw new Error('Expected HTTP 401 without a session, got ' + response.status)
+            if (response.status !== 401 || !payload ||
+                !['Não autorizado', 'Nao autorizado'].includes(payload.message ?? payload.error)) {
+              throw new Error('Expected application HTTP 401 JSON (not proxy-level 401), got ' + response.status)
             }
           }
           NODE
