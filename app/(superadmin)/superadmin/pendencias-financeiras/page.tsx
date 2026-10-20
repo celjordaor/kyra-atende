@@ -5,8 +5,6 @@ import { redirect } from 'next/navigation'
 import ReviewQueue from './ReviewQueue'
 
 export const metadata = { title: 'Pendências financeiras — SuperAdmin Kyra' }
-const STATUS: Record<string,string> = { pending_review:'Em análise', escalated:'Encaminhado', reviewed:'Analisado' }
-const REASON: Record<string,string> = { refund:'Estorno', chargeback:'Contestação', cancelled:'Cancelamento', other:'Outro' }
 export default async function PendenciasFinanceirasPage(){
  const {data:{user}}=await createClient().auth.getUser()
  if(!user)redirect('/login')
