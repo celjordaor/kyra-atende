@@ -173,3 +173,11 @@ A pesquisa dos arquivos disponibilizados no contexto do Project não retornou o 
 - Checagem SQL: `authenticated` não tem permissão de `EXECUTE` em `reserve_ai_monetary`; `service_role` tem. Orçamentos confirmados na base: Essencial 500, Cresce 1500, Expande 4000 e Enterprise 4000 centavos/mês.
 - **Correção `ac15346b`:** erro durante a chamada à Anthropic agora mantém a reserva para conciliação, pois timeout/erro do cliente não prova ausência de cobrança no provedor. Evita liberar dinheiro indevidamente após um envio ambíguo. Reverso operacional: falhas comprovadamente sem cobrança também deixam reserva aberta até decisão manual; não há reconciliador automático.
 - Ainda não foram realizados testes HTTP com sessão real nem chamada paga à Anthropic. Nenhuma reserva ou custo real foi criado nesta rodada; o commit da correção depende de novo CI/deploy.
+
+
+## Asaas — revisão operacional inicial (19/10/2026)
+
+- Checkout já utiliza catálogo `PLAN_PRICES`, referência de tenant/plano/período e Asaas sandbox configurado por ambiente. Foi adicionado `AbortSignal.timeout(10000)` e `cache:'no-store'` ao envio de criação do link para não manter chamada externa indefinidamente (commit `49e6f9b6`). **Timeout pode ocorrer depois da criação do link**: não tentar novamente automaticamente; avaliar registro de intenção e idempotência do checkout.
+- Webhook existente valida autenticação por token em comparação de tempo constante, consulta pagamento e link na API autenticada e aplica pagamentos via RPC idempotente/transacional. Logs de erros transacionais ou de provedor foram reduzidos a códigos/tipos sem imprimir objetos de exceções potencialmente sensíveis (commit `869423b9`).
+- Cron `suspend-overdue` **não suspende assinaturas**, apenas relata quantas exigem conciliação. Mantido intencionalmente: não desabilitar serviços com base em status sem política de carência/checagem da fatura.
+- **Ainda pendente:** verificação de eventos de estorno e cancelamento com política explícita, renovação recorrente e reconciliação do pagamento, idempotência de criação do payment link, testes em sandbox com reenvio de webhook e eventos fora de ordem. Nenhuma cobrança real emitida neste ciclo.
