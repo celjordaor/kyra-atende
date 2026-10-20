@@ -56,9 +56,10 @@ export async function POST(request: NextRequest) {
   try {
     const { reply, tokensUsed } = await chat(messages)
 
-    // Incrementa contador em background (fire-and-forget)
+    // Aguardar persistência do uso antes de responder como concluído.
+    // Em caso de falha de banco, a chamada ao provedor pode já ter gerado custo.
     if (tokensUsed > 0) {
-      void incrementUsage(tenantId, 'ai_chat_tokens_used', tokensUsed)
+      await incrementUsage(tenantId, 'ai_chat_tokens_used', tokensUsed)
     }
 
     return NextResponse.json({ reply })
