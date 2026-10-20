@@ -51,12 +51,21 @@ export async function POST(request: NextRequest) {
 
   // Toda tentativa é rastreada, inclusive respostas incertas do Asaas.
   const attemptId = randomUUID()
-  const { error: startError } = await supabase.from('asaas_checkout_attempts').insert({
-    id: attemptId, tenant_id: tenantId, plan, period, amount, status: 'started',
+  const { data: claim, error: startError } = await supabase.rpc('claim_asaas_checkout', {
+    p_id: attemptId, p_tenant: tenantId, p_plan: plan, p_period: period, p_amount: amount,
   })
-  if (startError) {
-    console.error('[billing/checkout] registro inicial indisponível', { code: startError.code })
+  if (startError || !claim) {
+    console.error('[billing/checkout] registro inicial indisponível', { code: startError?.code })
     return NextResponse.json({ error: 'Não foi possível registrar a tentativa de pagamento.' }, { status: 503 })
+  }
+  if (claim.created !== true) {
+    if (claim.status === 'link_created' && typeof claim.payment_url === 'string') {
+      return NextResponse.json({ paymentUrl: claim.payment_url, reused: true })
+    }
+    return NextResponse.json({
+      error: 'Há uma tentativa anterior aguardando processamento ou conciliação. Não foi criado outro link.',
+      requiresReconciliation: true,
+    }, { status: 409 })
   }
   async function record(status: 'link_created'|'uncertain'|'rejected', extra: Record<string, unknown> = {}) {
     const { error } = await supabase.from('asaas_checkout_attempts').update({
