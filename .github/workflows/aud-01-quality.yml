@@ -26,3 +26,28 @@ jobs:
         run: pnpm exec tsc --noEmit --incremental false
       - name: ESLint
         run: pnpm exec next lint --no-cache
+      - name: HTTP authorization smoke (unauthenticated)
+        if: github.ref == 'refs/heads/main'
+        env:
+          BASE_URL: https://www.kyraatende.com.br
+        run: |
+          node --input-type=module <<'NODE'
+          const base = process.env.BASE_URL
+          const checks = [
+            { method: 'PATCH', path: '/api/superadmin/tenants/00000000-0000-4000-8000-000000000000/status', body: { status: 'active' } },
+            { method: 'PATCH', path: '/api/superadmin/email-templates/aud01_invalid_key', body: { subject: 'test', html: '<p>test</p>' } },
+            { method: 'DELETE', path: '/api/superadmin/email-templates/aud01_invalid_key' },
+          ]
+          for (const test of checks) {
+            const response = await fetch(base + test.path, {
+              method: test.method,
+              headers: { 'content-type': 'application/json' },
+              body: test.body ? JSON.stringify(test.body) : undefined,
+              redirect: 'manual',
+            })
+            console.log(test.method, test.path, response.status)
+            if (response.status !== 401) {
+              throw new Error('Expected HTTP 401 without a session, got ' + response.status)
+            }
+          }
+          NODE
