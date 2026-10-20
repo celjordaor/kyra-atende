@@ -203,3 +203,11 @@ A pesquisa dos arquivos disponibilizados no contexto do Project não retornou o 
 - Botão `Consultar Asaas` adicionado a cada pagamento confirmado em `superadmin/assinaturas`, com indicador de status atual e identificação do ambiente sandbox/produção.
 - Escopo: somente pagamentos previamente conciliados no Kyra Atende; não lista cobranças abertas que nunca chegaram ao webhook. Respostas com estorno, cancelamento ou status divergente são informativas e devem levar à conferência manual, nunca alteração automática de acesso.
 - Pendente homologação HTTP real com Superadmin, resposta de sandbox e chamadas não autorizadas; não foram criadas cobranças nem executados estornos.
+
+## Asaas — análise manual de estornos e contestações (19/10/2026)
+
+- Estrutura `asaas_payment_reviews` criada com RLS e privilégios exclusivos de `service_role`, vinculada a pagamentos previamente processados.
+- Função `save_asaas_payment_review` valida o ator Superadmin, exige motivo e anotação, e grava revisão e evento em `admin_audit_events` na mesma transação. A RPC não concede nem revoga acesso.
+- API `POST /api/superadmin/asaas-payment-reviews` valida sessão/papel e dados. No componente de consulta de status do Asaas, resultados divergentes expõem formulário de análise para estorno, contestação, cancelamento ou outro motivo.
+- A interface não executa ação financeira nem mudança de plano. Revisões de pagamentos não conciliados originalmente ainda não estão incluídas; consulta HTTP autenticada e teste de persistência com pagamento de homologação ainda são necessários.
+- Testes de permissão RPC e consulta sem criação de revisões executados; nenhuma cobrança real modificada. Sem automação de suspensão, reembolso ou cancelamento.
