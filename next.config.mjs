@@ -14,7 +14,6 @@ const nextConfig = {
       'recharts',
       'react-markdown',
       '@supabase/supabase-js',
-      '@anthropic-ai/sdk',
     ],
     // web-push tem código nativo — não bundlar em cada Lambda reduz o tracing
     serverComponentsExternalPackages: ['web-push', '@anthropic-ai/sdk'],
