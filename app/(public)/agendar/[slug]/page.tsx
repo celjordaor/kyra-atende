@@ -26,7 +26,7 @@ export default async function PublicBookingPage({ params, searchParams }: PagePr
   if (error || !tenant) notFound()
 
   // Busca serviços e profissionais ativos do tenant em paralelo
-  const [{ data: services }, { data: professionals }] = await Promise.all([
+  const [{ data: services }, { data: professionals }, { data: assignments }] = await Promise.all([
     supabase
       .from('services')
       .select('id, name, description, duration_minutes, price')
@@ -40,6 +40,7 @@ export default async function PublicBookingPage({ params, searchParams }: PagePr
       .eq('tenant_id', tenant.id)
       .eq('is_active', true)
       .order('name', { ascending: true }),
+    supabase.from('professional_services').select('professional_id,service_id').eq('tenant_id', tenant.id),
   ])
 
   // O convite só permite pré-preencher três campos, não autentica o cliente.
@@ -71,7 +72,7 @@ export default async function PublicBookingPage({ params, searchParams }: PagePr
       <BookingFlow
         tenantId={tenant.id}
         services={services ?? []}
-        professionals={professionals ?? []}
+        professionals={(professionals ?? []).map(p => ({ ...p, serviceIds: (assignments ?? []).filter(a => a.professional_id === p.id).map(a => a.service_id) }))}
         prefill={prefill}
         invitationToken={prefill ? token : undefined}
       />
