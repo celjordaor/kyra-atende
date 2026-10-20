@@ -3,6 +3,7 @@
 import React, { useState } from 'react'
 import { Button } from '@/components/atoms/Button'
 import { PlanModal } from '@/components/organisms/PlanModal'
+import { BillingPendingNotice } from '@/components/organisms/BillingPendingNotice'
 import type { Plan } from '@/components/organisms/PlanModal'
 
 
@@ -66,6 +67,7 @@ export default function PlanoPageClient({ currentPlan, planStatus, trialEndsAt, 
         </p>
       </div>
 
+      <BillingPendingNotice />
       {/* Card principal do plano */}
       <div
         id="plano-atual"
