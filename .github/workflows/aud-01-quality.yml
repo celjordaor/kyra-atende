@@ -37,6 +37,12 @@ jobs:
             { method: 'PATCH', path: '/api/superadmin/tenants/00000000-0000-4000-8000-000000000000/status', body: { status: 'active' } },
             { method: 'PATCH', path: '/api/superadmin/email-templates/aud01_invalid_key', body: { subject: 'test', html: '<p>test</p>' } },
             { method: 'DELETE', path: '/api/superadmin/email-templates/aud01_invalid_key' },
+            { method: 'GET', path: '/api/superadmin/ai-budgets' },
+            { method: 'PATCH', path: '/api/superadmin/ai-budgets', body: { scope: 'plan', plan: 'essencial', monthly_budget_cents: 100 } },
+            { method: 'DELETE', path: '/api/superadmin/ai-budgets', body: { tenant_id: '00000000-0000-4000-8000-000000000000' } },
+            { method: 'POST', path: '/api/superadmin/asaas-payment-reviews', body: { paymentId: 'pay_aud01_dummy', status: 'reviewed', reason: 'other', note: 'Test only' } },
+            { method: 'GET', path: '/api/superadmin/asaas-payment-status?paymentId=pay_aud01_dummy' },
+            { method: 'GET', path: '/api/superadmin/whatsapp-reconciliation' },
           ]
           for (const test of checks) {
             const response = await fetch(base + test.path, {
