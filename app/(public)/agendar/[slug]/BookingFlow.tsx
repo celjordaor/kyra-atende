@@ -17,6 +17,7 @@ interface Professional {
   id:         string
   name:       string
   avatar_url: string | null
+  serviceIds: string[]
 }
 
 interface TakenSlot {
@@ -339,12 +340,10 @@ function DataRow({ icon, label, value }: { icon: string; label: string; value: s
 // ─── BookingFlow ──────────────────────────────────────────────────────────────
 
 export default function BookingFlow({ tenantId, services, professionals, prefill, invitationToken }: Props) {
-  const hasMultipleProfs = professionals.length > 1
-
   const [step,          setStep]          = useState<Step>('service')
   const [service,       setService]       = useState<Service | null>(null)
   const [professional,  setProfessional]  = useState<Professional | null>(
-    professionals.length === 1 ? professionals[0] : null,
+    null,
   )
   const [selectedDay,   setSelectedDay]   = useState<Date>(() => {
     const d = new Date()
@@ -365,6 +364,9 @@ export default function BookingFlow({ tenantId, services, professionals, prefill
   const [engineSlots, setEngineSlots] = useState<{professional_id:string;starts_at:string;ends_at:string}[] | null>(null)
   const [slotsError, setSlotsError] = useState(false)
 
+  const eligibleProfessionals = service ? professionals.filter(p => p.serviceIds.includes(service.id)) : []
+  const hasMultipleProfs = eligibleProfessionals.length > 1
+
   // Próximos 14 dias úteis (sem domingo)
   const availableDays: Date[] = Array.from({ length: 21 }, (_, i) => {
     const d = new Date()
@@ -372,7 +374,7 @@ export default function BookingFlow({ tenantId, services, professionals, prefill
     return d
   }).filter(d => d.getDay() !== 0).slice(0, 14)
 
-  const slots = engineSlots ? Array.from(new Set(engineSlots.map(s => s.starts_at))) : generateSlots(selectedDay)
+  const slots = engineSlots ? Array.from(new Set(engineSlots.map(s => s.starts_at))) : []
 
   // Carrega slots ocupados ao entrar na etapa de datetime ou ao mudar dia/profissional
   useEffect(() => {
@@ -393,7 +395,7 @@ export default function BookingFlow({ tenantId, services, professionals, prefill
         if (res.ok) {
           const json = await res.json()
           if(json.engine) { setEngineSlots(json.slots ?? []); setTakenSlots([]) }
-          else { setEngineSlots(null); setTakenSlots(json.slots ?? []) }
+          else { setEngineSlots([]); setTakenSlots([]); setSlotsError(true) }
         } else {
           setSlotsError(true)
           setTakenSlots([])
@@ -486,7 +488,8 @@ export default function BookingFlow({ tenantId, services, professionals, prefill
               key={s.id}
               onClick={() => {
                 setService(s)
-                setStep(hasMultipleProfs ? 'professional' : 'datetime')
+                setProfessional(null)
+                setStep('professional')
               }}
               style={{
                 padding: '16px', borderRadius: 'var(--r-md)', cursor: 'pointer', textAlign: 'left',
@@ -524,7 +527,7 @@ export default function BookingFlow({ tenantId, services, professionals, prefill
         Escolha o profissional
       </h2>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
-        {/* Opção: qualquer profissional */}
+        {/* Opção: qualquer profissional elegível */}
         <button
           onClick={() => { setProfessional(null); setStep('datetime') }}
           style={{
@@ -551,7 +554,7 @@ export default function BookingFlow({ tenantId, services, professionals, prefill
         </button>
 
         {/* Lista de profissionais */}
-        {professionals.map(p => (
+        {eligibleProfessionals.map(p => (
           <button
             key={p.id}
             onClick={() => { setProfessional(p); setStep('datetime') }}
