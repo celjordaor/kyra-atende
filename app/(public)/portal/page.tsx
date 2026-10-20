@@ -1,6 +1,7 @@
 import {createClient} from '@/lib/supabase/server'
 import {createAdminClient} from '@/lib/supabase/admin'
 import PortalSignIn from './PortalSignIn'
+import ClaimInvitation from './ClaimInvitation'
 export const metadata={title:'Portal do Cliente — Kyra Atende',robots:{index:false,follow:false}}
 export default async function CustomerPortal(){
  const {data:{user}}=await createClient().auth.getUser()
@@ -14,5 +15,6 @@ export default async function CustomerPortal(){
  {(memberships??[]).length===0?<p>Seu acesso foi verificado, mas ainda não há empresas vinculadas à sua identidade. A ativação do vínculo exigirá confirmação de titularidade; nenhum cadastro de cliente é associado apenas por e-mail ou telefone.</p>:<>
  <h2>Minhas empresas</h2>{(tenants??[]).map(t=><p key={t.id}>{t.name}</p>)}
  <p>Histórico e novos agendamentos serão disponibilizados após a conclusão da autorização por empresa.</p></>}
+ <ClaimInvitation/>
  </main>
 }
