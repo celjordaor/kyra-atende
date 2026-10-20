@@ -1,36 +1,41 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Kyra Atende
 
-## Getting Started
+Plataforma SaaS multitenant de atendimento e agendamentos com módulos administrativos, gestão de clientes e profissionais, integração de mensagens WhatsApp/IA e cobrança. **O status de cada módulo deve ser consultado nas evidências**, não inferido da mera existência de código.
 
-First, run the development server:
+## Documentação para desenvolvimento e homologação
+
+- [Plano de continuidade e pendências](docs/PLANO-DE-CONTINUIDADE-E-PENDENCIAS.md) — prioridades, critérios de aceite, itens adiados e limitações documentais.
+- [AUD-01 — Evidências de segurança](docs/auditoria/AUD-01-evidencias-rls-componentes.md) — testes de RLS, autorização, integrações, migrations e deploy.
+- [Migrations remotas auditadas](docs/auditoria/sql-remoto-aplicado/README.md) — inventário histórico para evitar reaplicações inadequadas.
+
+**Antes de desenvolver:** ler a documentação e verificar se a mudança já foi entregue, se está adiada ou se depende de homologação. Confirmar o projeto Supabase de destino e o histórico remoto de migrations, planejar alterações de banco e manter GitHub sincronizado.
+
+## Stack observada
+
+Next.js 14.2.35 (App Router), React 18, TypeScript, Supabase (Postgres, Auth, RLS), PNPM 9, Vercel, APIs de IA e integrações Asaas/Evolution.
+
+## Execução local
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+pnpm install --frozen-lockfile
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Qualidade:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+pnpm exec tsc --noEmit --incremental false
+pnpm exec next lint --no-cache
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Workflow: [AUD-01 Quality Gates](.github/workflows/aud-01-quality.yml). Não confundir build Vercel `READY` com aprovação de TypeScript/ESLint.
 
-## Learn More
+## Segurança e ambientes
 
-To learn more about Next.js, take a look at the following resources:
+Jamais publicar chaves de `service_role`, segredos de webhook, tokens ou credenciais. A autorização por tenant depende de identidade autenticada e RLS. As operações privilegiadas da plataforma exigem papel Superadmin.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Projeto Supabase de referência de auditoria: `zrszytzlovthyezozqhj`. **Reconfirmar projeto, ambiente e permissões antes de executar migrations, testes ou operações administrativas.** Para homologação, priorizar contas e instâncias descartáveis; não modificar dados reais de clientes.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Status
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+AUD-01: **fase técnica passível de encerramento com ressalvas**, sujeita a aprovação responsável; testes HTTP autenticados e comprovação de CI permanecem abertos. Ver plano de continuidade para pendências comerciais, integrações e módulos futuros.
