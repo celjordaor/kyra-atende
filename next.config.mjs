@@ -1,4 +1,5 @@
 /** @type {import('next').NextConfig} */
+// Preview-only build resource diagnostic. No behavioral configuration changes.
 const nextConfig = {
   // ── Type-check e lint: rodam no editor/IDE, não no deploy ─────────────────
   typescript: {
