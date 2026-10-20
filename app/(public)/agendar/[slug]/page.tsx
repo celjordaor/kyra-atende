@@ -4,6 +4,8 @@ import { createHash } from 'node:crypto'
 import { PublicBookingLayout } from '@/components/templates'
 import BookingFlow from './BookingFlow'
 
+export const metadata = { referrer: 'no-referrer', robots: { index: false, follow: false } }
+
 interface PageProps {
   params:      { slug: string }
   searchParams: { convite?: string; nome?: string; email?: string; tel?: string }
