@@ -22,26 +22,26 @@ export async function GET(request: NextRequest) {
   // Tenants em trial com expires_at entre 2 e 3.5 dias no futuro
   const { data: tenants, error } = await supabase
     .from('tenants')
-    .select('id, name, expires_at')
-    .eq('status', 'trial')
-    .gte('expires_at', from)
-    .lte('expires_at', to)
+    .select('id, name, trial_ends_at')
+    .eq('plan_status', 'trial')
+    .gte('trial_ends_at', from)
+    .lte('trial_ends_at', to)
 
   if (error) {
     console.error('[cron/trial-warning]', error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ error: 'Falha ao consultar trials' }, { status: 500 })
   }
 
   let sent = 0
   for (const tenant of tenants ?? []) {
     const daysLeft = Math.ceil(
-      (new Date(tenant.expires_at as string).getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
+      (new Date(tenant.trial_ends_at as string).getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
     )
 
     void dispatchPush(tenant.id, 'trial_expiring', {
       tenantName: tenant.name,
       daysLeft,
-      expiresAt:  tenant.expires_at,
+      expiresAt:  tenant.trial_ends_at,
     })
     sent++
   }
