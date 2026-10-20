@@ -173,11 +173,15 @@ export async function getUsage(tenantId: string, key: string): Promise<number> {
 /** Incrementa um contador de uso. */
 export async function incrementUsage(tenantId: string, key: string, by = 1): Promise<void> {
   const supabase = createAdminClient()
-  await supabase.rpc('increment_usage_counter', {
+  const { error } = await supabase.rpc('increment_usage_counter', {
     p_tenant_id: tenantId,
     p_key:       key,
     p_by:        by,
   })
+  if (error) {
+    console.error('[entitlements] contador não atualizado', { key, code: error.code })
+    throw new Error('Falha ao registrar consumo.')
+  }
 }
 
 /**
