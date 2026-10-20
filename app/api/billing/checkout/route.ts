@@ -99,7 +99,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ paymentUrl: payment.url })
   } catch (err) {
     await record('uncertain')
-    console.error('[billing/checkout] chamada ao provedor falhou, { errorType: err instanceof Error ? err.name : 'unknown' })
+    console.error('[billing/checkout] chamada ao provedor falhou', { errorType: err instanceof Error ? err.name : 'unknown' })
     return NextResponse.json({ error: 'Erro ao criar link de pagamento.' }, { status: 500 })
   }
 }
