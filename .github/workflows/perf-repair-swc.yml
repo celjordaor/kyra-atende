@@ -1,0 +1,43 @@
+name: Safe SWC lockfile rebuild
+on:
+  push:
+    branches: [perf/repair-swc-lockfile-v2]
+    paths:
+      - '.github/workflows/perf-repair-swc.yml'
+permissions:
+  contents: write
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: pnpm
+      - name: Re-resolve Next without changing version
+        run: |
+          pnpm update next@14.2.35 --lockfile-only --no-frozen-lockfile --force
+          node - <<'NODE'
+          const fs=require('fs');
+          const pkg=JSON.parse(fs.readFileSync('package.json','utf8'));
+          const lock=fs.readFileSync('pnpm-lock.yaml','utf8');
+          if(pkg.dependencies.next!=='14.2.35')throw Error('Next version changed');
+          for(const arch of ['linux-x64-gnu','linux-x64-musl']){
+            if(!lock.includes("'@next/swc-"+arch+"@14.2.35':"))throw Error('Missing SWC '+arch);
+          }
+          for(const arch of ['linux-x64-gnu','linux-x64-musl']){
+            if(lock.includes("'@next/swc-"+arch+"@14.2.33':"))throw Error('Old SWC '+arch);
+          }
+          NODE
+      - name: Commit only lockfile
+        run: |
+          git add pnpm-lock.yaml
+          if git diff --cached --quiet; then echo "No changes required"; exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "fix(deps): regenerate matching SWC lockfile"
+          git push origin HEAD:perf/repair-swc-lockfile-v2
