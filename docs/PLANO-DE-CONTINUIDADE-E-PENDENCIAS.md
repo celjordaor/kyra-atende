@@ -181,3 +181,11 @@ A pesquisa dos arquivos disponibilizados no contexto do Project não retornou o 
 - Webhook existente valida autenticação por token em comparação de tempo constante, consulta pagamento e link na API autenticada e aplica pagamentos via RPC idempotente/transacional. Logs de erros transacionais ou de provedor foram reduzidos a códigos/tipos sem imprimir objetos de exceções potencialmente sensíveis (commit `869423b9`).
 - Cron `suspend-overdue` **não suspende assinaturas**, apenas relata quantas exigem conciliação. Mantido intencionalmente: não desabilitar serviços com base em status sem política de carência/checagem da fatura.
 - **Ainda pendente:** verificação de eventos de estorno e cancelamento com política explícita, renovação recorrente e reconciliação do pagamento, idempotência de criação do payment link, testes em sandbox com reenvio de webhook e eventos fora de ordem. Nenhuma cobrança real emitida neste ciclo.
+
+## Superadmin: acompanhamento de assinaturas (19/10/2026)
+
+- Nova pagina somente de leitura em `/superadmin/assinaturas`, com sessao verificada e papel Superadmin, consulta a `subscriptions` e `tenants` e indicador de vencimentos nos proximos sete dias, periodos encerrados e status `overdue`.
+- Reutilizada a navegacao do `DashboardLayout`; commits `369da295` e `49174dcb`.
+- Nenhuma operacao de pagamento, cancelamento ou suspensao e oferecida na interface. Fim do periodo nao implica inadimplencia verificada; conciliacao Asaas segue obrigatoria.
+- Consulta limitada a 500 assinaturas e empresas: a tela deve sinalizar ampliacao/paginacao antes de escalar. Nao representa reconciliacao financeira completa.
+- Proxima rodada: validacao automatizada, publicacao e verificacao autenticada do painel; depois projetar fila de conciliacao segura para cancelamentos e estornos.
