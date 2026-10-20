@@ -103,7 +103,7 @@ export default function PlanoPageClient({ currentPlan, planStatus, trialEndsAt, 
               size="sm"
               onClick={() => setModalOpen(true)}
             >
-              {isActive ? 'Mudar plano' : 'Fazer upgrade'}
+              {isTrial ? 'Assinar plano' : isActive ? 'Mudar plano' : 'Fazer upgrade'}
             </Button>
           </div>
         </div>
@@ -163,6 +163,7 @@ export default function PlanoPageClient({ currentPlan, planStatus, trialEndsAt, 
         onClose={() => setModalOpen(false)}
         currentPlan={currentPlan}
         mode="upgrade"
+        isTrial={isTrial}
       />
     </>
   )
