@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
   }
 
-  const body = await request.json().catch(() => null)
+  // Não aceitar payloads desproporcionais, mesmo com segredo válido.\n  // Conferir também o tamanho efetivo, pois Content-Length pode faltar.\n  const maxBytes = 1024 * 1024\n  const declaredBytes = Number(request.headers.get('content-length'))\n  if (Number.isFinite(declaredBytes) && declaredBytes > maxBytes) {\n    return NextResponse.json({ error: 'Payload muito grande' }, { status: 413 })\n  }\n  const raw = await request.text().catch(() => '')\n  if (Buffer.byteLength(raw, 'utf8') > maxBytes) {\n    return NextResponse.json({ error: 'Payload muito grande' }, { status: 413 })\n  }\n  const body = (() => { try { return JSON.parse(raw) } catch { return null } })()
   const instance = body?.instance
   if (!body || typeof body.event !== 'string' || typeof instance !== 'string' ||
       !/^[0-9a-f]{8}-[0-9a-f-]{27,36}$/i.test(instance) || !body.data) {
