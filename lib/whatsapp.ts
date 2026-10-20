@@ -86,11 +86,24 @@ export async function handleWebhook(payload: EvolutionWebhookPayload): Promise<v
         tenant_id: tenantId,
         phone: from,
         status: 'pending',
+        pending_message_id: messageId,
+        pending_remote_jid: remoteJid,
       }, { onConflict: 'tenant_id,phone', ignoreDuplicates: true })
     if (queueError) throw queueError
     return
   }
-  if (permission.status === 'ignored' || permission.status === 'pending') return
+  if (permission.status === 'pending') {
+    // Preserve the first provider reference only, without storing message text.
+    // An older pending row may predate the reference columns.
+    const { error: referenceError } = await supabase
+      .from('whatsapp_contact_permissions')
+      .update({ pending_message_id: messageId, pending_remote_jid: remoteJid })
+      .eq('tenant_id', tenantId).eq('phone', from).eq('status', 'pending')
+      .is('pending_message_id', null)
+    if (referenceError) throw referenceError
+    return
+  }
+  if (permission.status === 'ignored') return
   if (permission.status !== 'manual' && permission.status !== 'ai') return
 
   // Salva no histórico exclusivamente em conversas autorizadas.

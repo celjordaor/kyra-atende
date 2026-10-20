@@ -408,3 +408,15 @@ A pesquisa dos arquivos disponibilizados no contexto do Project não retornou o 
 - Teste SQL em `ROLLBACK`: primeiro claim vence, claim repetido não processa, atualização de estado somente uma vez, estado terminal preservado e acesso direto authenticated negado. Nenhuma mensagem enviada.
 - **Limites:** ainda não é uma fila recuperável com leases/workers; falhas após inserção de inbound e antes do claim podem ficar sem rastreamento e precisam de reconciliação; mensagens `processing` antigas requerem triagem humana. Não automatizar retry de mensagens com entrega incerta, pois pode duplicar resposta.
 - Para homologar: instância isolada Evolution, segredo configurado, testes de webhook legítimo, duplicidade, processamento IA com e sem resposta, resposta HTTP ambígua e monitoramento de estados. Evitar tocar números reais.
+
+## Roadmap futuro — integração oficial WhatsApp Business Platform (Meta)
+
+- Decisão de produto em 20/10/2026: manter Evolution API por QR Code para homologação atual; planejar integração futura com a **Cloud API oficial da Meta**, onboarding por tenant/WABA, webhooks autenticados, templates, consentimento, tarifação e migração por empresa.
+- Cada tenant conecta seu número próprio; a plataforma Kyra Atende não exige um número central. Não reutilizar números de outros sistemas sem plano de transição, e não modificar a integração ativa durante este pacote.
+- Esta frente é **roadmap** e não está implementada nesta etapa.
+
+## Ajuste de homologação — primeira mensagem após aprovação de IA
+
+- A fila atual registra só telefone/metadados antes da autorização; por isso aprovar IA não processa o texto original. Solução condicionada a armazenar **somente o ID técnico da primeira mensagem e o JID** e recuperar o texto pela Evolution apenas após a decisão do proprietário.
+- Critérios: nunca persistir conteúdo não autorizado no Supabase; identificação exata da mensagem; nenhuma resposta duplicada em decisões concorrentes; preservar integração com outras empresas; falhar fechado e sinalizar pendência se a Evolution não encontrar o evento.
+- Não realizar automaticamente reenvio quando o estado da entrega for incerto.
