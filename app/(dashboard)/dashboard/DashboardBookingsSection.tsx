@@ -26,6 +26,8 @@ export interface ServiceRevenue {
 
 interface Props {
   todayBookings:   Booking[]
+  nextBookings: Booking[]
+  nextLabel: string
   pendingBookings: Booking[]
   newClients:      NewClient[]
   topServices:     ServiceRevenue[]
@@ -205,8 +207,9 @@ function toCompleteBooking(b: Booking): CompleteModalBooking {
 }
 
 // ── Componente principal ──────────────────────────────────────
-export function DashboardBookingsSection({ todayBookings, pendingBookings, newClients, topServices }: Props) {
+export function DashboardBookingsSection({ todayBookings, nextBookings, nextLabel, pendingBookings, newClients, topServices }: Props) {
   const [todayBks,        setTodayBks]        = useState<Booking[]>(todayBookings)
+  const [nextBks, setNextBks] = useState<Booking[]>(nextBookings)
   const [pendingBks,      setPendingBks]       = useState<Booking[]>(pendingBookings)
   const [loadId,          setLoadId]           = useState<string | null>(null)
   const [completeModalId, setCompleteModalId]  = useState<string | null>(null)
@@ -215,7 +218,7 @@ export function DashboardBookingsSection({ todayBookings, pendingBookings, newCl
 
   // Deriva o booking do modal a partir do estado atual (evita stale closure)
   const completeModalBk = completeModalId
-    ? (todayBks.find(b => b.id === completeModalId) ?? null)
+    ? (todayBks.find(b => b.id === completeModalId) ?? nextBks.find(b => b.id === completeModalId) ?? null)
     : null
 
   async function handleAction(id: string, status: 'confirmed' | 'cancelled' | 'completed') {
@@ -226,11 +229,13 @@ export function DashboardBookingsSection({ todayBookings, pendingBookings, newCl
     }
 
     // Snapshot para rollback
+    const snapshotNext = nextBks
     const snapshotToday   = todayBks
     const snapshotPending = pendingBks
 
     // Atualização otimista imediata
     setTodayBks(prev   => prev.map(b => b.id === id ? { ...b, status } : b))
+    setNextBks(prev => prev.map(b => b.id === id ? { ...b, status } : b))
     setPendingBks(prev => prev.filter(b => b.id !== id))
     setLoadId(id)
 
@@ -242,6 +247,7 @@ export function DashboardBookingsSection({ todayBookings, pendingBookings, newCl
       // Rollback em caso de erro
       console.error('Erro ao atualizar agendamento:', e)
       setTodayBks(snapshotToday)
+      setNextBks(snapshotNext)
       setPendingBks(snapshotPending)
     } finally {
       setLoadId(null)
@@ -293,6 +299,22 @@ export function DashboardBookingsSection({ todayBookings, pendingBookings, newCl
               </div>
             )
           }
+        </div>
+
+        {/* Próximo dia com expediente cadastrado */}
+        <div style={section}>
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+            <h2 style={sectionTitle}>Agenda de amanhã / próximo dia disponível</h2>
+            <a href="/agenda" style={{fontSize:12,color:'var(--brand)',textDecoration:'none'}}>Ver agenda →</a>
+          </div>
+          <p style={{fontSize:12,color:'var(--muted)',margin:0,textTransform:'capitalize'}}>{nextLabel}</p>
+          {nextBks.length===0?<div style={empty}>Nenhum agendamento registrado para este dia.</div>:
+          <div style={{display:'flex',flexDirection:'column',gap:8}}>{nextBks.map(b=>
+            <BookingRow key={b.id} booking={b} loadId={loadId}
+              onConfirm={id=>handleAction(id,'confirmed')}
+              onComplete={id=>handleAction(id,'completed')}
+              onCancel={id=>handleAction(id,'cancelled')}/>
+          )}</div>}
         </div>
 
         {/* Receita por serviço */}
@@ -470,6 +492,7 @@ export function DashboardBookingsSection({ todayBookings, pendingBookings, newCl
       booking={completeModalBk ? toCompleteBooking(completeModalBk) : null}
       onClose={() => setCompleteModalId(null)}
       onDone={(id, data) => {
+        setNextBks(prev => prev.map(b=>b.id===id ? {...b,status:'completed',...(data.price_charged!=null?{price:data.price_charged}:{})}:b))
         setTodayBks(prev =>
           prev.map(b => b.id === id
             ? { ...b, status: 'completed', ...(data.price_charged != null ? { price: data.price_charged } : {}) }
