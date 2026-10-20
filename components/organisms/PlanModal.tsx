@@ -93,10 +93,11 @@ export interface PlanModalProps {
   onClose: () => void
   currentPlan: Plan
   mode?: 'view' | 'upgrade'
+  isTrial?: boolean
   onSave?: (newPlan: Plan) => void
 }
 
-export function PlanModal({ open, onClose, currentPlan, mode = 'upgrade' }: PlanModalProps) {
+export function PlanModal({ open, onClose, currentPlan, mode = 'upgrade', isTrial = false }: PlanModalProps) {
   const [period,   setPeriod]   = useState<Period>('monthly')
   const [selected, setSelected] = useState<Plan>(currentPlan)
   const [loading,  setLoading]  = useState(false)
@@ -111,7 +112,7 @@ export function PlanModal({ open, onClose, currentPlan, mode = 'upgrade' }: Plan
     return () => { active = false }
   }, [open, mode])
   const isReadOnly = mode === 'view'
-  const canUpgrade = selected !== currentPlan && !isReadOnly && pending === false
+  const canUpgrade = (isTrial || selected !== currentPlan) && !isReadOnly && pending === false
 
   async function handleUpgrade() {
     if (!canUpgrade) return
@@ -133,7 +134,7 @@ export function PlanModal({ open, onClose, currentPlan, mode = 'upgrade' }: Plan
     <Modal
       open={open}
       onClose={onClose}
-      title={isReadOnly ? 'Seu plano atual' : 'Escolha seu plano'}
+      title={isReadOnly ? 'Seu plano atual' : isTrial ? 'Contrate seu plano' : 'Escolha seu plano'}
       size="xl"
     >
       {!isReadOnly && pending !== false && <p role="status">{pending === null ? 'Verificando pagamentos...' : 'Pagamento em aberto ou aguardando conciliação. Não é possível escolher outro plano até a confirmação.'}</p>}
@@ -223,7 +224,7 @@ export function PlanModal({ open, onClose, currentPlan, mode = 'upgrade' }: Plan
                   background: 'var(--green-dim)', color: 'var(--green)',
                   padding: '2px 8px', borderRadius: 20,
                 }}>
-                  Plano atual
+                  {isTrial ? 'Plano em avaliação' : 'Plano atual'}
                 </div>
               )}
 
@@ -289,7 +290,7 @@ export function PlanModal({ open, onClose, currentPlan, mode = 'upgrade' }: Plan
             disabled={!canUpgrade}
             onClick={handleUpgrade}
           >
-            {selected === currentPlan
+            {selected === currentPlan && !isTrial
               ? 'Plano atual'
               : `Assinar ${PLANS.find(p => p.key === selected)!.name}`}
           </Button>
