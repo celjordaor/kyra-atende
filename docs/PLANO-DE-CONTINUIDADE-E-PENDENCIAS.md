@@ -150,3 +150,12 @@ A pesquisa dos arquivos disponibilizados no contexto do Project não retornou o 
 - **Requisitos antes da ativação:** confirmar o câmbio USD/BRL e sua política de atualização; validar cálculo de reserva com casos reais de contexto; adicionar reconciliação de reservas abandonadas (não liberá-las automaticamente quando custo no provedor for incerto); garantir retenção/limite de logs e testar HTTP autenticado, cenários concorrentes e mês de referência.
 - **Riscos conhecidos:** o histórico anterior ao ledger não foi reconstruído, o custo de chamadas WhatsApp ainda não integra este orçamento, e reservas podem permanecer presas após queda de processo. O teto de 25k tokens de entrada é conservador mas não é validação de limite real garantido em todos os cenários. Não declarar teto total ou custo de toda a IA enquanto WhatsApp não for abrangido.
 - **Importante:** não alterar o preço das assinaturas ao editar os orçamentos de IA; Enterprise permanece customizável. A ativação precisa de decisão de operação, já que o controle passa a bloquear acesso quando o orçamento é atingido.
+
+## Liberação controlada do orçamento financeiro de IA (19/10/2026)
+
+- Usuário autorizou liberação e testes da franquia em valor. Tela em reais **já existe** em `/superadmin/orcamento-ia`; não migrar para USD.
+- Variáveis de ambiente de produção configuradas no Vercel: `AI_USD_BRL_RATE=5.04` (referência operacional fixa, não FX em tempo real) e `AI_MONETARY_ENFORCEMENT_ENABLED=true`. Elas terão efeito no próximo deployment construído **depois** da alteração. Revisar o câmbio regularmente.
+- Teste de SQL em transação revertida verificou reserva aceita, reserva acima do orçamento recusada, liberação única e liberação duplicada recusada; nenhuma reserva de teste persistida.
+- Os dois workflows GitHub Actions e deployment `READY` no commit `2bac5b0e` estavam confirmados antes desta configuração. Isto comprova compilação/checagens, **não** teste real com Anthropic.
+- Bloqueio é relativo ao chat do dashboard; chamadas via WhatsApp ainda não estão integradas ao ledger orçamentário. Sem histórico de ledger antes da funcionalidade. Reservas abertas após timeout continuam aguardando conciliação manual.
+- **Riscos:** disparos que ultrapassem a reserva estimada de 25k tokens de entrada podem exceder a previsão; não existe renovação automática do câmbio nem garantia de que o orçamento seja o custo total da conta Anthropic. É necessário testar autenticado 401/403/200 e consumo real com tenant homologado antes de considerar integralmente homologado.
