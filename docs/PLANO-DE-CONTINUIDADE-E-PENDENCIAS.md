@@ -298,3 +298,10 @@ A pesquisa dos arquivos disponibilizados no contexto do Project não retornou o 
 - Endpoint autenticado `GET/POST/DELETE /api/settings/availability/blocks` e tela em `/configuracoes/horarios` para cadastrar feriados, ausências, indisponibilidade e inatividade; remoção sob confirmação do servidor.
 - Teste de inserção e remoção no PostgreSQL executado com `ROLLBACK`, sem resíduos; privilégios diretos negados a `authenticated` confirmados.
 - Pendências: motor central para aplicar os bloqueios aos slots; não foi ativada nenhuma restrição de agendamento nesta rodada. Feriados recorrentes/calendário nacional automático e exceções permissivas ainda não implementados. HTTP E2E e publicação requerem verificação.
+
+## Motor de disponibilidade — prévia autenticada de slots (20/10/2026)
+
+- Criada RPC `get_available_slots` service_role-only: combina faixa geral da empresa, horário específico/herdado, vínculos profissional/serviço sob ativação gradual, duração de serviço, bloqueios e reservas concorrentes existentes; geração em passos de 15 minutos no fuso cadastrado. Migrations versionadas `20261020104000_get_available_slots.sql`, `20261020104100_fix_available_slot_timestamps.sql`, `20261020104200_fix_available_slot_interval.sql`, todas aplicadas remotamente.
+- API `GET /api/availability/slots?serviceId=...&date=...&professionalId=...` exige sessão vinculada ao tenant, consulta RPC por service role e retorna slots apenas para visualização.
+- Validação SQL transacional com `ROLLBACK`: configuração temporária de expediente gera horários futuros; bloqueio geral temporário elimina os slots; nenhuma configuração nem bloqueio de teste persistidos.
+- **Não ativado:** agendamento interno e link público ainda não consomem o motor, nem a inserção/edição fazem enforcement. Não apresentar prévia como garantia de reserva; banco continua protegendo sobreposição. Próximos passos: validação de duração e disponibilidade em POST/PUT com travamento transacional, proteção de fusos/DST, profissão sem vínculo e E2E de links públicos; conferir regras de preço e permissões.
