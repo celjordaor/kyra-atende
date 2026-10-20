@@ -1,11 +1,12 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { notFound } from 'next/navigation'
+import { createHash } from 'node:crypto'
 import { PublicBookingLayout } from '@/components/templates'
 import BookingFlow from './BookingFlow'
 
 interface PageProps {
   params:      { slug: string }
-  searchParams: { nome?: string; email?: string; tel?: string }
+  searchParams: { convite?: string; nome?: string; email?: string; tel?: string }
 }
 
 export default async function PublicBookingPage({ params, searchParams }: PageProps) {
@@ -38,11 +39,20 @@ export default async function PublicBookingPage({ params, searchParams }: PagePr
       .order('name', { ascending: true }),
   ])
 
-  // Dados pré-preenchidos vindos do link enviado por e-mail (da tela de clientes)
-  const prefill = {
-    nome:  searchParams.nome  ?? '',
-    email: searchParams.email ?? '',
-    tel:   searchParams.tel   ?? '',
+  // O convite só permite pré-preencher três campos, não autentica o cliente.
+  // Links legados com nome/e-mail/telefone na URL não são mais utilizados.
+  let prefill: {nome:string;email:string;tel:string}|undefined
+  const token = typeof searchParams.convite === 'string' ? searchParams.convite : ''
+  if (/^[a-f0-9]{64}$/.test(token)) {
+    const tokenHash = createHash('sha256').update(token).digest('hex')
+    const { data: invitation } = await supabase.from('booking_invitations')
+      .select('client_id').eq('tenant_id',tenant.id).eq('token_hash',tokenHash)
+      .is('revoked_at',null).gt('expires_at',new Date().toISOString()).maybeSingle()
+    if (invitation) {
+      const { data: client } = await supabase.from('clients')
+        .select('name,email,phone').eq('id',invitation.client_id).eq('tenant_id',tenant.id).maybeSingle()
+      if (client) prefill={nome:client.name,email:client.email??'',tel:client.phone??''}
+    }
   }
 
   return (
