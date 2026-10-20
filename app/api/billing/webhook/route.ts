@@ -160,12 +160,12 @@ export async function POST(request: NextRequest) {
     if (error) {
       // Se a persistência falhar, devolver erro para permitir retentativa
       // do mesmo evento pelo Asaas, sem confirmar recebimento antecipadamente.
-      console.error('[billing/webhook] conciliação transacional falhou:', error)
+      console.error('[billing/webhook] conciliação transacional falhou', { code: error.code })
       return NextResponse.json({ error: 'Falha ao registrar pagamento' }, { status: 503 })
     }
     return NextResponse.json({ received: true })
   } catch (err) {
-    console.error('[billing/webhook] indisponibilidade de conciliação:', err)
+    console.error('[billing/webhook] indisponibilidade de conciliação', { errorType: err instanceof Error ? err.name : 'unknown' })
     return NextResponse.json({ error: 'Serviço temporariamente indisponível' }, { status: 503 })
   }
 }
