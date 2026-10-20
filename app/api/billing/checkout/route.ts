@@ -6,6 +6,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireSession } from '@/lib/route-helpers'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { PLAN_PRICES } from '@/lib/billing-prices'
+import { randomUUID } from 'node:crypto'
 
 export async function POST(request: NextRequest) {
   const session = await requireSession()
@@ -48,6 +49,23 @@ export async function POST(request: NextRequest) {
 
   if (!asaasKey) return NextResponse.json({ error: 'Provedor de pagamento indisponível.' }, { status: 503 })
 
+  // Toda tentativa é rastreada, inclusive respostas incertas do Asaas.
+  const attemptId = randomUUID()
+  const { error: startError } = await supabase.from('asaas_checkout_attempts').insert({
+    id: attemptId, tenant_id: tenantId, plan, period, amount, status: 'started',
+  })
+  if (startError) {
+    console.error('[billing/checkout] registro inicial indisponível', { code: startError.code })
+    return NextResponse.json({ error: 'Não foi possível registrar a tentativa de pagamento.' }, { status: 503 })
+  }
+  async function record(status: 'link_created'|'uncertain'|'rejected', extra: Record<string, unknown> = {}) {
+    const { error } = await supabase.from('asaas_checkout_attempts').update({
+      status, updated_at: new Date().toISOString(), ...extra,
+    }).eq('id', attemptId)
+    if (error) console.error('[billing/checkout] tentativa exige conciliação', { attemptId, code: error.code })
+    return !error
+  }
+
   try {
     // Cria payment link
     const paymentRes = await fetch(`${asaasUrl}/paymentLinks`, {
@@ -66,17 +84,22 @@ export async function POST(request: NextRequest) {
       }),
     })
     if (!paymentRes.ok) {
+      await record(paymentRes.status >= 500 ? 'uncertain' : 'rejected', { http_status: paymentRes.status })
       console.error('[billing/checkout] Falha do provedor ao criar link:', paymentRes.status)
       return NextResponse.json({ error: 'Não foi possível criar o link de pagamento.' }, { status: 502 })
     }
     const payment = await paymentRes.json()
     if (typeof payment.url !== 'string' || !payment.url.startsWith('https://')) {
+      await record('uncertain', { http_status: paymentRes.status })
       return NextResponse.json({ error: 'O provedor não retornou um link válido.' }, { status: 502 })
     }
 
+    const recorded = await record('link_created', { payment_url: payment.url, payment_link_id: typeof payment.id === 'string' ? payment.id : null, http_status: paymentRes.status })
+    if (!recorded) return NextResponse.json({ error: 'Link gerado, mas o registro exige conciliação. Contate o suporte antes de tentar novamente.' }, { status: 503 })
     return NextResponse.json({ paymentUrl: payment.url })
   } catch (err) {
-    console.error('[billing/checkout] chamada ao provedor falhou', { errorType: err instanceof Error ? err.name : 'unknown' })
+    await record('uncertain')
+    console.error('[billing/checkout] chamada ao provedor falhou, { errorType: err instanceof Error ? err.name : 'unknown' })
     return NextResponse.json({ error: 'Erro ao criar link de pagamento.' }, { status: 500 })
   }
 }
