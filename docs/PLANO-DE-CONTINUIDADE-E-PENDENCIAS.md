@@ -166,3 +166,10 @@ A pesquisa dos arquivos disponibilizados no contexto do Project não retornou o 
 - API do Superadmin `GET /api/superadmin/ai-budgets` agora inclui `reservations`: soma de orçamento reservado, quantidade aberta e quantidade acima de 15 minutos por tenant; somente usuários Superadmin autorizados podem consultar. Limite de 10.000 reservas reportado como consulta possivelmente incompleta.
 - Tela `/superadmin/orcamento-ia` apresenta coluna **Reservado**, subtrai reservas abertas do saldo estimado e destaca reservas antigas para conciliação. Não libera automaticamente dinheiro bloqueado e não executa novas chamadas Anthropic.
 - **Homologação pendente:** verificar últimos commits da UI e deploy, endpoint HTTP autorizado (401/403/200) e comportamento real de orçamento. A estimativa de FX fixa em produção precisa de revisão periódica; continuar distinguindo custo calculado de custo financeiro confirmado pela Anthropic.
+
+## Revisão de segurança da reserva financeira — 19/10/2026
+
+- Último deploy anterior ao ajuste `5c21ddf6` está `READY`; ambos workflows de qualidade nesse commit finalizaram com `success`.
+- Checagem SQL: `authenticated` não tem permissão de `EXECUTE` em `reserve_ai_monetary`; `service_role` tem. Orçamentos confirmados na base: Essencial 500, Cresce 1500, Expande 4000 e Enterprise 4000 centavos/mês.
+- **Correção `ac15346b`:** erro durante a chamada à Anthropic agora mantém a reserva para conciliação, pois timeout/erro do cliente não prova ausência de cobrança no provedor. Evita liberar dinheiro indevidamente após um envio ambíguo. Reverso operacional: falhas comprovadamente sem cobrança também deixam reserva aberta até decisão manual; não há reconciliador automático.
+- Ainda não foram realizados testes HTTP com sessão real nem chamada paga à Anthropic. Nenhuma reserva ou custo real foi criado nesta rodada; o commit da correção depende de novo CI/deploy.
