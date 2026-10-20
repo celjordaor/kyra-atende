@@ -8,16 +8,18 @@ export async function GET(){
  const session=await requireSession()
  if(!session.ok)return session.response
  const db=createAdminClient(),tenantId=session.tenantId
- const [settings,hours,professionals,services,links,assignment]=await Promise.all([
+ const [settings,hours,professionals,services,links,assignment,professionalHours,professionalModes]=await Promise.all([
   db.from('availability_settings').select('timezone,booking_notice_minutes,booking_horizon_days').eq('tenant_id',tenantId).maybeSingle(),
   db.from('company_working_hours').select('weekday,starts_at,ends_at').eq('tenant_id',tenantId).order('weekday'),
   db.from('professionals').select('id,name,is_active').eq('tenant_id',tenantId).order('name'),
   db.from('services').select('id,name,is_active').eq('tenant_id',tenantId).order('name'),
   db.from('professional_services').select('professional_id,service_id').eq('tenant_id',tenantId),
-  db.from('service_assignment_settings').select('enforce_links').eq('tenant_id',tenantId).maybeSingle()
+  db.from('service_assignment_settings').select('enforce_links').eq('tenant_id',tenantId).maybeSingle(),
+  db.from('professional_working_hours').select('professional_id,weekday,starts_at,ends_at').eq('tenant_id',tenantId),
+  db.from('professional_availability_settings').select('professional_id,mode').eq('tenant_id',tenantId)
  ])
- if([settings,hours,professionals,services,links,assignment].some(x=>x.error))return NextResponse.json({error:'Falha ao consultar disponibilidade.'},{status:503})
- return NextResponse.json({settings:settings.data,hours:hours.data,professionals:professionals.data,services:services.data,links:links.data,enforceLinks:assignment.data?.enforce_links??false},{headers:{'Cache-Control':'no-store'}})
+ if([settings,hours,professionals,services,links,assignment,professionalHours,professionalModes].some(x=>x.error))return NextResponse.json({error:'Falha ao consultar disponibilidade.'},{status:503})
+ return NextResponse.json({settings:settings.data,hours:hours.data,professionals:professionals.data,services:services.data,links:links.data,professionalHours:professionalHours.data,professionalModes:professionalModes.data,enforceLinks:assignment.data?.enforce_links??false},{headers:{'Cache-Control':'no-store'}})
 }
 export async function PUT(request:NextRequest){
  const session=await requireSession()
