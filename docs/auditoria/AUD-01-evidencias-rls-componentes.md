@@ -500,3 +500,11 @@ Autorização recebida para utilizar contas de teste existentes. Ensaios executa
 - `authenticated` permanece sem privilégio SELECT em `admin_audit_events`, e sem EXECUTE em `audit_save_email_template`. A rota de templates do GitHub ainda utiliza as RPCs auditáveis de criação/edição/exclusão.
 - Escopo da rodada: somente leitura de banco, código e deployment. Não houve mudanças funcionais ou migrações adicionais.
 - Pendências para fechamento formal: comprovar execução verde do workflow `quality`, executar testes HTTP com sessões reais dos diferentes perfis/tenants, validar API auditável publicada sob autenticação válida e observar um evento administrativo auditável real em ambiente de homologação. Não declarar AUD-01 encerrada antes dessas evidências.
+
+
+## AUD-01 — Verificação negativa de privilégio administrativo (19/10/2026)
+
+- Consulta de privilégios no projeto Kyra Atende confirma `authenticated=false` para EXECUTE em `audit_update_tenant_status`, `audit_save_email_template` e `audit_delete_email_template`, além de SELECT/INSERT em `admin_audit_events`.
+- Teste SQL sob `SET LOCAL ROLE authenticated` e JWT de identidade de tenant de teste: tentativa de execução de `audit_update_tenant_status` e `audit_save_email_template` gerou `insufficient_privilege`, conforme verificado por bloco de asserção `DO`. Transação revertida por ROLLBACK. Nenhum dado de negócio alterado.
+- Vercel: commit anterior `b499fc1a` READY; commit `5a5568fc` ainda BUILDING na última consulta. Consulta de status do GitHub para `5a5568fc` mostrou Vercel pending, não sendo prova de falha.
+- GitHub Actions `quality` ainda sem comprovação de execução verde pelo conector disponível. HTTP autenticado para os diferentes perfis continua pendente e é condição para encerramento integral.
