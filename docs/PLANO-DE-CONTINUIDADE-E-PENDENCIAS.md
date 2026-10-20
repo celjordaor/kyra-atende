@@ -323,3 +323,10 @@ A pesquisa dos arquivos disponibilizados no contexto do Project não retornou o 
 - Teste SQL com rollback confirmou consumo e rejeição do segundo uso; execução direta da RPC pelo papel authenticated negada. Sem criação permanente de agendamento de teste.
 - **Faltam antes de lançar portal ao público:** confirmação do template Supabase Auth para código de e-mail (pode estar configurado para magic link), endpoint de vinculação ao cadastro após verificação robusta, políticas/UX de múltiplas empresas, funções de listar/cancelar/remarcar, auditoria de sessão, rate-limit e E2E com contas reais.
 - **Limitação de agendamentos:** o fluxo público existente ainda não valida o novo motor de disponibilidade no ato da reserva; evitar afirmar que a integração foi concluída. A deduplicação pública por telefone não confere titularidade e não deve criar vínculo de portal.
+
+## Portal central — ativação de vínculo verificado (20/10/2026)
+
+- Migration `20261020111000_claim_verified_customer_invitation.sql` aplicada no Supabase e versionada: RPC `claim_customer_invitation` exclusiva de service_role exige Auth com e-mail confirmado, convite individual vigente, já consumido num agendamento real, pertencente ao mesmo cliente/tenant, e igualdade com o e-mail verificado. A RPC cria identidade e membership numa transação idempotente.
+- Endpoint autenticado `POST /api/portal/claim` recebe apenas slug e token, deriva a identidade do `getUser()` e verifica a empresa antes de chamar RPC. Frontend `/portal` recebe campo para colar convite utilizado após confirmar agendamento.
+- Validações: função negada ao papel `authenticated`; cenário sem identidade verificada não cria vínculo; teste SQL revertido. Nenhum cliente foi vinculado artificialmente.
+- Pendências: validar e configurar template de código OTP no Supabase Auth, garantir verificação de sessão HTTP E2E e proteção antiabuso, possibilitar ativação de clientes sem convite individual, histórico e agendamento autenticado por tenant, tratamento de expiração e revogação, além de experiência de resgatar convite sem copiar token. O portal ainda não deve ser considerado homologado.
