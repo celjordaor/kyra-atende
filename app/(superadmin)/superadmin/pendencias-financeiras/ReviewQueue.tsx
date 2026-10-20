@@ -1,5 +1,5 @@
 'use client'
-import { useMemo, useState } from 'react'
+import { Fragment, useMemo, useState } from 'react'
 type Case={payment_id:string;tenant_id:string;status:string;reason:string;note:string;reviewed_by:string;updated_at:string}
 type Audit={id:string;resource_id:string;actor_id:string;created_at:string;changes:{status?:string;reason?:string}}
 const statuses:Record<string,string>={pending_review:'Em análise',escalated:'Encaminhado',reviewed:'Analisado'}
@@ -30,14 +30,14 @@ export default function ReviewQueue({cases,companies,actors,audits}:{cases:Case[
     <thead><tr>{['Cliente','Pagamento','Motivo','Andamento','Responsável','Atualização','Observação','Histórico'].map(h=><th key={h} style={{textAlign:'left',padding:8,borderBottom:'1px solid var(--border)'}}>{h}</th>)}</tr></thead>
     <tbody>{filtered.map(c=>{
       const history=audits.filter(a=>a.resource_id===c.payment_id)
-      return <><tr key={c.payment_id}><td style={{padding:8}}>{companies[c.tenant_id]??'Cliente não localizado'}</td><td><code>{c.payment_id}</code></td>
+      return <Fragment key={c.payment_id}><tr><td style={{padding:8}}>{companies[c.tenant_id]??'Cliente não localizado'}</td><td><code>{c.payment_id}</code></td>
        <td>{reasons[c.reason]??c.reason}</td><td>{statuses[c.status]??c.status}</td><td>{actors[c.reviewed_by]??'Administrador'}</td>
        <td>{new Date(c.updated_at).toLocaleString('pt-BR')}</td><td style={{maxWidth:250,overflowWrap:'anywhere'}}>{c.note}</td>
        <td><button type="button" aria-expanded={expanded===c.payment_id} onClick={()=>setExpanded(expanded===c.payment_id?null:c.payment_id)}>{expanded===c.payment_id?'Ocultar':'Ver histórico'} ({history.length})</button></td>
       </tr>{expanded===c.payment_id&&<tr key={c.payment_id+'-history'}><td colSpan={8} style={{padding:12,background:'var(--surface-2)'}}>
        <strong>Alterações auditadas</strong>{history.length===0?<p>Nenhum evento encontrado na janela consultada.</p>:
        <ul>{history.map(a=><li key={a.id}>{new Date(a.created_at).toLocaleString('pt-BR')} — {actors[a.actor_id]??'Administrador'}: {statuses[a.changes?.status??'']??a.changes?.status??'—'} / {reasons[a.changes?.reason??'']??a.changes?.reason??'—'}</li>)}</ul>}
-      </td></tr>}</>
+      </td></tr>}</Fragment>
     })}</tbody>
    </table>
    {filtered.length===0&&<p>Nenhum caso encontrado para os filtros escolhidos.</p>}
