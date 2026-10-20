@@ -93,3 +93,10 @@ A pesquisa dos arquivos disponibilizados no contexto do Project não retornou o 
 - Lista no máximo 100 tentativas em estados `sending`, `accepted`, `unknown` e `reconcile`, exibindo tenant, sufixo do telefone, estado, timestamps e indicador de atenção após 10 minutos. Não retorna conteúdo nem hash das mensagens e não permite modificar estados.
 - **Não implementado:** interface visual de conciliação, autenticação HTTP E2E, paginação, fluxo de confirmação/reconciliação manual e reenvio idempotente. Nunca reenviar automaticamente mensagens `unknown`.
 - **Critério de aceite:** endpoint retorna 401 sem sessão, 403 para usuário não Superadmin; Superadmin enxerga somente os metadados previstos, sem dados do corpo; estado permanece inalterado após leitura. Requer testes autenticados controlados.
+
+## UI de conciliação e verificação real de CI (20/10/2026)
+
+- Tela `/superadmin/whatsapp-conciliacao`, somente consulta, usa `DataTable` padrão do Design System, atualiza sob demanda, identifica estados e casos de atenção; menu lateral do Superadmin atualizado (commits `b621430c` e `3a44cd59`).
+- **CI comprovado:** workflow `AUD-01 Quality Gates` no commit `b90a011d` finalizado com `success` ([run 39349444741](https://github.com/celjordaor/kyra-atende/actions/runs/39349444741)); workflow `AUD-01 Static Security & Quality Checks` também `success` ([run 39349444780](https://github.com/celjordaor/kyra-atende/actions/runs/39349444780)). No commit `3a44cd59`, Quality Gates também apresentou `success` ([run 39350229633](https://github.com/celjordaor/kyra-atende/actions/runs/39350229633)). O CI está comprovado nesses commits, mas permanece a obrigação de testar HTTP com sessões legítimas antes de homologação integral.
+- Sem envio de WhatsApp, sem mutações de outbox pela tela; não há conciliação de estado nem retries.
+- Após deploy READY, homologar a tela com sessão real de Superadmin e negar acesso a tenant admin; nenhuma operação de envio é oferecida na UI.
