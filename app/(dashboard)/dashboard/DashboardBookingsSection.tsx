@@ -6,7 +6,8 @@
  * serviço (barras), pendentes, novos clientes.
  */
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { api }              from '@/lib/api'
 import type { Booking }     from '@/components/organisms'
 import { CompleteModal }    from '@/components/organisms'
@@ -209,9 +210,11 @@ function toCompleteBooking(b: Booking): CompleteModalBooking {
 
 // ── Componente principal ──────────────────────────────────────
 export function DashboardBookingsSection({ todayBookings, nextBookings, nextLabel, nextTitle, pendingBookings, newClients, topServices }: Props) {
+  const router=useRouter()
   const [todayBks,        setTodayBks]        = useState<Booking[]>(todayBookings)
   const [nextBks, setNextBks] = useState<Booking[]>(nextBookings)
   const [pendingBks,      setPendingBks]       = useState<Booking[]>(pendingBookings)
+  useEffect(()=>{setTodayBks(todayBookings);setNextBks(nextBookings);setPendingBks(pendingBookings)},[todayBookings,nextBookings,pendingBookings])
   const [loadId,          setLoadId]           = useState<string | null>(null)
   const [completeModalId, setCompleteModalId]  = useState<string | null>(null)
 
@@ -244,6 +247,7 @@ export function DashboardBookingsSection({ todayBookings, nextBookings, nextLabe
       // ✅ Endpoints corretos do backend (seção 17 do guide)
       if      (status === 'confirmed') await api.post(`/bookings/${id}/confirm`, {})
       else if (status === 'cancelled') await api.post(`/bookings/${id}/cancel`,  {})
+      router.refresh()
     } catch (e) {
       // Rollback em caso de erro
       console.error('Erro ao atualizar agendamento:', e)
@@ -501,6 +505,7 @@ export function DashboardBookingsSection({ todayBookings, nextBookings, nextLabe
           )
         )
         setCompleteModalId(null)
+        router.refresh()
       }}
     />
 
