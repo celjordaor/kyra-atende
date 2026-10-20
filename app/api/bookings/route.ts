@@ -104,13 +104,6 @@ export async function POST(request: NextRequest) {
   if(availability==='error')return NextResponse.json({error:'Não foi possível verificar a disponibilidade.'},{status:503})
   if(availability==='unavailable')return NextResponse.json({error:'Horário indisponível para esse serviço ou profissional.'},{status:409})
 
-  // Busca nome, telefone e e-mail do cliente para preencher os campos snapshot
-  const { data: clientData } = await supabase
-    .from('clients')
-    .select('name, phone, email')
-    .eq('id', client_id)
-    .single()
-
   const {data:createdId,error:createError}=await createAdminClient().rpc('create_booking_checked',{
     p_tenant:tenantId,p_client:client_id,p_service:service_id,p_professional:professional_id??null,
     p_start:start_at,p_end:end_at,p_notes:notes??null,p_status:'confirmed',
