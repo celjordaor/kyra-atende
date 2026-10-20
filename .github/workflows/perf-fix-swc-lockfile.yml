@@ -1,0 +1,52 @@
+name: Regenerate Next SWC lockfile (isolated)
+on:
+  push:
+    branches: [perf/fix-next-swc-lockfile]
+    paths:
+      - '.github/workflows/perf-fix-swc-lockfile.yml'
+permissions:
+  contents: write
+jobs:
+  regenerate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: pnpm
+      - name: Regenerate lockfile from official registry
+        run: |
+          pnpm install --lockfile-only --no-frozen-lockfile
+          node - <<'NODE'
+          const fs = require('node:fs')
+          const yaml = fs.readFileSync('pnpm-lock.yaml','utf8')
+          const required = [
+            "'@next/swc-linux-x64-gnu@14.2.35':",
+            "'@next/swc-linux-x64-musl@14.2.35':",
+          ]
+          for (const needle of required) {
+            if (!yaml.includes(needle)) {
+              console.error('Missing expected SWC version:',needle)
+              process.exit(1)
+            }
+          }
+          const pkg = JSON.parse(fs.readFileSync('package.json','utf8'))
+          if (pkg.dependencies.next !== '14.2.35') process.exit(1)
+          NODE
+      - name: Commit only regenerated lockfile
+        run: |
+          git add pnpm-lock.yaml
+          if git diff --cached --quiet; then
+            echo "Lockfile already consistent"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "fix(deps): align Next.js 14.2.35 SWC lockfile"
+          git push origin HEAD:perf/fix-next-swc-lockfile
