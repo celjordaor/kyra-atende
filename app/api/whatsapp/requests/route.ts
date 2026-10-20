@@ -38,7 +38,7 @@ export async function GET() {
  * This must never search by phone and process a newer/unrelated message.
  */
 async function fetchApprovedInbound(tenantId: string, phone: string, remoteJid: string, messageId: string): Promise<EvolutionWebhookPayload | null> {
-  const url = process.env.EVOLUTION_API_URL?.replace(/\\/$/, '')
+  const url = process.env.EVOLUTION_API_URL?.replace(/\/$/, '')
   const key = process.env.EVOLUTION_API_KEY
   if (!url || !key) return null
   const response = await fetch(`${url}/chat/findMessages/${encodeURIComponent(tenantId)}`, {
