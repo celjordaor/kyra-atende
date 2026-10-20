@@ -69,6 +69,7 @@ export default async function PublicBookingPage({ params, searchParams }: PagePr
         services={services ?? []}
         professionals={professionals ?? []}
         prefill={prefill}
+        invitationToken={prefill ? token : undefined}
       />
     </PublicBookingLayout>
   )
