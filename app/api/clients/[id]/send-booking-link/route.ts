@@ -8,6 +8,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireSession } from '@/lib/route-helpers'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { randomBytes, createHash } from 'node:crypto'
 
 export async function POST(
   _request: NextRequest,
@@ -51,12 +52,15 @@ export async function POST(
   }
 
   const appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? 'https://www.kyraatende.com.br').replace(/\/$/, '')
-  // Monta URL com dados do cliente pre-preenchidos no formulario
-  const qs = new URLSearchParams()
-  qs.set('nome',  client.name)
-  if (client.email) qs.set('email', client.email)
-  if (client.phone) qs.set('tel',   client.phone)
-  const bookingUrl = `${appUrl}/agendar/${tenant.slug}?${qs.toString()}`
+  // Convite individual com segredo aleatório; nunca transportar dados pessoais na URL.
+  const token = randomBytes(32).toString('hex')
+  const tokenHash = createHash('sha256').update(token).digest('hex')
+  const { error: inviteError } = await admin.from('booking_invitations').insert({
+    tenant_id: tenantId, client_id: clientId, token_hash: tokenHash,
+    expires_at: new Date(Date.now() + 7 * 86400000).toISOString(),
+  })
+  if (inviteError) return NextResponse.json({ message: 'Não foi possível preparar o convite.' }, { status: 503 })
+  const bookingUrl = `${appUrl}/agendar/${encodeURIComponent(tenant.slug)}?convite=${token}`
 
   // ── 3. Envia e-mail via Resend ───────────────────────────────────────────────
   const resendKey = process.env.RESEND_API_KEY
