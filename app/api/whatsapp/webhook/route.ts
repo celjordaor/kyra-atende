@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     await handleWebhook({ event: body.event, instance, data: body.data })
     return NextResponse.json({ received: true })
   } catch (error) {
-    console.error('[whatsapp/webhook] falha ao processar evento:', error)
+    console.error('[whatsapp/webhook] falha ao processar evento', { errorType: error instanceof Error ? error.name : 'unknown' })
     return NextResponse.json({ error: 'Falha no processamento' }, { status: 500 })
   }
 }
