@@ -283,3 +283,11 @@ A pesquisa dos arquivos disponibilizados no contexto do Project não retornou o 
 - Migration `20261020101000_save_company_working_hours.sql` versionada e aplicada; RPC `save_company_working_hours` substitui as faixas numa transação, valida o ator vinculado ao tenant e é executável somente via service role. Tabelas continuam fechadas para acesso direto.
 - SQL transacional de cadastro de duas faixas (08h–12h e 13h–18h) executado e revertido, sem alterar expedientes reais. Endpoint HTTP autenticado e interface publicada ainda requerem teste de homologação.
 - **Importante:** esta é a primeira configuração de expediente, ainda não o motor de disponibilidade. Horários configurados não interferem em reservas existentes ou novos agendamentos até integração posterior. Também faltam UI de bloqueios, cadastro de faixas próprias, vínculo N:N editável e validação de agenda pública.
+
+## Configuração de profissionais — expediente e serviços (20/10/2026)
+
+- API `GET /api/settings/availability` inclui horários e modos de profissionais; nova rota autenticada `PUT /api/settings/availability/professional` chama RPC com tenant e ator da sessão.
+- Migration versionada e aplicada `20261020102000_save_professional_availability.sql`: salva atomicamente herança/horários próprios e vínculos N:N profissional-serviços; valida tenant, intervalo, sobreposições e serviços do mesmo tenant; acesso exclusivo de service role.
+- UI `ProfissionaisHorarios.tsx` integrada em `/configuracoes/horarios` permite escolher profissional, herdar expediente ou editar faixas próprias e marcar múltiplos serviços.
+- Teste SQL em transação revertida testou registro de horário e vínculo; usuário `authenticated` sem permissão direta da RPC. Nenhum dado real de horário/vínculo permaneceu após teste.
+- **Ainda não ativo em agendamentos ou links públicos**: associação N:N, bloqueios e expediente individual aguardam motor central e validação de reservas. Não forçar associações nos tenants antigos sem ativação explícita.
