@@ -77,3 +77,12 @@ A pesquisa dos arquivos disponibilizados no contexto do Project não retornou o 
 - **Ainda não resolvido:** em falha depois da confirmação HTTP do provedor, o sistema não possui outbox persistente para conciliar os envios ambíguos; incrementos de consumo e persistência não são transacionais com o provedor. Uma repetição manual da chamada HTTP poderá reenviar, portanto não classificar esta correção como idempotência ponta a ponta.
 - **Próxima implementação recomendada:** desenho e migração da outbox com ID externo imutável, estado `pending/processing/sent/failed/unknown`, leases, retentativas somente quando comprovadamente seguras, reconciliação com o provedor e testes de concorrência. Revisar os fluxos chamadores antes de alterar o tratamento da exceção.
 - Não foram disparadas mensagens nem feitos testes na instância real nesta rodada. A correção depende da confirmação de deploy e de teste controlado.
+
+
+## WhatsApp — Registro persistente de envio (20/10/2026)
+
+- Migration remota `20261020004119_whatsapp_outbound_delivery_tracking`: tabela `whatsapp_outbox` com RLS e permissões somente para backend `service_role`; cada tentativa guarda tenant, destinatário, hash SHA-256 do corpo (não o texto), estado, eventual HTTP do provedor e referência ao histórico.
+- `lib/whatsapp.ts` grava `sending` **antes** do envio; se o registro falhar, não chama a Evolution. Na resposta HTTP: `rejected` para rejeição, `accepted` para sucesso; falha de rede gera `unknown`, sem retry; falha de histórico após aceitação gera `reconcile`; histórico gravado gera `recorded`.
+- **Limites críticos:** esta primeira versão é rastreamento, não outbox transacional completa. Não existe chave idempotente compartilhada com Evolution, claim/lease, reconciliador ou interface administrativa; invocações repetidas podem ainda reenviar. Falha do próprio UPDATE de estado pode manter a linha em estado anterior. Incremento de consumo e envio externo continuam não transacionais.
+- **Segurança:** armazenamento sem conteúdo da mensagem, isolamento por backend, nenhuma linha criada em dados reais nesta rodada. Não confundir a criação de tabela com teste E2E.
+- **Validação pendente:** build/TypeScript, testes com Evolution isolada, falha simulada após aceite HTTP, falha de histórico, recuperação de `sending` antigo e reconciliação operacional. Não ativar retry automático antes de determinar uma estratégia de idempotência ponta a ponta.
