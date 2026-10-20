@@ -20,7 +20,8 @@ jobs:
           cache: pnpm
       - name: Re-resolve Next without changing version
         run: |
-          pnpm update next@14.2.35 --lockfile-only --force
+          rm pnpm-lock.yaml
+          pnpm install --lockfile-only --ignore-scripts --no-frozen-lockfile
           node - <<'NODE'
           const fs=require('fs');
           const pkg=JSON.parse(fs.readFileSync('package.json','utf8'));
@@ -35,6 +36,7 @@ jobs:
           NODE
       - name: Commit only lockfile
         run: |
+          git diff --stat -- pnpm-lock.yaml || true
           git add pnpm-lock.yaml
           if git diff --cached --quiet; then echo "No changes required"; exit 0; fi
           git config user.name "github-actions[bot]"
