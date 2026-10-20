@@ -1,0 +1,3 @@
+# Arquivos legados fora do contexto de upload para a Vercel (teste isolado)
+api/
+package-lock.json
