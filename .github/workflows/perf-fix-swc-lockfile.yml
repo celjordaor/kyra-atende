@@ -20,7 +20,10 @@ jobs:
           cache: pnpm
       - name: Regenerate lockfile from official registry
         run: |
-          pnpm install --lockfile-only --no-frozen-lockfile
+          pnpm install --frozen-lockfile
+          # Next.js checks and patches missing optional SWC lockfile entries.
+          # Build may fail without runtime secrets in this isolated branch; only lockfile is used.
+          pnpm exec next build || true
           node - <<'NODE'
           const fs = require('node:fs')
           const yaml = fs.readFileSync('pnpm-lock.yaml','utf8')
