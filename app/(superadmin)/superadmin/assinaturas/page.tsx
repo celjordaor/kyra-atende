@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { redirect } from 'next/navigation'
+import CheckAsaasPayment from './CheckAsaasPayment'
 
 export const metadata = { title: 'Assinaturas — SuperAdmin Kyra' }
 const money=(n:number|null)=>n==null?'—':n.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})
@@ -46,11 +47,11 @@ export default async function AssinaturasPage(){
    <h2 style={{fontSize:18}}>Pagamentos confirmados e registrados</h2>
    <p style={{fontSize:13,color:'var(--muted)'}}>Somente pagamentos conciliados no banco. Não é uma lista de cobranças em aberto no Asaas.</p>
    <table style={{width:'100%',minWidth:700,borderCollapse:'collapse',fontSize:13}}>
-    <thead><tr>{['Empresa','Pagamento','Plano','Ciclo','Valor','Registrado em'].map(h=><th key={h} style={{textAlign:'left',padding:8,borderBottom:'1px solid var(--border)'}}>{h}</th>)}</tr></thead>
+    <thead><tr>{['Empresa','Pagamento','Plano','Ciclo','Valor','Registrado em','Conferência no Asaas'].map(h=><th key={h} style={{textAlign:'left',padding:8,borderBottom:'1px solid var(--border)'}}>{h}</th>)}</tr></thead>
     <tbody>{(payments.data??[]).map(p=><tr key={p.payment_id}>
      <td style={{padding:8}}>{names[p.tenant_id]?.name??'Empresa não identificada'}</td>
      <td><code>{p.payment_id}</code></td><td>{p.plan}</td><td>{p.period}</td>
-     <td>{money(p.amount)}</td><td>{date(p.processed_at)}</td>
+     <td>{money(p.amount)}</td><td>{date(p.processed_at)}</td><td style={{padding:8}}><CheckAsaasPayment paymentId={p.payment_id}/></td>
     </tr>)}</tbody>
    </table>
    {(payments.data??[]).length===0&&<p>Nenhum pagamento confirmado encontrado nos registros consultados.</p>}
