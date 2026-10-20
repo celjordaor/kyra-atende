@@ -102,14 +102,14 @@ export async function POST(request: NextRequest) {
 
   const availability=await checkConfiguredAvailability({tenantId,serviceId:service_id,professionalId:professional_id,startAt:start_at,endAt:end_at})
   if(availability==='error')return NextResponse.json({error:'Não foi possível verificar a disponibilidade.'},{status:503})
-  if(availability==='unavailable')return NextResponse.json({error:'Horário indisponível para esse serviço ou profissional.'},{status:409})
+  if(availability==='unavailable')return NextResponse.json({error:'O horário escolhido não está disponível para este serviço e profissional. Verifique o expediente, os bloqueios da agenda ou selecione outro horário.'},{status:409})
 
   const {data:createdId,error:createError}=await createAdminClient().rpc('create_booking_checked',{
     p_tenant:tenantId,p_client:client_id,p_service:service_id,p_professional:professional_id??null,
     p_start:start_at,p_end:end_at,p_notes:notes??null,p_status:'confirmed',
   })
   if(createError){
-    if(createError.code==='23P01')return NextResponse.json({error:'Horário indisponível. Escolha outro.'},{status:409})
+    if(createError.code==='23P01')return NextResponse.json({error:'O horário selecionado está ocupado ou bloqueado. Escolha outra data ou horário.'},{status:409})
     console.error('[bookings/create]',{code:createError.code})
     return NextResponse.json({error:'Não foi possível criar o agendamento.'},{status:400})
   }
