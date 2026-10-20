@@ -28,6 +28,7 @@ interface Props {
   todayBookings:   Booking[]
   nextBookings: Booking[]
   nextLabel: string
+  nextTitle: string
   pendingBookings: Booking[]
   newClients:      NewClient[]
   topServices:     ServiceRevenue[]
@@ -207,7 +208,7 @@ function toCompleteBooking(b: Booking): CompleteModalBooking {
 }
 
 // ── Componente principal ──────────────────────────────────────
-export function DashboardBookingsSection({ todayBookings, nextBookings, nextLabel, pendingBookings, newClients, topServices }: Props) {
+export function DashboardBookingsSection({ todayBookings, nextBookings, nextLabel, nextTitle, pendingBookings, newClients, topServices }: Props) {
   const [todayBks,        setTodayBks]        = useState<Booking[]>(todayBookings)
   const [nextBks, setNextBks] = useState<Booking[]>(nextBookings)
   const [pendingBks,      setPendingBks]       = useState<Booking[]>(pendingBookings)
@@ -304,7 +305,7 @@ export function DashboardBookingsSection({ todayBookings, nextBookings, nextLabe
         {/* Próximo dia com expediente cadastrado */}
         <div style={section}>
           <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-            <h2 style={sectionTitle}>Agenda de amanhã / próximo dia disponível</h2>
+            <h2 style={sectionTitle}>{nextTitle}</h2>
             <a href="/agenda" style={{fontSize:12,color:'var(--brand)',textDecoration:'none'}}>Ver agenda →</a>
           </div>
           <p style={{fontSize:12,color:'var(--muted)',margin:0,textTransform:'capitalize'}}>{nextLabel}</p>
