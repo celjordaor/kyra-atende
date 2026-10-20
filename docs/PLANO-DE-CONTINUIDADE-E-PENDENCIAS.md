@@ -247,3 +247,12 @@ A pesquisa dos arquivos disponibilizados no contexto do Project não retornou o 
 - A RPC de checkout passa a classificar tentativas `started` com mais de 15 minutos como `uncertain` ao verificar nova solicitação para o mesmo cliente/plano/ciclo/valor. Mantém bloqueio de duplicação até conciliação; não presume ausência de cobrança.
 - Teste SQL em transação revertida: primeira solicitação aceita, tentativa envelhecida classificada como incerta e permissão de execução negada a `authenticated`. Nenhuma cobrança foi criada.
 - A verificação de entrega exige manter migrations no Git e aplicadas no Supabase; conclusão de deploy deve ser reportada separadamente.
+
+## Contratação pendente — plano bloqueado no cliente (19/10/2026)
+
+- Validada lacuna funcional: a trava anterior era por cliente/plano/ciclo, permitindo iniciar outro checkout com plano diferente. Corrigida no banco para trava transacional por tenant, independentemente de plano ou período (`20261020055000_asaas_checkout_tenant_lock.sql`).
+- Pendências de link de checkout não expiram mais após 24 horas apenas por idade (`20261020056000_asaas_checkout_pending_persistent.sql`); requerem conciliação.
+- Endpoint autenticado `GET /api/billing/pending` e avisos em `configuracoes/plano` e `configuracoes/assinatura`. O modal `PlanModal` consulta pendência e impede seleção e compra até consulta sem pendência; falha de consulta bloqueia por segurança.
+- Criado estado `paid` no ledger de tentativas (`20261020057000_asaas_checkout_paid_state.sql`). Webhook validado e idempotente passa a fechar o checkout correspondente pelo identificador do paymentLink quando o pagamento é confirmado. Sem vínculo de paymentLink a pendência permanece para conciliação manual; nunca presumir pagamento por data.
+- Teste SQL revertido: checkout inicial aceito; outra contratação de plano diferente bloqueada; status `paid` permitiu nova tentativa. Sem dados de teste persistidos.
+- **Limitação:** interface sinaliza pagamento/checkout pendente, não equivale a consulta de status financeiro em tempo real a todos os pagamentos no Asaas; links externos sem processamento do webhook exigem conciliação.
