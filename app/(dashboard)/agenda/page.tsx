@@ -21,6 +21,10 @@ interface RawBooking {
 }
 
 type ServiceRow = { id: string; name: string; price: number }
+type Hours = {weekday:number;start:string;end:string}
+type Block = {starts_at:string;ends_at:string;professional_id:string|null;category:string;reason:string|null}
+type Availability = {hours:Hours[];settings:{timezone?:string}|null}
+type Blocks = {blocks:Block[]}
 
 export default async function AgendaPage() {
   const supabase = createClient()
@@ -33,17 +37,24 @@ export default async function AgendaPage() {
 
   let rawBookings: RawBooking[] = []
   let services: ServiceRow[]    = []
+  let availability:Availability|null=null
+  let blocks:Block[]=[]
 
   // Carregar recursos independentemente evita que um erro em bookings
   // esconda os serviços disponíveis no calendário.
   const results = await Promise.allSettled([
     apiGet<RawBooking[]>(`/bookings?dateFrom=${from.toISOString()}&dateTo=${to.toISOString()}`),
     apiGet<ServiceRow[]>('/services'),
+    apiGet<Availability>('/settings/availability'),
+    apiGet<Blocks>('/settings/availability/blocks'),
   ] as const)
   if (results[0].status === 'fulfilled') rawBookings = results[0].value
   else console.error('[AgendaPage] falha ao carregar agendamentos:', results[0].reason)
   if (results[1].status === 'fulfilled') services = results[1].value
   else console.error('[AgendaPage] falha ao carregar serviços:', results[1].reason)
+
+  if(results[2].status==='fulfilled') availability=results[2].value
+  if(results[3].status==='fulfilled') blocks=results[3].value.blocks??[]
 
   const bookings: Booking[] = (rawBookings ?? [])
     .map((b) => ({
@@ -63,5 +74,5 @@ export default async function AgendaPage() {
       status:         b.status as Booking['status'],
     }))
 
-  return <AgendaClient bookings={bookings} services={services ?? []} />
+  return <AgendaClient bookings={bookings} services={services ?? []} hours={availability?.hours??[]} blocks={blocks} timezone={availability?.settings?.timezone??'America/Sao_Paulo'} availabilityLoaded={!!availability&&results[3].status==='fulfilled'} />
 }
