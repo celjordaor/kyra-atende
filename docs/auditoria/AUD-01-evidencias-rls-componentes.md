@@ -636,3 +636,13 @@ Autorização recebida para utilizar contas de teste existentes. Ensaios executa
 - Correção pontual na mesma rota, sem alterar motor de cálculo: commit final `1d95255dd33df945abe9d23430ff8f0932320e43` ajusta a expressão regular para `8-4-4-4-12`, incluindo a posição dos hífens e variante UUID. A expressão foi relida no GitHub e testada com UUID válido e identificador truncado; validou/rejeitou respectivamente.
 - Supabase `zrszytzlovthyezozqhj`: a reconsulta de `company_working_hours` para o slug TDSoft agora retornou **5 registros** (fotografia atual), diferentemente do instante anterior com zero; nenhuma configuração foi modificada nesta auditoria. Não afirmar que todos os serviços/horários estão homologados apenas por essa contagem.
 - CI e Vercel do commit final ainda sujeitos à validação de sucesso/READY no momento desta documentação. Nenhuma migration, alteração de dados, agenda ou serviço efetuada neste ajuste.
+
+
+## Homologação funcional — ficha de conclusão e histórico por cliente (20/10/2026)
+
+- Sem novas tabelas/migrations: `components/organisms/BookingDetailModal.tsx` (commit `74129bb7`) fornece visualização somente leitura reutilizável de cliente, serviço, profissional, horário, status, observações e, quando concluído, valores, desconto, meio de pagamento e `paid_at`. Ausência de pagamento registrado é exibida como informação ausente, não como pagamento confirmado.
+- `app/(dashboard)/agendamentos/AgendamentosClient.tsx` (commit `8d83512d`) disponibiliza botão de visualização para agendamentos concluídos.
+- `app/api/clients/[id]/bookings/route.ts` (commit `f3517e46`) implementa consulta paginada (20 registros/página), limitada pelo `session.tenantId`, com verificação da existência do cliente no mesmo tenant antes da busca. Apenas leitura e retorno `no-store`.
+- `app/(dashboard)/clientes/ClientesClient.tsx` (commit `12762059`) adiciona histórico acessível a partir da lista e utiliza a mesma ficha em cada agendamento. Não carrega histórico de todos os clientes antecipadamente.
+- `AUD-01 Quality Gates` de `12762059` terminou em `success`, incluindo TypeScript, ESLint e smoke HTTP sem sessão. Static Security & Quality Checks e deploy Vercel ainda precisavam de confirmação ao registrar este item. Homologação visual e funcional pendente, especialmente vínculos tenant/cliente, paginação, agendamentos com dados financeiros parciais e leitura de concluídos.
+- Não houve operação SQL de escrita, migração nem alteração no módulo de disponibilidade.
