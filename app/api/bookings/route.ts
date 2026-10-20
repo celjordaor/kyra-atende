@@ -8,6 +8,7 @@ import { requireSession } from '@/lib/route-helpers'
 import { getLimit } from '@/lib/entitlements'
 import { paymentRequired } from '@/lib/route-helpers'
 import { dispatchPush } from '@/lib/push'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { checkConfiguredAvailability } from '@/lib/availability-validation'
 
 export async function GET(request: NextRequest) {
@@ -110,31 +111,22 @@ export async function POST(request: NextRequest) {
     .eq('id', client_id)
     .single()
 
-  const { data, error } = await supabase
-    .from('bookings')
-    .insert({
-      tenant_id:       tenantId,
-      client_id,
-      professional_id: professional_id ?? null,
-      service_id,
-      start_at,
-      end_at,
-      client_name:  clientData?.name  ?? '',
-      client_phone: clientData?.phone ?? null,
-      client_email: clientData?.email ?? null,
-      notes:  notes ?? null,
-      status: 'confirmed',
-    })
-    .select(`
+  const {data:createdId,error:createError}=await createAdminClient().rpc('create_booking_checked',{
+    p_tenant:tenantId,p_client:client_id,p_service:service_id,p_professional:professional_id??null,
+    p_start:start_at,p_end:end_at,p_notes:notes??null,p_status:'confirmed',
+  })
+  if(createError){
+    if(createError.code==='23P01')return NextResponse.json({error:'Horário indisponível. Escolha outro.'},{status:409})
+    console.error('[bookings/create]',{code:createError.code})
+    return NextResponse.json({error:'Não foi possível criar o agendamento.'},{status:400})
+  }
+  const {data,error}=await supabase.from('bookings').select(`
       id, tenant_id, client_id, professional_id, service_id,
-      client_name, client_phone, client_email,
-      start_at, end_at,
+      client_name, client_phone, client_email, start_at, end_at,
       status, notes, created_at,
       professionals!bookings_professional_id_fkey(id, name),
       services!bookings_service_id_fkey(id, name, duration_minutes, price)
-    `)
-    .single()
-
+    `).eq('id',createdId).eq('tenant_id',tenantId).single()
   if (error) {
     if (error.code === '23P01') {
       return NextResponse.json(
