@@ -240,3 +240,10 @@ A pesquisa dos arquivos disponibilizados no contexto do Project não retornou o 
 - Tentativas em estado incerto ou iniciado exigem conciliação manual; não são automaticamente liberadas. Isso pode bloquear uma nova compra daquela combinação até correção administrativa e é uma decisão de segurança para evitar links duplicados.
 - Teste SQL com transação revertida: a primeira claim foi aceita e a segunda, reconhecida como repetida; permissão EXECUTE somente service_role. Sem cobrança e sem dados persistidos pelo teste.
 - **Limitação:** proteção vale a mesma combinação de tenant/plano/ciclo/valor; não substitui idempotência nativa do provedor para variações de pedido nem reconciliação de links criados sem resposta. Links bem-sucedidos são reutilizados até 24 horas, sem verificar automaticamente se foram pagos ou cancelados; essa checagem precisa integrar a próxima rodada.
+
+## Fechamento de rodada Git + Supabase (19/10/2026)
+
+- Migration versionada `20261020054000_asaas_checkout_stale_claim.sql`, aplicada no Supabase como `asaas_checkout_stale_claim`.
+- A RPC de checkout passa a classificar tentativas `started` com mais de 15 minutos como `uncertain` ao verificar nova solicitação para o mesmo cliente/plano/ciclo/valor. Mantém bloqueio de duplicação até conciliação; não presume ausência de cobrança.
+- Teste SQL em transação revertida: primeira solicitação aceita, tentativa envelhecida classificada como incerta e permissão de execução negada a `authenticated`. Nenhuma cobrança foi criada.
+- A verificação de entrega exige manter migrations no Git e aplicadas no Supabase; conclusão de deploy deve ser reportada separadamente.
