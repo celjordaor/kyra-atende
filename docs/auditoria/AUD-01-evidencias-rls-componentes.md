@@ -491,3 +491,12 @@ Autorização recebida para utilizar contas de teste existentes. Ensaios executa
 - Privilégios reconfirmados: `authenticated` não possui EXECUTE nas duas RPCs; `service_role` possui. RLS e ACL da tabela de auditoria permanecem protegidos conforme migration anterior.
 - Verificação de deploy: commit da integração `48dfa2d4` estava `BUILDING` na última consulta; ainda não homologado por HTTP. Resultado do workflow CI segue não confirmado. Não afirmar encerramento total AUD-01 sem testes HTTP com sessões legítimas, CI aprovado e smoke test do build publicado.
 - Não foram alterados templates reais ou registros de clientes durante os testes; artefatos foram criados e revertidos transacionalmente.
+
+
+## AUD-01 — Consolidação de homologação após estabilização do Git (19/10/2026)
+
+- Vercel confirmou deployment **READY** para `b499fc1a` e o status GitHub relacionado à Vercel como **success**. Isso verifica a publicação desse commit, mas não equivale à aprovação do workflow GitHub Actions `quality`; a consulta de workflow por SHA não retornou execuções.
+- Inspeção atual do Supabase `zrszytzlovthyezozqhj`: **5 tenants, 8 templates e 0 eventos persistidos** em `admin_audit_events`. O zero reflete ausência de operações administrativas auditadas persistidas até esta leitura e é compatível com os testes anteriores executados sob rollback; **não demonstra falha das RPCs**, que foram testadas transacionalmente.
+- `authenticated` permanece sem privilégio SELECT em `admin_audit_events`, e sem EXECUTE em `audit_save_email_template`. A rota de templates do GitHub ainda utiliza as RPCs auditáveis de criação/edição/exclusão.
+- Escopo da rodada: somente leitura de banco, código e deployment. Não houve mudanças funcionais ou migrações adicionais.
+- Pendências para fechamento formal: comprovar execução verde do workflow `quality`, executar testes HTTP com sessões reais dos diferentes perfis/tenants, validar API auditável publicada sob autenticação válida e observar um evento administrativo auditável real em ambiente de homologação. Não declarar AUD-01 encerrada antes dessas evidências.
