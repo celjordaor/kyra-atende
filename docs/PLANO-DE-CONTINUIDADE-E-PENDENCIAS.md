@@ -159,3 +159,10 @@ A pesquisa dos arquivos disponibilizados no contexto do Project não retornou o 
 - Os dois workflows GitHub Actions e deployment `READY` no commit `2bac5b0e` estavam confirmados antes desta configuração. Isto comprova compilação/checagens, **não** teste real com Anthropic.
 - Bloqueio é relativo ao chat do dashboard; chamadas via WhatsApp ainda não estão integradas ao ledger orçamentário. Sem histórico de ledger antes da funcionalidade. Reservas abertas após timeout continuam aguardando conciliação manual.
 - **Riscos:** disparos que ultrapassem a reserva estimada de 25k tokens de entrada podem exceder a previsão; não existe renovação automática do câmbio nem garantia de que o orçamento seja o custo total da conta Anthropic. É necessário testar autenticado 401/403/200 e consumo real com tenant homologado antes de considerar integralmente homologado.
+
+## Visibilidade de reservas financeiras pendentes (19/10/2026)
+
+- Os workflows `AUD-01 Quality Gates` e `AUD-01 Static Security & Quality Checks` do commit `c13d37ca` concluíram com `success`, mas deploy continuava `BUILDING` na consulta subsequente.
+- API do Superadmin `GET /api/superadmin/ai-budgets` agora inclui `reservations`: soma de orçamento reservado, quantidade aberta e quantidade acima de 15 minutos por tenant; somente usuários Superadmin autorizados podem consultar. Limite de 10.000 reservas reportado como consulta possivelmente incompleta.
+- Tela `/superadmin/orcamento-ia` apresenta coluna **Reservado**, subtrai reservas abertas do saldo estimado e destaca reservas antigas para conciliação. Não libera automaticamente dinheiro bloqueado e não executa novas chamadas Anthropic.
+- **Homologação pendente:** verificar últimos commits da UI e deploy, endpoint HTTP autorizado (401/403/200) e comportamento real de orçamento. A estimativa de FX fixa em produção precisa de revisão periódica; continuar distinguindo custo calculado de custo financeiro confirmado pela Anthropic.
