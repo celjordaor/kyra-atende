@@ -50,6 +50,9 @@ export default async function DashboardPage(){
  const supabase=createClient()
  const {data:{user}}=await supabase.auth.getUser()
  if(!user)redirect('/login')
+ const tenantId=user.app_metadata?.tenant_id as string|undefined
+ const tenantResult=tenantId?await supabase.from('tenants').select('name').eq('id',tenantId).maybeSingle():null
+ const tenantName=tenantResult?.data?.name??''
  const [bookingsResult,clientsResult,availabilityResult,blocksResult]=await Promise.allSettled([
   apiGet<RawBooking[]>('/bookings'),
   apiGet<Client[]>('/clients'),
@@ -109,7 +112,7 @@ export default async function DashboardPage(){
  const greeting=localHour<12?'Bom dia':localHour<18?'Boa tarde':'Boa noite'
  return <div style={{display:'flex',flexDirection:'column',gap:28}}>
   <div>
-   <h1 style={{fontSize:22,fontWeight:600,color:'var(--ink)',margin:'0 0 4px'}}>{greeting} 👋</h1>
+   <h1 style={{fontSize:22,fontWeight:600,color:'var(--ink)',margin:'0 0 4px'}}>{greeting}{tenantName?`, ${tenantName}`:''} 👋</h1>
    <p style={{fontSize:14,color:'var(--muted)',margin:0}}>{now.toLocaleDateString('pt-BR',{timeZone:tz,weekday:'long',day:'numeric',month:'long'})}{countPending>0?` · ${countPending} aguardando confirmação`:''}</p>
   </div>
   <div id="stat-tiles" style={{display:'grid',gridTemplateColumns:'repeat(7,minmax(0,1fr))',gap:10}}>
