@@ -1,10 +1,10 @@
 import {createAdminClient} from '@/lib/supabase/admin'
-/** Tenant-scoped appointment validity check; legacy tenants without working hours remain unaffected. */
+/** Fail closed when working hours have not been configured. */
 export async function checkConfiguredAvailability(input:{tenantId:string;serviceId:string;professionalId:string|null|undefined;startAt:string;endAt:string;excludeBookingId?:string}):Promise<'allowed'|'unavailable'|'error'>{
  const db=createAdminClient()
  const {count,error:hoursError}=await db.from('company_working_hours').select('id',{head:true,count:'exact'}).eq('tenant_id',input.tenantId)
  if(hoursError)return 'error'
- if(!count)return 'allowed'
+ if(!count)return 'unavailable'
  if(!input.professionalId)return 'unavailable'
  const {data:settings,error:settingsError}=await db.from('availability_settings').select('timezone').eq('tenant_id',input.tenantId).maybeSingle()
  if(settingsError)return 'error'
