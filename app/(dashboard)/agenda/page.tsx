@@ -31,9 +31,9 @@ export default async function AgendaPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  // Carrega 60 dias de agendamentos (30 passados + 30 futuros) via API NestJS
-  const from = new Date(); from.setDate(from.getDate() - 30); from.setHours(0, 0, 0, 0)
-  const to   = new Date(); to.setDate(to.getDate() + 30);     to.setHours(23, 59, 59, 999)
+  // Inclui agendamentos futuros de longo prazo; o calendário pode navegar além de 30 dias.
+  const from = new Date(); from.setDate(from.getDate() - 90); from.setHours(0, 0, 0, 0)
+  const to   = new Date(); to.setDate(to.getDate() + 365);     to.setHours(23, 59, 59, 999)
 
   let rawBookings: RawBooking[] = []
   let services: ServiceRow[]    = []
