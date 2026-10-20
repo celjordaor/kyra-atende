@@ -161,46 +161,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ id: invitedBookingId }, { status: 201 })
     }
 
-    // ── Deduplicação de cliente por telefone ─────────────────────────────────
-    let clientId: string | null = null
-    const normalizedPhone = client_phone?.trim() || null
-
-    if (normalizedPhone) {
-      const { data: existingClient } = await supabase
-        .from('clients')
-        .select('id, status')
-        .eq('tenant_id', tenant_id)
-        .eq('phone', normalizedPhone)
-        .limit(1)
-        .single()
-
-      if (existingClient) {
-        // Cliente já existe — vincula
-        clientId = existingClient.id
-      } else {
-        // Novo cliente — cria como lead (nasceu do agendamento público)
-        const { data: newClient } = await supabase
-          .from('clients')
-          .insert({
-            tenant_id,
-            name:   client_name.trim(),
-            phone:  normalizedPhone,
-            email:  client_email?.trim() || null,
-            status: 'lead',
-            source: 'booking',
-          })
-          .select('id')
-          .single()
-
-        if (newClient) clientId = newClient.id
-      }
-    }
-
-    // ── Inserir agendamento ──────────────────────────────────────────────────
-    if(!clientId)return NextResponse.json({message:'Não foi possível identificar o cadastro do cliente.'},{status:400})
-    const {data:bookingId,error:insertError}=await supabase.rpc('create_booking_checked',{
-      p_tenant:tenant_id,p_client:clientId,p_service:service_id,p_professional:professional_id??null,
-      p_start:start_at,p_end:end_at,p_notes:notes?.trim()||null,p_status:'pending',
+    // Identificação/criação de cliente e reserva na mesma transação:
+    // se o horário não estiver disponível, nenhum cadastro de lead persiste.
+    const {data:bookingId,error:insertError}=await supabase.rpc('create_public_booking_atomic',{
+      p_tenant:tenant_id,p_service:service_id,p_professional:professional_id??null,
+      p_start:start_at,p_end:end_at,p_name:client_name.trim(),p_phone:client_phone.trim(),
+      p_email:client_email?.trim()||null,p_notes:notes?.trim()||null,
     })
     if(insertError){
       if(insertError.code==='23P01')return NextResponse.json({message:'Este horário não está mais disponível. Escolha outro.'},{status:409})
