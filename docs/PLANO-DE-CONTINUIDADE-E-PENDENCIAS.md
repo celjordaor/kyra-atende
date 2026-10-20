@@ -384,3 +384,10 @@ A pesquisa dos arquivos disponibilizados no contexto do Project não retornou o 
 - `POST /api/bookings` e `POST /api/public/bookings` utilizam a RPC atômica em vez de INSERT direto. A rota do Portal do Cliente já tinha RPC atômica e usa o mesmo lock do tenant, portanto os três canais compartilham coordenação transacional.
 - Teste SQL transacional revertido confirmou primeira reserva, recusa de duplicidade de horário e liberação após cancelamento; permissão de execução direta para authenticated negada. Nenhum agendamento de teste persistido.
 - Restam homologação HTTP multicanal, rate-limiting público, deduplicação/criação de cliente público dentro de transação, revisão de profissão não escolhida para tenants legados, adaptação de UI e validação com sessões concorrentes reais; CI/Vercel precisam ser confirmados após commit final. Não declarar homologação completa sem esses cenários.
+
+## Reserva pública e criação de cliente atômicas — 20/10/2026
+
+- Migration `20261020118000_atomic_public_client_booking.sql` aplicada e versionada: RPC service_role-only `create_public_booking_atomic` serializa por tenant, preserva a identificação legada pelo telefone e cria lead+agendamento dentro da mesma transação por meio de `create_booking_checked`.
+- `POST /api/public/bookings` (sem convite) delega ao novo RPC; não deixa cadastros de lead órfãos quando o slot é inválido ou o agendamento falha. Convite individual segue RPC separada de uso único; portal usa identidade verificada.
+- Teste SQL com `ROLLBACK` confirmou falha de reserva com duração inválida sem persistência de cliente e execução direta negada ao papel authenticated. Não foram criados cadastros/agendamentos reais.
+- Pendências: execução E2E HTTP autenticada e anônima com teste multitenant; testes paralelos em duas sessões independentes; rate limit por IP em endpoints públicos; proteção e verificação de titularidade de telefone (deduplicação não significa autenticação); revisão de comportamento legado quando profissional não é selecionado; calendário, fuso e templating de OTP; verificação final do CI e deploy.
