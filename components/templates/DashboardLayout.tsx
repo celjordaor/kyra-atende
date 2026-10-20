@@ -99,6 +99,7 @@ const SUPERADMIN_NAV: NavItem[] = [
   { href: '/superadmin',                label: 'Dashboard',       icon: <IconHome /> },
   { href: '/superadmin/empresas',       label: 'Empresas',         icon: <IconBuilding /> },
   { href: '/superadmin/planos',         label: 'Planos',           icon: <IconShield /> },
+  { href: '/superadmin/assinaturas',    label: 'Assinaturas',      icon: <IconCalendar /> },
   { href: '/superadmin/orcamento-ia', label: 'Orçamento de IA', icon: <IconShield /> },
   { href: '/superadmin/relatorios',     label: 'Relatórios',       icon: <IconBarChart /> },
   { href: '/superadmin/whatsapp-conciliacao', label: 'Conciliação WhatsApp', icon: <IconMail /> },
