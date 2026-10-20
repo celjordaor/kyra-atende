@@ -8,6 +8,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireSession } from '@/lib/route-helpers'
 import { getLimit, getUsage, incrementUsage } from '@/lib/entitlements'
 import { chat, type ChatMessage } from '@/lib/ai'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 export async function POST(request: NextRequest) {
   const session = await requireSession()
@@ -54,12 +55,33 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { reply, tokensUsed } = await chat(messages)
+    const { reply, tokensUsed, inputTokens, outputTokens } = await chat(messages)
 
     // Aguardar persistência do uso antes de responder como concluído.
     // Em caso de falha de banco, a chamada ao provedor pode já ter gerado custo.
     if (tokensUsed > 0) {
       await incrementUsage(tenantId, 'ai_chat_tokens_used', tokensUsed)
+    }
+
+    // Registro financeiro separado da franquia comercial. Sem cotação
+    // configurada não inventar valores em BRL nem inferir custos históricos.
+    const fx = Number(process.env.AI_USD_BRL_RATE ?? '')
+    if (Number.isFinite(fx) && fx > 0) {
+      const { error: ledgerError } = await createAdminClient().from('ai_cost_ledger').insert({
+        tenant_id: tenantId,
+        source: 'dashboard_chat',
+        model: 'claude-haiku-4-5-20251001',
+        input_tokens: inputTokens,
+        output_tokens: outputTokens,
+        input_usd_per_million: 1,
+        output_usd_per_million: 5,
+        usd_to_brl: fx,
+      })
+      if (ledgerError) {
+        console.error('[ai/chat] falha no registro financeiro', { code: ledgerError.code })
+      }
+    } else {
+      console.warn('[ai/chat] AI_USD_BRL_RATE ausente: custo em BRL não contabilizado')
     }
 
     return NextResponse.json({ reply })
