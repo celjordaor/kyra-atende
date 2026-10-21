@@ -666,3 +666,29 @@ Autorização expressa do responsável para testes em produção, pois o ambient
 - Dois workflows GitHub `AUD-01 Quality Gates` e `AUD-01 Static Security & Quality Checks` no head PR #18 concluíram `success`.
 - Deploy de produção `dpl_3EVpXGQHvHGo2yzFKCZpj2mdP9Yy` foi observado **BUILDING** logo após o merge; confirmar `READY` antes do aceite da aplicação publicada.
 - Pendente teste operacional na virada calendário real (1º dia UTC) e HTTP de envios externos/concorrência. A correção remove a dependência do cron NestJS para reset do fluxo atual Next.js; não prova ausência de scheduler NestJS paralelo.
+
+
+## Encerramento formal da rodada técnica AUD-01 — 21/10/2026
+
+**Decisão:** AUD-01 **ENCERRADA COMO AVALIAÇÃO TÉCNICA COM RESSALVAS**, sem alegar homologação integral ponta a ponta ou liberação irrestrita de integração comercial. Consolidar provas existentes e não repetir testes já aprovados sem evidência de regressão.
+
+### Gates confirmados no fechamento
+- **Vercel:** deployment production `dpl_3EVpXGQHvHGo2yzFKCZpj2mdP9Yy` da aplicação, SHA `0788dea96ce8eb6d583a5e43f91aa4839839277a` (PR #18), confirmado **READY**.
+- **Supabase:** migrations finais remotas `20261021225119_whatsapp_atomic_outbound_quota` e `20261021225918_whatsapp_monthly_quota_cycle` presentes. Testes SQL transacionais com rollback e CI dos PRs #17/#18 aprovados conforme registros anteriores.
+- **Cadastro duplicado:** aceite funcional dado pelo responsável em produção, com mensagem explícita e acesso ao login.
+- **WhatsApp:** reserva concorrente de quota e ancoragem do ciclo mensal implementadas; SQL transacional aprovado. Ainda sem teste de virada no calendário real e de falha no provedor por HTTP.
+- **Agenda, dashboard, segurança SQL e quotas IA:** aproveitar aceites parciais e evidências anteriores explicitamente documentados; não rotular como homologação geral de todos os módulos.
+
+### Riscos residuais / pendências transferidas para gates específicos
+1. **E2E HTTP multitenant e Portal:** nenhum vínculo de cliente disponível; testes P01–P13 e acessos cruzados reais pendentes. Reabrir ao existirem identidades QA verificadas.
+2. **Evolution/WhatsApp:** duplicidade real de webhook, resposta em falhas/timeout, entrega ambígua, concorrência de chamadas HTTP e reconciliação; não efetuar retries automáticos de mensagens ambíguas.
+3. **Asaas:** eventos reais de renovação, cancelamento, estorno e chargeback e seus reflexos no plano; checkout inicial sandbox já aprovado.
+4. **IA:** chamadas autenticadas concorrentes, falha/timeout do provedor e orçamento de IA do agente WhatsApp separados do chat; evidências SQL aprovadas.
+5. **Segurança Supabase:** advisor atual apresenta `auth_leaked_password_protection` WARN (desativado), `extension_in_public` WARN para `btree_gist` (restrição GiST crítica de agendamento; não mover sem avaliação de dependências) e 26 INFO `rls_enabled_no_policy` (não abrir políticas por cosmética).
+6. **Ambiente/scheduler:** serviço NestJS de suspensão por inadimplência não comprovado em runtime; agendador de reset legado potencialmente paralelo ao novo controle transacional requer verificação operacional.
+7. **Governança/integrações:** garantir evidências HTTP e reconciliar matriz funcional com escopo original em ocasião apropriada. Não inferir aceite dos itens não comprovados.
+
+### Próximo programa
+- Portão G0 da evolução: **consolidação técnica concluída com ressalvas documentadas**, sem dizer que riscos residuais estão homologados. Riscos que afetam decisões comerciais ou segurança precisam de aceite explícito antes de disponibilizar funções correspondentes irrestritamente.
+- **Próxima etapa planejada E1 — Fundações de confiança e Design System**, segundo `docs/PROJETO-EVOLUCAO-POS-HOMOLOGACAO.md`, abrangendo identidade visual, login/OTP, padrões de formulários, PWA, acessibilidade, privacidade e termos. Manter **18 pedidos** rastreados no backlog.
+- **Não iniciar implementação E1 ainda:** o roadmap v0.1 explicitamente requer aceite do proprietário; preparar apenas escopo e critérios e submeter à aprovação.
