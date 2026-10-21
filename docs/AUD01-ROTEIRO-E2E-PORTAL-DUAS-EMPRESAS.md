@@ -39,3 +39,8 @@ Sem identidades verificadas e testes HTTP reais, não marcar E2E como aprovado. 
 - **B:** `tdsoft-btqu` — 4 clientes, 3 serviços/profissionais ativos, 39 reservas, 4 convites, 0 memberships. Dos convites, 1 consumido e válido, 3 não consumidos e válidos. Um convite consumido válido corresponde a cliente com e-mail cadastrado.
 - O responsável autorizou usar as duas empresas para homologação, não autorizou envio para contatos reais. Próximo passo: obter duas caixas QA acessíveis e executar autenticação OTP pelo frontend, gerar configuração mínima da Babi pelos fluxos oficiais, convite/booking teste com e-mails QA, sem persistir identidades artificiais por SQL.
 - Até autenticação real e vinculação comprovada, o teste de isolamento entre duas sessões continua **bloqueado por pré-requisito**, não reprovado nem aprovado.
+
+## Atualização da empresa Babi — 21/10/2026
+- O responsável inseriu dados via sistema; conferência somente leitura: Babi tem 1 cliente, 1 serviço ativo, 1 profissional ativo e 1 agendamento. TDSOFT continua com 4 clientes, 3 serviços, 3 profissionais, 39 agendamentos.
+- Nas duas empresas, 0 agendamentos com cliente, serviço ou profissional referenciados em tenant diferente. Este resultado é integridade de dados existentes, **não prova HTTP E2E com sessões distintas**.
+- Babi permanece sem convite individual e sem vínculo Portal; as duas empresas têm zero memberships. Para o fluxo E2E, usar convites legítimos e caixas QA acessíveis para OTP; não criar memberships artificialmente.
