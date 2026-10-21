@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Evento inválido' }, { status: 400 })
   }
 
-  const reviewTypes = ['PAYMENT_REFUNDED', 'PAYMENT_CHARGEBACK_REQUESTED', 'PAYMENT_CHARGEBACK_DISPUTE', 'PAYMENT_DELETED']
+  const reviewTypes = ['PAYMENT_REFUNDED', 'PAYMENT_PARTIALLY_REFUNDED', 'PAYMENT_REFUND_IN_PROGRESS', 'PAYMENT_CHARGEBACK_REQUESTED', 'PAYMENT_CHARGEBACK_DISPUTE', 'PAYMENT_AWAITING_CHARGEBACK_REVERSAL', 'PAYMENT_DELETED']
   if (reviewTypes.includes(body.event)) {
     const id = body.payment?.id
     if (typeof id !== 'string' || !/^pay_[a-zA-Z0-9_-]{1,100}$/.test(id) || body.id.length > 120 || body.id.length < 3) {
@@ -71,8 +71,11 @@ export async function POST(request: NextRequest) {
       // Fail closed when the event disagrees with the provider's current lifecycle state.
       const compatible: Record<string, string[]> = {
         PAYMENT_REFUNDED: ['REFUNDED'],
+        PAYMENT_PARTIALLY_REFUNDED: ['PARTIALLY_REFUNDED'],
+        PAYMENT_REFUND_IN_PROGRESS: ['REFUND_IN_PROGRESS', 'REFUNDED'],
         PAYMENT_CHARGEBACK_REQUESTED: ['CHARGEBACK_REQUESTED', 'CHARGEBACK_DISPUTE', 'AWAITING_CHARGEBACK_REVERSAL'],
         PAYMENT_CHARGEBACK_DISPUTE: ['CHARGEBACK_DISPUTE', 'AWAITING_CHARGEBACK_REVERSAL'],
+        PAYMENT_AWAITING_CHARGEBACK_REVERSAL: ['AWAITING_CHARGEBACK_REVERSAL'],
         PAYMENT_DELETED: ['DELETED'],
       }
       if (!compatible[body.event]?.includes(verified.status)) {
