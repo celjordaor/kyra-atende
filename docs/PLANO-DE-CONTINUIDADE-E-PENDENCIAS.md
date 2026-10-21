@@ -515,3 +515,11 @@ A pesquisa dos arquivos disponibilizados no contexto do Project não retornou o 
 - Registro idempotente por ID de evento, associado somente a pagamentos já conciliados no Kyra Atende; sem suspensão automática de assinatura, sem alterar período contratado ou planos.
 - Checks GitHub de qualidade e segurança aprovados no PR. **Ainda não publicar** até validar a migration remota e os formatos/estados efetivamente emitidos pelo sandbox Asaas; possível divergência de estado entre chegada do webhook e consulta atual deve exigir reconciliação.
 - Cancelamento solicitado pelo próprio cliente e vencimento ao fim do período contratual demandam política e implementação distintas. Renovação automática do Asaas também não foi demonstrada.
+
+### Encerramento do pacote Asaas de eventos negativos e handoff para roadmap (21/10/2026)
+
+- PR #9 merged, commit `756dc442`, com AUD-01 Quality Gates e Static Security Checks aprovados; deployment Vercel de produção `READY` confirmado. Migration `20261021033613_asaas_lifecycle_events` aplicada, registrada no histórico remoto e alinhada ao Git.
+- Teste SQL transacional com ROLLBACK validou idempotência de evento repetido em `asaas_lifecycle_events`; nenhum evento fictício persistiu.
+- **Validados nesta fase:** compra via checkout sandbox com plano ativado e registros coerentes; pagamentos sucessivos/idempotência na rotina SQL; fila de revisão de eventos negativos com storage e CI. **Não homologados:** recebimento de webhook efetivo de refund/chargeback, cancelamento solicitado pelo cliente, automação de renovação no provedor e política de estorno/revogação.
+- A fila de eventos negativos não suspende plano automaticamente; tratar `PAYMENT_DELETED` sem confirmação por consulta do provedor como pendência de conciliação manual. Não alterar assinaturas a partir de eventos externos não corroborados.
+- Roadmap futuro separado em `docs/PROJETO-EVOLUCAO-POS-HOMOLOGACAO.md`: cruza 18 pedidos do arquivo do usuário, P2 existentes, telas e documentação; **nenhuma das melhorias foi iniciada**. Iniciar apenas após término formal dos gates atuais.
