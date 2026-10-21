@@ -523,3 +523,11 @@ A pesquisa dos arquivos disponibilizados no contexto do Project não retornou o 
 - **Validados nesta fase:** compra via checkout sandbox com plano ativado e registros coerentes; pagamentos sucessivos/idempotência na rotina SQL; fila de revisão de eventos negativos com storage e CI. **Não homologados:** recebimento de webhook efetivo de refund/chargeback, cancelamento solicitado pelo cliente, automação de renovação no provedor e política de estorno/revogação.
 - A fila de eventos negativos não suspende plano automaticamente; tratar `PAYMENT_DELETED` sem confirmação por consulta do provedor como pendência de conciliação manual. Não alterar assinaturas a partir de eventos externos não corroborados.
 - Roadmap futuro separado em `docs/PROJETO-EVOLUCAO-POS-HOMOLOGACAO.md`: cruza 18 pedidos do arquivo do usuário, P2 existentes, telas e documentação; **nenhuma das melhorias foi iniciada**. Iniciar apenas após término formal dos gates atuais.
+
+### AUD-01 — revisão do Portal e isolamento multitenant (21/10/2026)
+
+- Inspecionadas rotas atuais `/api/portal/overview`, `/api/portal/bookings` (GET/POST) e `/api/portal/claim`. O histórico filtra o par exato `(tenant_id,client_id)` de cada membership; consultas de slots/novo agendamento conferem vínculo com identidade autenticada e tenant antes de chamar RPC. Em consultas de usuário sem vínculo, endpoint devolve 403; sem sessão autenticada e email confirmado, 401 nos fluxos de consulta/agendamento.
+- Supabase, consulta somente leitura: `customer_memberships=0`, `bookings` com cliente de tenant divergente = 0, membership com cliente de tenant divergente = 0.
+- `authenticated` e `anon` não possuem `EXECUTE` nas RPCs `claim_customer_invitation`, `create_portal_booking`, `get_available_slots`; acesso público autenticado passa pelo backend protegido.
+- **Status:** revisão estrutural e integridade aprovadas no escopo inspecionado. **Ainda pendente**: criar identidades/vínculos de homologação para tenant A e B, testar 401/403/201 via HTTP, OTP real, manipulação de tenant ID, concorrência, rate limiting, isolamento GUI e fluxos de cancelamento/remarcação. Sem memberships existentes, não declarar E2E multitenant aprovado.
+- Backlog de melhorias pós-auditoria continua em `docs/PROJETO-EVOLUCAO-POS-HOMOLOGACAO.md`, sem executar itens novos agora.
