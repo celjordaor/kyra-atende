@@ -29,24 +29,37 @@ export default function LoginClient() {
     setLoading(true)
     setError(null)
 
-    const supabase = createClient()
-    const { error: authError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
+    try {
+      const supabase = createClient()
+      const attempt = supabase.auth.signInWithPassword({ email, password })
+      // Evita tela bloqueada quando Supabase/rede não responde no preview.
+      const result = await Promise.race([
+        attempt,
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('AUTH_TIMEOUT')), 15000),
+        ),
+      ])
 
-    if (authError) {
+      if (result.error) {
+        setError(
+          result.error.message.includes('Invalid login credentials')
+            ? 'E-mail ou senha incorretos.'
+            : 'Não foi possível entrar. Verifique suas credenciais e tente novamente.',
+        )
+        return
+      }
+
+      router.push(next)
+      router.refresh()
+    } catch (err) {
       setError(
-        authError.message.includes('Invalid login credentials')
-          ? 'E-mail ou senha incorretos.'
-          : authError.message,
+        err instanceof Error && err.message === 'AUTH_TIMEOUT'
+          ? 'O serviço de autenticação demorou para responder. Tente novamente.'
+          : 'Não foi possível conectar ao serviço de autenticação. Tente novamente.',
       )
+    } finally {
       setLoading(false)
-      return
     }
-
-    router.push(next)
-    router.refresh()
   }
 
   return (
