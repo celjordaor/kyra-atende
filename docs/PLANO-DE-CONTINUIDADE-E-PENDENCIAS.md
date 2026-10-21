@@ -508,3 +508,10 @@ A pesquisa dos arquivos disponibilizados no contexto do Project não retornou o 
 - A RPC `apply_verified_asaas_payment` estende o período ao receber outro `payment_id` válido. A renovação por pagamentos distintos foi anteriormente simulada com rollback; **cobrança recorrente automática no Asaas ainda não foi comprovada**.
 - Snapshot somente leitura: 3 assinaturas `active`, 1 `trial`; 2 eventos `asaas.payment.confirmed`. Nenhuma alteração financeira foi feita nesta revisão.
 - Próxima entrega: desenhar política de cancelamento ao fim do período e estorno com reconciliação autenticada no Asaas, trilha de auditoria, proteção de eventos fora de ordem e idempotência. Testar em sandbox sem interromper a assinatura usada na homologação. Não promover alteração de `plan_status` sem validação das regras comerciais.
+
+### Asaas — implementação de revisão para eventos negativos (21/10/2026)
+
+- PR #9 em homologação: webhook confere na API autenticada do Asaas o status de estorno, chargeback ou exclusão antes de gravar evento na tabela restrita `asaas_lifecycle_events`.
+- Registro idempotente por ID de evento, associado somente a pagamentos já conciliados no Kyra Atende; sem suspensão automática de assinatura, sem alterar período contratado ou planos.
+- Checks GitHub de qualidade e segurança aprovados no PR. **Ainda não publicar** até validar a migration remota e os formatos/estados efetivamente emitidos pelo sandbox Asaas; possível divergência de estado entre chegada do webhook e consulta atual deve exigir reconciliação.
+- Cancelamento solicitado pelo próprio cliente e vencimento ao fim do período contratual demandam política e implementação distintas. Renovação automática do Asaas também não foi demonstrada.
