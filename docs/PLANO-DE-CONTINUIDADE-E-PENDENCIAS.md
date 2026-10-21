@@ -559,3 +559,11 @@ A pesquisa dos arquivos disponibilizados no contexto do Project não retornou o 
 - Teste SQL transacional com ROLLBACK: limite 3/600s, chamadas 1-3 autorizadas, quarta bloqueada com retry_after positivo; zero buckets persistidos após teste. `anon` e `authenticated` não têm EXECUTE na RPC.
 - **Pendente antes de homologação E2E:** HTTP 429 real via rede e sessão de QA, verificação de IP da borda em ambiente publicado e configurações de rate limit do OTP Supabase. Planejar limpeza periódica de janelas expiradas para limitar crescimento da tabela; sem rotinas de remoção ainda.
 - Merge não equivale a deploy: confirmar Vercel READY para `32848b7b` antes do aceite de publicação.
+
+### AUD-01 — finalização do rate limiter e retenção (21/10/2026)
+- Vercel produção commit `32848b7b` confirmado `READY` (o deploy posterior apenas de documentação foi cancelado, sem impacto no app).
+- Tabela `api_rate_limit_windows` consultada: 0 janelas e 0 expiradas no momento da inspeção.
+- Não existe extensão `pg_cron` instalada; para evitar dependência invasiva foi implementada limpeza oportunista limitada: índice por `window_start`, remoção de até 250 registros com >48h em aproximadamente 1% das chamadas de `claim_api_rate_limit`. **Não é limpeza em hora fixa nem comprovação de execução real sobre janelas vencidas**.
+- PR #12 merged, commit `0bb3e024`; Quality Gates e Static Security Check do commit final aprovados. Migration `20261021131221_api_rate_limit_retention` aplicada ao Supabase e timestamp alinhado ao Git; teste transacional com ROLLBACK confirmou limite 2 com terceira tentativa negada, sem contadores persistidos.
+- Deploy produção `0bb3e024` estava `BUILDING` na última consulta; preview do commit anterior apresentou ERROR, e deve ser investigado se afetar o deploy final. Não marcar publicação dessa correção como pronta até READY.
+- Acessos HTTP diretos permaneceram bloqueados nos meios de teste disponíveis; teste real HTTP 429/Retry-After, confiança do IP na Vercel e configuração efetiva do OTP Supabase continuam pendentes.
