@@ -593,3 +593,13 @@ A pesquisa dos arquivos disponibilizados no contexto do Project não retornou o 
 4. **Portal:** nenhuma identidade ou membership de clientes; investigação técnica encerrada com ressalvas a pedido do responsável, E2E P01–P13 pendente por falta de vínculo. Não criar relações artificiais.
 5. **Deploy:** Vercel READY no último commit de aplicação `3f359504`. Deployments dos commits documentais `8bb722ff` e `9b0bb057` foram CANCELED; não declarar código desses commits publicado, mas documentação existe no GitHub main.
 6. **Gates que ainda impedem a classificação de AUD-01 como homologação plena:** HTTP/E2E real com sessões distintas de tenants; WhatsApp/Evolution real de homologação e falhas; testes concorrentes HTTP de agendamento; limites reais OTP e de APIs; fluxos de billing Asaas (renovação, cancelamento, estorno/chargeback); IA e cotas em concorrência. Estes continuam **não comprovados**. A conclusão administrativa da rodada pode ser **AUD-01: avaliação técnica encerrada com riscos e testes pendentes**, sem alegar certificação comercial.
+
+
+## AUD-01 — Verificação focal Asaas (21/10/2026)
+
+- Revisão estática efetuada sobre `app/api/billing/checkout/route.ts`, `app/api/billing/webhook/route.ts`, `app/api/billing/pending/route.ts`, `app/api/superadmin/asaas-payment-reviews/route.ts` e `api/src/billing/scheduler.service.ts`.
+- Checkout usa `claim_asaas_checkout`, grava estado da tentativa e reutiliza link anterior quando seguro; evento de confirmação de pagamento consulta a API autenticada do Asaas, verifica referência e valor e usa RPC `apply_verified_asaas_payment`. Eventos negativos são registrados para revisão; não revogam automaticamente na rota webhook analisada.
+- Estado de dados consultado somente em contagens: `asaas_processed_payments=2`, `asaas_checkout_attempts=1`, `asaas_lifecycle_events=0`, `asaas_payment_reviews=0`. Não inferir testes de estorno/chargeback pela existência das tabelas.
+- Vercel runtime_errors 24h filtrado pelas rotas checkout/webhook: sem grupos de erros; ausência de erros não demonstra sucesso de integração.
+- **Achado para avaliação operacional:** `api/src/billing/scheduler.service.ts` contém cron que chama `billing.suspendTenant` depois de sete dias de `subscriptions.status=overdue`. NÃO está demonstrado que o serviço NestJS esteja implantado/ativo; verificar runtime antes de julgar o efeito. Não acionar nem desativar por suposição.
+- **Aceite:** checkout inicial Sandbox continua homologado conforme evidência anterior; renovação automática, cancelamento, estorno e chargeback com evento verdadeiro continuam **pendentes de E2E**. Sem mudanças financeiras ou chamadas ao provedor nesta rodada.
