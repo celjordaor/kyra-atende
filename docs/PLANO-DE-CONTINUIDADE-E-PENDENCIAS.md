@@ -615,3 +615,13 @@ Autorização expressa do responsável para testes em produção, pois o ambient
 - IA: `ai_chat_quota_claims` com 0 registros. Não demonstra comportamento sob concorrência.
 - Tentativa HTTP direta ao Portal via ambiente executor falhou por resolução DNS (`Could not resolve host: www.kyraatende.com.br`); não atribuir resposta 401 nem sucesso E2E.
 - Pendências dependentes de integração ativa e testes HTTP permanecem abertas. Sandbox permite exercitá-las, mas a conexão usada nesta rodada não forneceu executor HTTP acessível; não inventar evidências.
+
+
+## AUD-01 — Inspeção focal WhatsApp/Evolution (21/10/2026)
+
+- Revisão de `app/api/whatsapp/webhook/route.ts`, `lib/whatsapp.ts`, `app/api/superadmin/whatsapp-reconciliation/route.ts`.
+- Webhook tem comparação de segredo, tamanho máximo 1 MiB, validações básicas de evento/instância e processamento aguardado. Inbound tem exclusão por `external_id`, claim de processamento, fila de permissão e registro `needs_review` para falhas. Outbound cria intenção `sending` antes de chamar Evolution, com `unknown` em falha de rede e `reconcile` em falha de histórico; nenhum retry automático. Interface Superadmin faz somente consulta.
+- Banco remoto (somente leitura): `whatsapp_outbox`: 3 linhas todas `recorded`; `whatsapp_inbound_processing`: 3 linhas todas `done`; `whatsapp_contact_permissions`: 1 `ai`, 1 `ignored`. Zero linhas aguardando conciliação na inspeção; nenhuma prova de injeção de falhas/concorrência.
+- Consulta de logs unificados por texto `whatsapp/webhook` não encontrou eventos no período consultado. Não inferir ausência de tráfego a partir dessa busca.
+- **Status da frente:** implementação e consistência dos registros inspecionados verificadas. E2E externo com Evolution, cenários de falha pós-aceite, duplicidade em concorrência, controle de número QA e reconciliação seguem pendentes; não reenviar automaticamente mensagens ambíguas.
+- **Achado de risco para próxima rodada:** `sendMessage` faz checagem de limite de WhatsApp antes do envio, sem reserva atômica visível no caminho, e `incrementUsage` ocorre após o efeito externo. Chamadas paralelas podem ultrapassar o limite sem prova de quota concorrente; testar sem atingir contatos reais.
