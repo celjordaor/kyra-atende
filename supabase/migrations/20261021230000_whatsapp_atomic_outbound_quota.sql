@@ -11,13 +11,13 @@ DECLARE
  v_id uuid;
  v_start timestamptz := date_trunc('month', now() AT TIME ZONE 'UTC') AT TIME ZONE 'UTC';
 BEGIN
- IF p_tenant IS NULL OR p_limit < 0 OR p_to !~ '^[0-9]{8,16}$'
+ IF p_tenant IS NULL OR p_limit IS NULL OR p_limit < 0 OR p_to !~ '^[0-9]{8,16}$'
     OR p_body_sha256 !~ '^[a-f0-9]{64}$' THEN
   RAISE EXCEPTION 'invalid outbound quota claim';
  END IF;
  PERFORM pg_advisory_xact_lock(hashtextextended('wa_quota:' || p_tenant::text, 0));
- SELECT coalesce(value,0) INTO v_used
- FROM public.usage_counters WHERE tenant_id=p_tenant AND key='whatsapp_messages_sent';
+ SELECT coalesce((SELECT value FROM public.usage_counters
+ WHERE tenant_id=p_tenant AND key='whatsapp_messages_sent'),0) INTO v_used;
  SELECT count(*) INTO v_pending FROM public.whatsapp_outbox
  WHERE tenant_id=p_tenant AND created_at >= v_start
    AND status IN ('sending','accepted','unknown','reconcile');
