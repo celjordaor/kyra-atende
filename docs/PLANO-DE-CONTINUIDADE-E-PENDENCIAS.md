@@ -446,3 +446,10 @@ A pesquisa dos arquivos disponibilizados no contexto do Project não retornou o 
 - **Validado pelo usuário:** os dias fechados são sinalizados corretamente na interface.
 - Esses dois cenários da Agenda estão homologados funcionalmente. Permanecem fora deste aceite os indicadores financeiros e demais dados do Dashboard, ainda a conferir.
 - Próxima atividade: homologação dos KPIs e das seções do Dashboard com a empresa de teste.
+
+### Aceite funcional do Dashboard — 20/10/2026
+
+- **Validado pelo usuário:** Dashboard da empresa de teste apresentou corretamente os indicadores e informações revisados.
+- Frente **Agenda e Dashboard encerrada no escopo funcional testado pelo usuário**: Agenda em 03/12/2026, dias fechados e Dashboard.
+- Este aceite não substitui testes de concorrência, segurança ou E2E de todos os módulos.
+- Próxima frente priorizada: **Asaas / cobrança, assinaturas e limites por plano/consumo de IA**.
