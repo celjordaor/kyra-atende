@@ -8,9 +8,9 @@ export default function PortalSignIn(){
  const [busy,setBusy]=useState(false)
  const [message,setMessage]=useState('')
  async function send(e:React.FormEvent){e.preventDefault();setBusy(true);setMessage('')
-  const {error}=await createClient().auth.signInWithOtp({email:email.trim(),options:{shouldCreateUser:true}})
+  const {error}=await createClient().auth.signInWithOtp({email:email.trim(),options:{shouldCreateUser:true,emailRedirectTo:`${window.location.origin}/auth/callback?next=%2Fportal`}})
   setBusy(false);if(error){setMessage('Não foi possível enviar o código. Aguarde e tente novamente.');return}
-  setPhase('code');setMessage('Verifique sua caixa de entrada. Se receber um código, informe abaixo.')
+  setPhase('code');setMessage('Verifique seu e-mail. Se receber um código, digite abaixo. Se receber um link de confirmação, abra-o para concluir o acesso ao Portal.')
  }
  async function verify(e:React.FormEvent){e.preventDefault();setBusy(true);setMessage('')
   const {error}=await createClient().auth.verifyOtp({email:email.trim(),token:code.trim(),type:'email'})
@@ -19,7 +19,7 @@ export default function PortalSignIn(){
  }
  return <form onSubmit={phase==='email'?send:verify} style={{display:'flex',flexDirection:'column',gap:12}}>
   <label>E-mail <input type="email" required value={email} onChange={e=>setEmail(e.target.value)} disabled={busy||phase==='code'} autoComplete="email"/></label>
-  {phase==='code'&&<label>Código de confirmação <input inputMode="numeric" autoComplete="one-time-code" required value={code} onChange={e=>setCode(e.target.value)} disabled={busy}/></label>}
+  {phase==='code'&&<label>Código de confirmação (se recebido) <input inputMode="numeric" autoComplete="one-time-code" required value={code} onChange={e=>setCode(e.target.value)} disabled={busy}/></label>}
   <button disabled={busy} type="submit">{busy?'Aguarde...':phase==='email'?'Receber código':'Confirmar acesso'}</button>
   {message&&<p role="status">{message}</p>}
   {phase==='code'&&<button type="button" onClick={()=>{setPhase('email');setCode('');setMessage('')}}>Usar outro e-mail</button>}
