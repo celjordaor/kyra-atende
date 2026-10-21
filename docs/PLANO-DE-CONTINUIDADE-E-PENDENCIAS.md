@@ -426,3 +426,10 @@ A pesquisa dos arquivos disponibilizados no contexto do Project não retornou o 
 - **Validado pelo usuário:** cenário da primeira mensagem respondida pela IA após autorização de contato no WhatsApp/Evolution, sem necessidade de reenviar a solicitação.
 - O comportamento de colocar contatos desconhecidos na fila de autorização também foi confirmado pelo usuário; um número adicional visto na fila era um contato pessoal distinto, não um problema de identificação.
 - Este aceite refere-se ao **fluxo funcional observado**, não encerra a homologação técnica E2E completa da Evolution. Permanecem abertos os testes de eventos duplicados, falha de IA, entrega ambígua, reconciliação, isolamento por tenant e recuperação de processamento.
+
+### Homologação incremental de idempotência WhatsApp — 20/10/2026
+
+- Testes SQL em transação `BEGIN/ROLLBACK` no Supabase, sem envio de mensagens nem persistência de dados de teste.
+- `claim_whatsapp_inbound`: primeira reivindicação `true`, repetição do mesmo identificador `false` — **aprovado**.
+- `complete_whatsapp_inbound`: transição `processing → needs_review` retornou `true`; segunda tentativa de finalizar o mesmo evento como `done` retornou `false` — **aprovado**.
+- **Ainda em aberto:** entrega duplicada real por webhook HTTP, testes de falha real IA/Evolution, validação de saída `unknown/reconcile`, eventual reconciliação de `processing` antigos e testes concorrentes com múltiplas requisições. Nenhum retry automático de saída ambígua.
