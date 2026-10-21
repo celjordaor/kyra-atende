@@ -486,3 +486,10 @@ A pesquisa dos arquivos disponibilizados no contexto do Project não retornou o 
 - **Aprovado — renovações sucessivas**: dois IDs distintos foram aceitos e a segunda confirmação ampliou o vencimento em relação à primeira.
 - **Persistência preservada**: após ambos os testes, 1 pagamento processado, 0 pagamentos fictícios com prefixo de QA e 1 evento `asaas.payment.confirmed` existente. Nenhuma alteração de assinatura/financeiro permaneceu após `ROLLBACK`.
 - **Pendente — E2E do Asaas Sandbox**: criar link pelo provedor, simular pagamento no provedor, verificar autenticidade do webhook HTTP, conciliar estados e testar cancelamento/reversão. Ainda não executado. Evitar declarar integração ponta a ponta homologada.
+
+### Asaas — verificação de pré-condições E2E (21/10/2026)
+
+- Confirmado no projeto Vercel: variáveis `ASAAS_SANDBOX=true`, `ASAAS_API_KEY` e `ASAAS_WEBHOOK_AUTH_TOKEN` configuradas para produção (valores sensíveis não expostos).
+- Deployment do código IA `5121d510` está `READY`; deploys apenas documentais posteriores foram cancelados.
+- O ambiente de ferramentas acessível nesta auditoria não oferece cliente HTTP autenticado para executar POST contra a API do Asaas nem sessão autenticada do Kyra Atende para chamar `/api/billing/checkout`. Assim, **nenhum checkout/link/pagamento de sandbox foi criado**; não alegar teste externo realizado.
+- Pré-requisitos para E2E externo: cliente autenticado de tenant sintético ou agente de teste com credenciais seguras, teste isolado e temporário de checkout no sandbox, confirmação em sandbox, webhook autêntico e conferência de idempotência. Manter redirecionamento estrito ao domínio `api-sandbox.asaas.com` e nunca inserir chaves em GitHub, logs ou documentação.
