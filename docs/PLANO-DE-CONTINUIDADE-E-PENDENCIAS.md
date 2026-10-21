@@ -501,3 +501,10 @@ A pesquisa dos arquivos disponibilizados no contexto do Project não retornou o 
 - Snapshot agregado: 2 pagamentos processados, 2 eventos de confirmação financeira e 0 checkouts pendentes. Nenhum registro financeiro foi modificado nesta verificação.
 - **Aprovado:** cenário de contratação/ativação de plano Cresce mensal no Asaas Sandbox, com persistência coerente.
 - **Pendente de homologação E2E:** renovação real pelo provedor, cancelamento, estorno, duplicação HTTP de webhook e reconciliação de falhas externas. Testes SQL transacionais anteriores não substituem esses cenários.
+
+### Ciclo de vida Asaas — auditoria de cancelamento e estorno (21/10/2026)
+
+- Confirmado no código de `app/api/billing/webhook/route.ts`: apenas `PAYMENT_RECEIVED`/`PAYMENT_CONFIRMED` executam conciliação de assinatura; eventos de cancelamento, estorno ou reversão retornam `ignored: true`, sem revogar acessos. Trata-se de proteção contra suspensão indevida, **não de homologação** do fluxo de cancelamento.
+- A RPC `apply_verified_asaas_payment` estende o período ao receber outro `payment_id` válido. A renovação por pagamentos distintos foi anteriormente simulada com rollback; **cobrança recorrente automática no Asaas ainda não foi comprovada**.
+- Snapshot somente leitura: 3 assinaturas `active`, 1 `trial`; 2 eventos `asaas.payment.confirmed`. Nenhuma alteração financeira foi feita nesta revisão.
+- Próxima entrega: desenhar política de cancelamento ao fim do período e estorno com reconciliação autenticada no Asaas, trilha de auditoria, proteção de eventos fora de ordem e idempotência. Testar em sandbox sem interromper a assinatura usada na homologação. Não promover alteração de `plan_status` sem validação das regras comerciais.
