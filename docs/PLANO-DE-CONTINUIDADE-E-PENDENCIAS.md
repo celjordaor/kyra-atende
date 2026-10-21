@@ -470,3 +470,11 @@ A pesquisa dos arquivos disponibilizados no contexto do Project não retornou o 
 - Teste SQL transacional com ROLLBACK em tenant Cresce: 200 reservas aceitas, 201ª negada, segunda liquidação negada e limite incompatível com plano rejeitado — **aprovado**, sem alterar contadores reais.
 - Checks de qualidade e segurança do PR **aprovados**. Ainda pendentes testes HTTP autenticados com cliente de homologação, falhas reais Anthropic, carga concorrente independente e validação do ciclo mensal em virada de período. A reserva fica conservada para falhas ambíguas, exigindo reconciliação posterior.
 - Os controles desta entrega aplicam-se ao **chat interno** `/api/ai/chat`; avaliar separadamente consumos do agente WhatsApp e demais recursos de IA.
+
+### Asaas Sandbox — pré-homologação (21/10/2026)
+
+- Vercel: `ASAAS_SANDBOX=true` confirmado no ambiente production, portanto o código de checkout/webhook aponta para endpoints sandbox do provedor. Não foram feitas chamadas de pagamento nem cobrança real nesta rodada.
+- Deploy `5121d510` do limite do chat IA confirmado `READY` na produção; houve um deploy exclusivamente documental posterior cancelado, sem impacto funcional.
+- Auditoria estática: o webhook valida token e consulta a cobrança no Asaas antes da conciliação, e a RPC `apply_verified_asaas_payment` verifica `payment_id` para impedir processamento duplo; o checkout registra tentativas e as reutiliza.
+- Tentativa de simulação SQL transacional de cobrança duplicada **bloqueada pela ferramenta de segurança antes da execução**. Não afirmar E2E aprovado; nenhum teste de pagamento foi executado.
+- Necessário ambiente isolado com dados sintéticos (Supabase de staging separado ou integração sandbox acessível) para testar: checkout → link → confirmação → duplicidade → assinatura → renovação, e conciliação após falha. Não simular operações financeiras na base de produção.
