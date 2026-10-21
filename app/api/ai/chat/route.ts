@@ -6,7 +6,7 @@
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { requireSession } from '@/lib/route-helpers'
-import { incrementUsage } from '@/lib/entitlements'
+import { incrementUsage, getLimit } from '@/lib/entitlements'
 import { chat, type ChatMessage } from '@/lib/ai'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { randomUUID } from 'node:crypto'
@@ -43,6 +43,35 @@ export async function POST(request: NextRequest) {
     content: m.content,
   }))
 
+  // Atomic monthly commercial quota; reserve before contacting Anthropic.
+  // For unlimited plans the claim is unnecessary; monetary budgets still apply.
+  const commercialLimit = await getLimit(tenantId, 'ai_chat_monthly_limit')
+  const quotaId = typeof commercialLimit === 'number' ? randomUUID() : null
+  const quotaAdmin = createAdminClient()
+  if (quotaId && typeof commercialLimit === 'number') {
+    const reserved = await quotaAdmin.rpc('reserve_ai_chat_quota', {
+      p_tenant: tenantId, p_id: quotaId, p_limit: commercialLimit,
+    })
+    if (reserved.error) {
+      console.error('[ai/chat] falha na reserva de interações', { code: reserved.error.code })
+      return NextResponse.json({ error: 'Não foi possível verificar o limite mensal de IA.' }, { status: 503 })
+    }
+    if (!reserved.data) {
+      return NextResponse.json({ error: 'Limite mensal de interações de IA atingido. Consulte seu plano.', upgradeRequired: true }, { status: 402 })
+    }
+  }
+  async function finishQuota(success: boolean): Promise<boolean> {
+    if (!quotaId) return true
+    const result = await quotaAdmin.rpc('finish_ai_chat_quota', {
+      p_tenant: tenantId, p_id: quotaId, p_success: success,
+    })
+    if (result.error || result.data !== true) {
+      console.error('[ai/chat] conciliação do limite de interações pendente', { code: result.error?.code })
+      return false
+    }
+    return true
+  }
+
   // Orçamento monetário: recurso habilitado explicitamente após configuração de câmbio.
   // Antes da ativação, preservar o fluxo existente para não interromper clientes.
   const monetaryEnabled = process.env.AI_MONETARY_ENFORCEMENT_ENABLED === 'true'
@@ -50,6 +79,7 @@ export async function POST(request: NextRequest) {
   const admin = createAdminClient()
   if (monetaryEnabled) {
     if (!Number.isFinite(fx) || fx <= 0 || fx > 100) {
+      await finishQuota(false)
       return NextResponse.json({ error: 'Orçamento de IA indisponível: câmbio não configurado.' }, { status: 503 })
     }
     // Reserva conservadora: até 25k input e 1024 output, em USD convertidos.
@@ -61,9 +91,11 @@ export async function POST(request: NextRequest) {
     })
     if (reservation.error) {
       console.error('[ai/chat] reserva financeira indisponível', { code: reservation.error.code })
+      await finishQuota(false)
       return NextResponse.json({ error: 'Não foi possível verificar o orçamento de IA.' }, { status: 503 })
     }
     if (!reservation.data) {
+      await finishQuota(false)
       return NextResponse.json({
         statusCode: 402, message: 'Limite financeiro mensal de IA atingido. Consulte seu plano.',
         upgradeRequired: true,
@@ -75,6 +107,7 @@ export async function POST(request: NextRequest) {
     } catch {
       // Resultado do provedor pode ser incerto. Conservar reserva até conciliação.
       console.error('[ai/chat] resultado de IA incerto; reserva mantida', { reservationId: id })
+      // Conservar também a reserva da interação: resultado do provedor pode ser incerto.
       return NextResponse.json({ error: 'Erro ao processar mensagem.' }, { status: 500 })
     }
     const settlement = await admin.rpc('finish_ai_monetary', {
@@ -85,6 +118,7 @@ export async function POST(request: NextRequest) {
       console.error('[ai/chat] conciliação financeira pendente', { code: settlement.error?.code, id })
       return NextResponse.json({ error: 'Resposta gerada, mas o registro financeiro precisa de conciliação.' }, { status: 503 })
     }
+    if (!await finishQuota(true)) return NextResponse.json({ error: 'Resposta gerada, mas o consumo de interações exige conciliação.' }, { status: 503 })
     return NextResponse.json({ reply: result.reply })
   }
 
@@ -102,8 +136,11 @@ export async function POST(request: NextRequest) {
       })
       if (error) console.error('[ai/chat] falha no registro financeiro', { code: error.code })
     }
+    if (!await finishQuota(true)) return NextResponse.json({ error: 'Resposta gerada, mas o consumo de interações exige conciliação.' }, { status: 503 })
     return NextResponse.json({ reply })
   } catch {
+    // A chamada Anthropic pode ter concluído antes de perder a resposta.
+    // Manter claim reservado para revisão, evitando crédito indevido e reenvio.
     return NextResponse.json({ error: 'Erro ao processar mensagem.' }, { status: 500 })
   }
 }
