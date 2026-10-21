@@ -10,6 +10,7 @@
 import React, {
   useCallback,
   useEffect,
+  useId,
   useRef,
 } from 'react'
 import { createPortal } from 'react-dom'
@@ -73,18 +74,22 @@ export function Modal({
   className  = '',
 }: ModalProps) {
   const dialogRef = useRef<HTMLDivElement>(null)
+  const titleId = useId()
   const prevFocus = useRef<HTMLElement | null>(null)
 
-  // Salva foco anterior e foca o dialog ao abrir
+  // Foca o primeiro controle, ou o próprio diálogo quando não houver controles.
+  // Cancela o agendamento do foco e devolve o foco anterior ao fechar/desmontar.
   useEffect(() => {
-    if (open) {
-      prevFocus.current = document.activeElement as HTMLElement
-      setTimeout(() => {
-        const el = dialogRef.current?.querySelector<HTMLElement>(FOCUSABLE)
-        el?.focus()
-      }, 50)
-    } else {
-      prevFocus.current?.focus()
+    if (!open) return
+    prevFocus.current = document.activeElement as HTMLElement
+    const frame = window.requestAnimationFrame(() => {
+      const el = dialogRef.current?.querySelector<HTMLElement>(FOCUSABLE)
+      ;(el ?? dialogRef.current)?.focus()
+    })
+    return () => {
+      window.cancelAnimationFrame(frame)
+      const previous = prevFocus.current
+      if (previous?.isConnected) previous.focus()
     }
   }, [open])
 
@@ -97,10 +102,11 @@ export function Modal({
   useEffect(() => {
     if (!open) return
     document.addEventListener('keydown', handleKeyDown)
+    const previousOverflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
     return () => {
       document.removeEventListener('keydown', handleKeyDown)
-      document.body.style.overflow = ''
+      document.body.style.overflow = previousOverflow
     }
   }, [open, handleKeyDown])
 
@@ -140,7 +146,8 @@ export function Modal({
       <div
         role="dialog"
         aria-modal="true"
-        aria-labelledby="modal-title"
+        aria-labelledby={titleId}
+        tabIndex={-1}
         ref={dialogRef}
         className={className}
         style={{
@@ -158,7 +165,7 @@ export function Modal({
           style={{
             width:           '100%',
             maxWidth:        maxW,
-            maxHeight:       'calc(100vh - 32px)',
+            maxHeight:       'calc(100dvh - 32px)',
             backgroundColor: 'var(--surface-2)',
             borderRadius:    'var(--r-lg)',
             boxShadow:       '0 20px 60px rgba(0,0,0,0.2)',
@@ -180,7 +187,7 @@ export function Modal({
             flexShrink:     0,
           }}>
             <h2
-              id="modal-title"
+              id={titleId}
               style={{
                 fontSize:   '18px',
                 fontWeight: 600,
