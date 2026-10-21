@@ -538,3 +538,10 @@ A pesquisa dos arquivos disponibilizados no contexto do Project não retornou o 
 - Constraints verificadas remotamente: `customer_identities.id -> auth.users.id` (FK), `customer_memberships(identity_id) -> customer_identities(id)` (FK), `customer_memberships(client_id,tenant_id) -> clients(id,tenant_id)` (FK composta), FK de tenant e chave primária `(identity_id,tenant_id,client_id)`.
 - Essas constraints impedem vínculo de cliente com tenant divergente e vínculos duplicados exatos no banco; ainda não comprovam sessões HTTP, OTP, permissões/fluxos GUI nem abuso de rate limits.
 - Próximo gate E2E: estabelecer duas identidades de QA por fluxos oficiais do Auth, convites verificados e vínculos legítimos a tenants de teste; demonstrar HTTP `401/403/200/201/409` e acesso cruzado negado sem manipular contas reais. Não inserir memberships manualmente ou assumir identidade por email/telefone.
+
+### AUD-01 — entrada pública do Portal e limite do teste HTTP (21/10/2026)
+- A revisão de `middleware.ts` identificou `/portal` ausente de `PUBLIC_PATHS`; visitantes sem sessão eram redirecionados para `/login` antes de acessar o formulário de OTP. Corrigido pelo PR #10, commit `491d80f8`, com os dois checks do GitHub aprovados. APIs `/api/portal/*` continuam exigindo autenticação e vínculos verificados nos handlers.
+- Tentativa de GET externo sem sessão no domínio público não retornou resposta utilizável pelo acesso disponível; ferramenta de Vercel retornou `deployment_authentication_required`. **Não declarar teste HTTP de 401/403 aprovado sem resposta real.**
+- Código das três rotas do Portal não contém rate limiting explícito; verificar camada global/provedor e manter teste de abuso/limites como pendente.
+- Consulta somente leitura de estado: `customer_identities=0`, `customer_memberships=0`, nenhuma reserva com cliente de tenant divergente. Teste com duas sessões OTP reais ainda bloqueado.
+- PR #10 foi merged; deploy `491d80f8` deve ser confirmado READY antes de marcar publicação.
