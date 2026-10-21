@@ -31,12 +31,9 @@ function DefaultLeftPanel() {
           </li>
         ))}
       </ul>
-      <blockquote style={{ margin: 0, padding: '16px 20px', background: 'rgba(255,255,255,0.12)', borderRadius: '12px', backdropFilter: 'blur(8px)', maxWidth: '320px' }}>
-        <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.9)', lineHeight: '1.6', margin: '0 0 8px', fontStyle: 'italic' }}>
-          &quot;Reduzi 80% das faltas e meus clientes adoram agendar pelo WhatsApp.&quot;
-        </p>
-        <footer style={{ fontSize: '12px', color: 'rgba(255,255,255,0.6)', fontWeight: 500 }}>— Ana Beatriz, Studio AB</footer>
-      </blockquote>
+      <p style={{ margin: 0, padding: '16px 20px', background: 'rgba(255,255,255,0.12)', borderRadius: '12px', maxWidth: '320px', fontSize: '13px', color: 'rgba(255,255,255,0.9)', lineHeight: '1.6' }}>
+        Organize agendamentos, acompanhe sua operação e mantenha as informações da empresa em um só lugar.
+      </p>
     </div>
   )
 }
