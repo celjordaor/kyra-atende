@@ -531,3 +531,10 @@ A pesquisa dos arquivos disponibilizados no contexto do Project não retornou o 
 - `authenticated` e `anon` não possuem `EXECUTE` nas RPCs `claim_customer_invitation`, `create_portal_booking`, `get_available_slots`; acesso público autenticado passa pelo backend protegido.
 - **Status:** revisão estrutural e integridade aprovadas no escopo inspecionado. **Ainda pendente**: criar identidades/vínculos de homologação para tenant A e B, testar 401/403/201 via HTTP, OTP real, manipulação de tenant ID, concorrência, rate limiting, isolamento GUI e fluxos de cancelamento/remarcação. Sem memberships existentes, não declarar E2E multitenant aprovado.
 - Backlog de melhorias pós-auditoria continua em `docs/PROJETO-EVOLUCAO-POS-HOMOLOGACAO.md`, sem executar itens novos agora.
+
+### AUD-01 — pré-condições e integridade estrutural do Portal (21/10/2026)
+
+- Consulta somente leitura: 5 tenants, 0 `customer_identities` e 0 `customer_memberships`. Sem identidade real de homologação, não há como demonstrar E2E com duas empresas.
+- Constraints verificadas remotamente: `customer_identities.id -> auth.users.id` (FK), `customer_memberships(identity_id) -> customer_identities(id)` (FK), `customer_memberships(client_id,tenant_id) -> clients(id,tenant_id)` (FK composta), FK de tenant e chave primária `(identity_id,tenant_id,client_id)`.
+- Essas constraints impedem vínculo de cliente com tenant divergente e vínculos duplicados exatos no banco; ainda não comprovam sessões HTTP, OTP, permissões/fluxos GUI nem abuso de rate limits.
+- Próximo gate E2E: estabelecer duas identidades de QA por fluxos oficiais do Auth, convites verificados e vínculos legítimos a tenants de teste; demonstrar HTTP `401/403/200/201/409` e acesso cruzado negado sem manipular contas reais. Não inserir memberships manualmente ou assumir identidade por email/telefone.
