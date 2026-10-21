@@ -33,6 +33,7 @@ export default function CadastroPage() {
       const result = await fetch('/api/auth/signup-email-check', {
         method: 'POST', headers: {'Content-Type':'application/json'},
         body: JSON.stringify({email:form.email.trim()}),
+        signal: AbortSignal.timeout(12000),
       })
       if (!result.ok) {
         setError(result.status === 429
@@ -57,7 +58,10 @@ export default function CadastroPage() {
     const supabase = createClient()
 
     // 1. Cria o usuário no Supabase Auth
-    const { data, error: signUpError } = await supabase.auth.signUp({
+    let signupResult: Awaited<ReturnType<typeof supabase.auth.signUp>>
+    try {
+      signupResult = await Promise.race([
+        supabase.auth.signUp({
       email:    form.email,
       password: form.password,
       options: {
@@ -65,7 +69,15 @@ export default function CadastroPage() {
         // Após confirmar o e-mail, vai para /auth/callback que redireciona ao /dashboard
         emailRedirectTo: `${window.location.origin}/auth/callback`,
       },
-    })
+        }),
+        new Promise<never>((_, reject) => setTimeout(() => reject(new Error('signup_timeout')), 15000)),
+      ])
+    } catch {
+      setError('A solicitação demorou mais que o esperado. Verifique seu e-mail antes de tentar novamente.')
+      setLoading(false)
+      return
+    }
+    const { data, error: signUpError } = signupResult
 
     if (signUpError) {
       setError(
