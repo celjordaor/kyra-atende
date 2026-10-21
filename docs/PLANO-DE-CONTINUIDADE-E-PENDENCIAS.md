@@ -433,3 +433,9 @@ A pesquisa dos arquivos disponibilizados no contexto do Project não retornou o 
 - `claim_whatsapp_inbound`: primeira reivindicação `true`, repetição do mesmo identificador `false` — **aprovado**.
 - `complete_whatsapp_inbound`: transição `processing → needs_review` retornou `true`; segunda tentativa de finalizar o mesmo evento como `done` retornou `false` — **aprovado**.
 - **Ainda em aberto:** entrega duplicada real por webhook HTTP, testes de falha real IA/Evolution, validação de saída `unknown/reconcile`, eventual reconciliação de `processing` antigos e testes concorrentes com múltiplas requisições. Nenhum retry automático de saída ambígua.
+
+### Encerramento da rodada WhatsApp e transição — 20/10/2026
+
+- Encerrada **a rodada de verificações solicitada**: autorização de contatos, primeira mensagem autorizada (aceite informado pelo usuário), idempotência de claim e transição terminal (testes SQL com ROLLBACK).
+- **Não equivale a homologação E2E completa da Evolution**: webhook duplicado real, falha efetiva de IA/provedor, entrega ambígua, recuperação de processamento e isolamento com múltiplos tenants permanecem sem prova de aceite. Manter esses riscos registrados para rodada dedicada, sem reenvio automático em situação ambígua.
+- Próxima frente ativa: **Agenda e Dashboard — homologação funcional dos ajustes publicados**, incluindo agendamentos em datas futuras, dias com bloqueios e consistência de indicadores. Nenhuma mudança no motor de disponibilidade sem novo aceite.
