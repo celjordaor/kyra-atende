@@ -647,3 +647,11 @@ Autorização expressa do responsável para testes em produção, pois o ambient
 - GitHub: **AUD-01 Quality Gates e AUD-01 Static Security & Quality Checks aprovados** na revisão final da branch.
 - Vercel produção: deployment `dpl_9iGTgL6RVrYhih3hRQCph28kg6PR` do commit `dbadebc8` confirmado `READY`.
 - **Status:** correção técnica do controle de quota concorrente implantada e validada transacionalmente. Teste HTTP simultâneo, virada mensal do contador e conciliação de situações ambíguas reais permanecem pendentes de E2E; não reabrir aceites SQL anteriores.
+
+## AUD-01 — Gate de virada mensal da quota WhatsApp (21/10/2026)
+
+- Conferência após merge PR #17: RPC `claim_whatsapp_outbound_quota` usa `usage_counters.value` bruto somado a reservas do mês corrente; não confere `reset_at`.
+- Banco remoto: existe contador `whatsapp_messages_sent` com `value=4` e `reset_at IS NULL`. Portanto não existe evidência de reset mensal seguro ou de ancoragem do contador a um ciclo mensal.
+- O único cron de reset identificado previamente está em `api/src/billing/scheduler.service.ts` (NestJS); deployment principal Vercel é Next.js e execução do NestJS não foi comprovada.
+- **Conclusão:** teste SQL de concorrência da quota está aprovado, mas virada mensal **NÃO homologada**. Possível bloqueio indevido no início do próximo mês caso contador não seja zerado; não induzir reset manual em produção.
+- Correção sugerida isolada: definir autoridade única do mês UTC no banco, inicialização/reinício atômico sob o mesmo lock do claim, conciliação de mensagens aceitas no ciclo anterior e teste de transição com ROLLBACK, preservando resultados ambíguos. Evitar executar dois resetters simultâneos sem alinhamento.
