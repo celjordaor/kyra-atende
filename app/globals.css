@@ -9,11 +9,11 @@
 
 :root {
   /* ── Marca ─────────────────────────────────────────── */
-  --brand:        #1E6EF5;
-  --brand-hover:  #2563EB;
-  --brand-active: #1D4ED8;
-  --brand-dim:    #DBEAFE;
-  --brand-faint:  #EFF6FF;
+  --brand:        #6941A5;
+  --brand-hover:  #59358F;
+  --brand-active: #4C2B7B;
+  --brand-dim:    #E9DEF8;
+  --brand-faint:  #F7F2FD;
 
   /* ── Semânticas ─────────────────────────────────────── */
   --green:        #10B981;
