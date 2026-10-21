@@ -545,3 +545,9 @@ A pesquisa dos arquivos disponibilizados no contexto do Project não retornou o 
 - Código das três rotas do Portal não contém rate limiting explícito; verificar camada global/provedor e manter teste de abuso/limites como pendente.
 - Consulta somente leitura de estado: `customer_identities=0`, `customer_memberships=0`, nenhuma reserva com cliente de tenant divergente. Teste com duas sessões OTP reais ainda bloqueado.
 - PR #10 foi merged; deploy `491d80f8` deve ser confirmado READY antes de marcar publicação.
+
+### AUD-01 — diagnóstico de abuso nas rotas públicas (21/10/2026)
+- Revisão de `app/api/public/bookings/route.ts`, `app/api/portal/claim/route.ts` e `app/api/portal/bookings/route.ts`: há validações de payload, sessão, membership e disponibilidade, mas não foi localizado rate limit explícito nos handlers. `middleware.ts` deixa APIs gerenciarem auth individualmente, sem controle global de frequência.
+- **P1 em aberto:** definir limitador central com contador atômico e expiração compartilhado (não memória do processo serverless) para POST público de reservas e tentativa de claim; limitar por contexto composto apropriado, sem confiar em `X-Forwarded-For` arbitrário, evitar vazamento de existência de contas, retornar HTTP 429/Retry-After, métricas sem PII e assegurar que fallbacks não abram caminho ilimitado.
+- OTP é controlado também por Supabase Auth e requer checagem da configuração efetiva no painel/fluxo real; não afirmar ausência ou presença de limite no provedor a partir do código cliente.
+- Pendente de aceitação: prova HTTP sob rajadas controladas com tenant QA e CI/regressão de agendamentos; não disparar rajadas no domínio de produção sem janela de testes e salvaguardas. Sem alterações de dados efetuadas nesta análise.
