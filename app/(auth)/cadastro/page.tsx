@@ -59,7 +59,10 @@ export default function CadastroPage() {
     // Sem sessão, a confirmação por e-mail deve ocorrer primeiro.
     // O callback encaminha novos usuários para /cadastro/concluir.
     if (!data.session) {
-      router.push('/cadastro/confirmar?email=' + encodeURIComponent(form.email))
+      // A resposta do Supabase pode ser intencionalmente indistinguível
+      // para e-mails já registrados. Não presumir que houve novo envio.
+      setLoading(false)
+      window.location.assign('/cadastro/confirmar?email=' + encodeURIComponent(form.email))
       return
     }
 
