@@ -635,3 +635,15 @@ Autorização expressa do responsável para testes em produção, pois o ambient
 - **Já aprovado:** idempotência de claim inbound e estado terminal WhatsApp em transação revertida; validação funcional da primeira mensagem após autorização pelo usuário. Não repetir estes casos sem regressão.
 - **Lacuna residual distinta:** `lib/whatsapp.ts` usa `assertWithinLimit` antes do envio seguido de `incrementUsage` após a chamada externa. Não foi evidenciada reserva atômica da quota mensal outbound em envios concorrentes. Restringir eventual correção a este caminho, após desenho seguro contra entregas ambíguas; não mexer no controle validado da IA.
 - **Sem prova E2E:** concorrência HTTP independente do chat, falhas reais Anthropic/Evolution, virada de período e quota financeira da IA processada via WhatsApp. Estes itens não invalidam os testes SQL anteriores. Nenhum teste duplicado nem alteração de aplicação foi realizado na rodada de deduplicação.
+
+
+## AUD-01 — Quota WhatsApp outbound atômica publicada (21/10/2026)
+
+- Após reconfirmar os aceites anteriores de IA e idempotência WhatsApp, foi isolada somente a lacuna de concorrência de quota outbound. **Não foram refeitos ou modificados controles de IA homologados.**
+- PR #17 `fix(aud01): reserva atômica de quota WhatsApp outbound` integrado à `main`, merge commit `dbadebc8007346e45bfedf6a406c6e429aa030b7`.
+- Migration aplicada no Supabase como `20261021225119_whatsapp_atomic_outbound_quota` e arquivo local sincronizado com o identificador remoto. RPCs `claim_whatsapp_outbound_quota` e `finalize_whatsapp_outbound_quota` restritas a `service_role`.
+- Claim adquire lock transacional por tenant, calcula consumo e tentativas pendentes no mês e cria intenção de envio somente se houver vaga. O estado `recorded` e o incremento do contador são liquidados na mesma transação/lock. Eventos `unknown`, `accepted`, `reconcile` e `sending` retêm a vaga até resolução; rejeições liberam a vaga; nunca fazer retry automático em entrega incerta.
+- Teste SQL em transação `BEGIN/ROLLBACK`: duas reservas aceitas no limite configurado, terceira negada, primeira liquidação aprovada, segunda liquidação negada, nova tentativa negada até uma reserva rejeitada liberar espaço; executou sem erro e foi revertido sem deixar registros QA. Não equivale a execução concorrente de duas conexões HTTP distintas.
+- GitHub: **AUD-01 Quality Gates e AUD-01 Static Security & Quality Checks aprovados** na revisão final da branch.
+- Vercel produção: deployment `dpl_9iGTgL6RVrYhih3hRQCph28kg6PR` do commit `dbadebc8` confirmado `READY`.
+- **Status:** correção técnica do controle de quota concorrente implantada e validada transacionalmente. Teste HTTP simultâneo, virada mensal do contador e conciliação de situações ambíguas reais permanecem pendentes de E2E; não reabrir aceites SQL anteriores.
