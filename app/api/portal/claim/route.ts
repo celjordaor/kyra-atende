@@ -1,8 +1,11 @@
+import { enforceApiRateLimit } from '@/lib/api-rate-limit'
 import {NextRequest,NextResponse} from 'next/server'
 import {createClient} from '@/lib/supabase/server'
 import {createAdminClient} from '@/lib/supabase/admin'
 import {createHash} from 'node:crypto'
 export async function POST(request:NextRequest){
+ const limited=await enforceApiRateLimit(request,'portalClaim','all')
+ if(limited)return limited
  const {data:{user},error}=await createClient().auth.getUser()
  if(error||!user||!user.email)return NextResponse.json({error:'Faça login com seu e-mail.'},{status:401})
  const body=await request.json().catch(()=>null)

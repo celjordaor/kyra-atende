@@ -1,3 +1,4 @@
+import { enforceApiRateLimit } from '@/lib/api-rate-limit'
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { dispatchPush } from '@/lib/push'
@@ -27,6 +28,8 @@ function formatDateTime(iso: string): string {
  * Verifica conflito de horário e dispara push notification ao tenant.
  */
 export async function POST(request: NextRequest) {
+  const limited = await enforceApiRateLimit(request, 'publicBooking', 'all')
+  if (limited) return limited
   try {
     const body = await request.json() as {
       convite?:          string
