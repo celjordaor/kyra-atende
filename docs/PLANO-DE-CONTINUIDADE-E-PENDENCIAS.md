@@ -478,3 +478,11 @@ A pesquisa dos arquivos disponibilizados no contexto do Project não retornou o 
 - Auditoria estática: o webhook valida token e consulta a cobrança no Asaas antes da conciliação, e a RPC `apply_verified_asaas_payment` verifica `payment_id` para impedir processamento duplo; o checkout registra tentativas e as reutiliza.
 - Tentativa de simulação SQL transacional de cobrança duplicada **bloqueada pela ferramenta de segurança antes da execução**. Não afirmar E2E aprovado; nenhum teste de pagamento foi executado.
 - Necessário ambiente isolado com dados sintéticos (Supabase de staging separado ou integração sandbox acessível) para testar: checkout → link → confirmação → duplicidade → assinatura → renovação, e conciliação após falha. Não simular operações financeiras na base de produção.
+
+### Asaas — homologação transacional autorizada na base atual (21/10/2026)
+
+- Usuário autorizou simulações financeiras no ambiente atual, ainda utilizado para testes. Executados testes SQL transacionais com `BEGIN`/`ROLLBACK`, sem disparo para API Asaas nem emissão de cobrança real.
+- **Aprovado — idempotência** de `apply_verified_asaas_payment`: primeira confirmação do mesmo ID aceita, segunda recusada sem reaplicar cobrança.
+- **Aprovado — renovações sucessivas**: dois IDs distintos foram aceitos e a segunda confirmação ampliou o vencimento em relação à primeira.
+- **Persistência preservada**: após ambos os testes, 1 pagamento processado, 0 pagamentos fictícios com prefixo de QA e 1 evento `asaas.payment.confirmed` existente. Nenhuma alteração de assinatura/financeiro permaneceu após `ROLLBACK`.
+- **Pendente — E2E do Asaas Sandbox**: criar link pelo provedor, simular pagamento no provedor, verificar autenticidade do webhook HTTP, conciliar estados e testar cancelamento/reversão. Ainda não executado. Evitar declarar integração ponta a ponta homologada.
