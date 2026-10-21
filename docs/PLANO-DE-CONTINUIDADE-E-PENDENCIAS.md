@@ -453,3 +453,12 @@ A pesquisa dos arquivos disponibilizados no contexto do Project não retornou o 
 - Frente **Agenda e Dashboard encerrada no escopo funcional testado pelo usuário**: Agenda em 03/12/2026, dias fechados e Dashboard.
 - Este aceite não substitui testes de concorrência, segurança ou E2E de todos os módulos.
 - Próxima frente priorizada: **Asaas / cobrança, assinaturas e limites por plano/consumo de IA**.
+
+### Auditoria Asaas, planos e IA — 20/10/2026 (levantamento, sem operações financeiras)
+
+- Revisados `app/api/billing/webhook/route.ts`, `app/api/billing/checkout/route.ts`, `lib/entitlements.ts`, `app/api/ai/chat/route.ts`, `lib/billing-prices.ts` e `apply_verified_asaas_payment`.
+- Controles existentes: webhook Asaas autenticado por token, verificação ativa de status/valor/referência pela API Asaas, processamento idempotente de `payment_id`, registro de tentativa de checkout e prevenção de checkout concorrente.
+- Snapshot agregado somente leitura no Supabase: 1 pagamento processado, 4 registros de assinaturas, 0 tentativas de checkout e 0 tentativas incertas no momento da leitura. Sem executar novas cobranças ou atualizar planos.
+- **P1 — limite do chat IA não aplicado no fluxo legado**: `app/api/ai/chat/route.ts` faz `chat(messages)` sem verificar `ai_chat_monthly_limit`; registra apenas `ai_chat_tokens_used` depois. A configuração monetária só ativa reserva caso `AI_MONETARY_ENFORCEMENT_ENABLED=true`. Corrigir com contabilização por interação e consumo atômico, respeitando o período de cobrança, e testar concorrência/estouro antes de produção.
+- **P1 — teste E2E de cobrança não encerrado**: validar em sandbox ciclo completo checkout → confirmação → assinatura → renovação/cancelamento/conciliação e cenários de webhook repetido, sem usar cobranças reais. Checar se o cancelamento no Asaas tem orquestração própria; webhook atual ignora eventos de suspensão/reversão intencionalmente.
+- Tabela `PLAN_ENTITLEMENTS` e `PLAN_PRICES` atualmente definidas em código. Revisar aderência aos preços e limites comerciais administráveis antes de publicá-los como dinâmica por tenant.
