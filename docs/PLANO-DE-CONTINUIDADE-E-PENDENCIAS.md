@@ -625,3 +625,13 @@ Autorização expressa do responsável para testes em produção, pois o ambient
 - Consulta de logs unificados por texto `whatsapp/webhook` não encontrou eventos no período consultado. Não inferir ausência de tráfego a partir dessa busca.
 - **Status da frente:** implementação e consistência dos registros inspecionados verificadas. E2E externo com Evolution, cenários de falha pós-aceite, duplicidade em concorrência, controle de número QA e reconciliação seguem pendentes; não reenviar automaticamente mensagens ambíguas.
 - **Achado de risco para próxima rodada:** `sendMessage` faz checagem de limite de WhatsApp antes do envio, sem reserva atômica visível no caminho, e `incrementUsage` ocorre após o efeito externo. Chamadas paralelas podem ultrapassar o limite sem prova de quota concorrente; testar sem atingir contatos reais.
+
+
+## AUD-01 — Deduplicação de evidências de cotas (21/10/2026)
+
+- Revisados histórico, implementação atual e RPCs remotas antes de reexecutar validações, conforme orientação do responsável.
+- **Já aprovado anteriormente:** PR #8/commit `5121d510`; teste SQL em rollback de `ai_chat_monthly_limit` com 200 reservas, 201ª negada, finalização duplicada negada e limite incompatível rejeitado. `reserve_ai_chat_quota` e `finish_ai_chat_quota` existem no banco e são chamadas por `app/api/ai/chat/route.ts`.
+- **Já aprovado em SQL:** reserva monetária com bloqueio por orçamento, liberação e proteção contra dupla liquidação; funções `reserve_ai_monetary` e `finish_ai_monetary` existem. A rota de chat contém a opção de enforcement monetário, mas o valor atual da variável de produção não foi reconfirmado nesta rodada.
+- **Já aprovado:** idempotência de claim inbound e estado terminal WhatsApp em transação revertida; validação funcional da primeira mensagem após autorização pelo usuário. Não repetir estes casos sem regressão.
+- **Lacuna residual distinta:** `lib/whatsapp.ts` usa `assertWithinLimit` antes do envio seguido de `incrementUsage` após a chamada externa. Não foi evidenciada reserva atômica da quota mensal outbound em envios concorrentes. Restringir eventual correção a este caminho, após desenho seguro contra entregas ambíguas; não mexer no controle validado da IA.
+- **Sem prova E2E:** concorrência HTTP independente do chat, falhas reais Anthropic/Evolution, virada de período e quota financeira da IA processada via WhatsApp. Estes itens não invalidam os testes SQL anteriores. Nenhum teste duplicado nem alteração de aplicação foi realizado na rodada de deduplicação.
