@@ -126,10 +126,21 @@ export function Modal({
           from { opacity: 0; }
           to   { opacity: 1; }
         }
+        @media (max-width: 640px) {
+          .kyra-modal-frame { padding: 8px !important; align-items: flex-end !important; }
+          .kyra-modal-surface { max-height: calc(100dvh - 16px) !important; border-radius: var(--r-lg) var(--r-lg) 0 0 !important; }
+          .kyra-modal-header { padding: 16px !important; }
+          .kyra-modal-body { padding: 16px !important; }
+          .kyra-modal-footer { padding: 12px 16px !important; flex-wrap: wrap; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .kyra-modal-surface, .kyra-modal-backdrop { animation: none !important; }
+        }
       `}</style>
 
       {/* Backdrop */}
       <div
+        className="kyra-modal-backdrop"
         aria-hidden="true"
         onClick={() => !persistent && onClose()}
         style={{
@@ -149,7 +160,7 @@ export function Modal({
         aria-labelledby={titleId}
         tabIndex={-1}
         ref={dialogRef}
-        className={className}
+        className={`kyra-modal-frame ${className}`}
         style={{
           position:        'fixed',
           inset:           0,
@@ -162,11 +173,13 @@ export function Modal({
         }}
       >
         <div
+          className="kyra-modal-surface"
           style={{
             width:           '100%',
             maxWidth:        maxW,
             maxHeight:       'calc(100dvh - 32px)',
             backgroundColor: 'var(--surface-2)',
+            border:          '1px solid var(--border)',
             borderRadius:    'var(--r-lg)',
             boxShadow:       '0 20px 60px rgba(0,0,0,0.2)',
             display:         'flex',
@@ -178,7 +191,7 @@ export function Modal({
           }}
         >
           {/* Header */}
-          <div style={{
+          <div className="kyra-modal-header" style={{
             display:        'flex',
             alignItems:     'center',
             justifyContent: 'space-between',
@@ -235,7 +248,7 @@ export function Modal({
           </div>
 
           {/* Body — scrollável */}
-          <div style={{
+          <div className="kyra-modal-body" style={{
             flex:       '1 1 auto',
             overflowY:  'auto',
             padding:    '24px',
@@ -245,7 +258,7 @@ export function Modal({
 
           {/* Footer */}
           {footer && (
-            <div style={{
+            <div className="kyra-modal-footer" style={{
               padding:       '16px 24px',
               borderTop:     '1px solid var(--border)',
               display:       'flex',
