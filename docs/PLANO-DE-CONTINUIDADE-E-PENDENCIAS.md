@@ -551,3 +551,11 @@ A pesquisa dos arquivos disponibilizados no contexto do Project não retornou o 
 - **P1 em aberto:** definir limitador central com contador atômico e expiração compartilhado (não memória do processo serverless) para POST público de reservas e tentativa de claim; limitar por contexto composto apropriado, sem confiar em `X-Forwarded-For` arbitrário, evitar vazamento de existência de contas, retornar HTTP 429/Retry-After, métricas sem PII e assegurar que fallbacks não abram caminho ilimitado.
 - OTP é controlado também por Supabase Auth e requer checagem da configuração efetiva no painel/fluxo real; não afirmar ausência ou presença de limite no provedor a partir do código cliente.
 - Pendente de aceitação: prova HTTP sob rajadas controladas com tenant QA e CI/regressão de agendamentos; não disparar rajadas no domínio de produção sem janela de testes e salvaguardas. Sem alterações de dados efetuadas nesta análise.
+
+### AUD-01 — controle atômico de frequência nas rotas públicas (21/10/2026)
+
+- PR #11 merged, commit `32848b7b`: `POST /api/public/bookings` e `POST /api/portal/claim` agora exigem `enforceApiRateLimit` antes de processar a requisição. Política inicial: 8 reservas em 600s e 12 resgates de convite em 600s por IP de borda verificado pela Vercel; sem IP confiável, bucket compartilhado conservador. Resposta 429 com `Retry-After` e `Cache-Control:no-store`; falha no Supabase retorna 503 (fail-closed).
+- RPC `claim_api_rate_limit` utiliza UPSERT atômico em tabela com RLS e privilégios restritos; migrations aplicada na produção QA como `20261021040706_api_rate_limit_windows`, nome de arquivo sincronizado com o remoto. CI Quality Gates e Static Security aprovado no PR.
+- Teste SQL transacional com ROLLBACK: limite 3/600s, chamadas 1-3 autorizadas, quarta bloqueada com retry_after positivo; zero buckets persistidos após teste. `anon` e `authenticated` não têm EXECUTE na RPC.
+- **Pendente antes de homologação E2E:** HTTP 429 real via rede e sessão de QA, verificação de IP da borda em ambiente publicado e configurações de rate limit do OTP Supabase. Planejar limpeza periódica de janelas expiradas para limitar crescimento da tabela; sem rotinas de remoção ainda.
+- Merge não equivale a deploy: confirmar Vercel READY para `32848b7b` antes do aceite de publicação.
