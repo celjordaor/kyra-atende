@@ -493,3 +493,11 @@ A pesquisa dos arquivos disponibilizados no contexto do Project não retornou o 
 - Deployment do código IA `5121d510` está `READY`; deploys apenas documentais posteriores foram cancelados.
 - O ambiente de ferramentas acessível nesta auditoria não oferece cliente HTTP autenticado para executar POST contra a API do Asaas nem sessão autenticada do Kyra Atende para chamar `/api/billing/checkout`. Assim, **nenhum checkout/link/pagamento de sandbox foi criado**; não alegar teste externo realizado.
 - Pré-requisitos para E2E externo: cliente autenticado de tenant sintético ou agente de teste com credenciais seguras, teste isolado e temporário de checkout no sandbox, confirmação em sandbox, webhook autêntico e conferência de idempotência. Manter redirecionamento estrito ao domínio `api-sandbox.asaas.com` e nunca inserir chaves em GitHub, logs ou documentação.
+
+### Asaas Sandbox — aceite de contratação ponta a ponta (21/10/2026)
+
+- Usuário confirmou que gerou link, assinou em sandbox e visualizou plano confirmado no Kyra Atende.
+- Consulta somente leitura ao Supabase confirmou: um checkout `paid`, tenant plano `cresce`/`active`, assinatura `active`/`monthly`, período vigente e valor da assinatura igual ao do checkout.
+- Snapshot agregado: 2 pagamentos processados, 2 eventos de confirmação financeira e 0 checkouts pendentes. Nenhum registro financeiro foi modificado nesta verificação.
+- **Aprovado:** cenário de contratação/ativação de plano Cresce mensal no Asaas Sandbox, com persistência coerente.
+- **Pendente de homologação E2E:** renovação real pelo provedor, cancelamento, estorno, duplicação HTTP de webhook e reconciliação de falhas externas. Testes SQL transacionais anteriores não substituem esses cenários.
