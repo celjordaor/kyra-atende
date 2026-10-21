@@ -462,3 +462,11 @@ A pesquisa dos arquivos disponibilizados no contexto do Project não retornou o 
 - **P1 — limite do chat IA não aplicado no fluxo legado**: `app/api/ai/chat/route.ts` faz `chat(messages)` sem verificar `ai_chat_monthly_limit`; registra apenas `ai_chat_tokens_used` depois. A configuração monetária só ativa reserva caso `AI_MONETARY_ENFORCEMENT_ENABLED=true`. Corrigir com contabilização por interação e consumo atômico, respeitando o período de cobrança, e testar concorrência/estouro antes de produção.
 - **P1 — teste E2E de cobrança não encerrado**: validar em sandbox ciclo completo checkout → confirmação → assinatura → renovação/cancelamento/conciliação e cenários de webhook repetido, sem usar cobranças reais. Checar se o cancelamento no Asaas tem orquestração própria; webhook atual ignora eventos de suspensão/reversão intencionalmente.
 - Tabela `PLAN_ENTITLEMENTS` e `PLAN_PRICES` atualmente definidas em código. Revisar aderência aos preços e limites comerciais administráveis antes de publicá-los como dinâmica por tenant.
+
+### Limites IA — homologação técnica e publicação (20/10/2026)
+
+- PR #8 integrado à main (commit `5121d510`): limite de interações do chat interno com reserva atômica por tenant antes da chamada à IA, segregação por mês UTC e proteção contra liquidação duplicada.
+- Supabase: migration `20261021024304_ai_chat_quota_claims` aplicada e alinhada ao repositório.
+- Teste SQL transacional com ROLLBACK em tenant Cresce: 200 reservas aceitas, 201ª negada, segunda liquidação negada e limite incompatível com plano rejeitado — **aprovado**, sem alterar contadores reais.
+- Checks de qualidade e segurança do PR **aprovados**. Ainda pendentes testes HTTP autenticados com cliente de homologação, falhas reais Anthropic, carga concorrente independente e validação do ciclo mensal em virada de período. A reserva fica conservada para falhas ambíguas, exigindo reconciliação posterior.
+- Os controles desta entrega aplicam-se ao **chat interno** `/api/ai/chat`; avaliar separadamente consumos do agente WhatsApp e demais recursos de IA.
