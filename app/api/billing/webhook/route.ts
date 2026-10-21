@@ -48,6 +48,52 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Evento inválido' }, { status: 400 })
   }
 
+  const reviewTypes = ['PAYMENT_REFUNDED', 'PAYMENT_CHARGEBACK_REQUESTED', 'PAYMENT_CHARGEBACK_DISPUTE', 'PAYMENT_DELETED']
+  if (reviewTypes.includes(body.event)) {
+    const id = body.payment?.id
+    if (typeof id !== 'string' || !/^pay_[a-zA-Z0-9_-]{1,100}$/.test(id) || body.id.length > 120 || body.id.length < 3) {
+      return NextResponse.json({ error: 'Evento financeiro inválido' }, { status: 400 })
+    }
+    const apiKey = process.env.ASAAS_API_KEY
+    if (!apiKey) return NextResponse.json({ error: 'Asaas não configurado' }, { status: 503 })
+    const base = process.env.ASAAS_SANDBOX !== 'false' ? 'https://api-sandbox.asaas.com/v3' : 'https://api.asaas.com/v3'
+    try {
+      const response = await fetch(`${base}/payments/${encodeURIComponent(id)}`, {
+        headers: { access_token: apiKey, accept: 'application/json', 'User-Agent': 'KyraAtende/1.0' },
+        cache: 'no-store',
+        signal: AbortSignal.timeout(8000),
+      })
+      if (!response.ok) return NextResponse.json({ error: 'Não foi possível conferir a cobrança' }, { status: 503 })
+      const verified = (await response.json()) as AsaasPayment
+      if (verified.id !== id || typeof verified.status !== 'string') {
+        return NextResponse.json({ error: 'Cobrança divergente' }, { status: 409 })
+      }
+      // Fail closed when the event disagrees with the provider's current lifecycle state.
+      const compatible: Record<string, string[]> = {
+        PAYMENT_REFUNDED: ['REFUNDED'],
+        PAYMENT_CHARGEBACK_REQUESTED: ['CHARGEBACK_REQUESTED', 'CHARGEBACK_DISPUTE', 'AWAITING_CHARGEBACK_REVERSAL'],
+        PAYMENT_CHARGEBACK_DISPUTE: ['CHARGEBACK_DISPUTE', 'AWAITING_CHARGEBACK_REVERSAL'],
+        PAYMENT_DELETED: ['DELETED'],
+      }
+      if (!compatible[body.event]?.includes(verified.status)) {
+        return NextResponse.json({ error: 'Estado da cobrança não confirmado no provedor' }, { status: 409 })
+      }
+      const admin = createAdminClient()
+      const { data: payment, error: lookupError } = await admin.from('asaas_processed_payments')
+        .select('tenant_id').eq('payment_id', id).maybeSingle()
+      if (lookupError) return NextResponse.json({ error: 'Falha ao identificar pagamento' }, { status: 503 })
+      if (!payment) return NextResponse.json({ received: true, ignored: true })
+      const { error: storeError } = await admin.from('asaas_lifecycle_events').upsert({
+        event_id: body.id, payment_id: id, tenant_id: payment.tenant_id,
+        event_type: body.event, provider_status: verified.status,
+      }, { onConflict: 'event_id', ignoreDuplicates: true })
+      if (storeError) return NextResponse.json({ error: 'Falha ao registrar revisão' }, { status: 503 })
+      return NextResponse.json({ received: true, reviewRequired: true })
+    } catch {
+      return NextResponse.json({ error: 'Conciliação temporariamente indisponível' }, { status: 503 })
+    }
+  }
+
   // Eventos que não representam pagamento liquidado não podem conceder
   // nem revogar direitos. Suspensões exigem reconciliação separada por fatura.
   if (!['PAYMENT_RECEIVED', 'PAYMENT_CONFIRMED'].includes(body.event)) {
