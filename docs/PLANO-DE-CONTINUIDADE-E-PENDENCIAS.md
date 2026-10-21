@@ -603,3 +603,15 @@ A pesquisa dos arquivos disponibilizados no contexto do Project não retornou o 
 - Vercel runtime_errors 24h filtrado pelas rotas checkout/webhook: sem grupos de erros; ausência de erros não demonstra sucesso de integração.
 - **Achado para avaliação operacional:** `api/src/billing/scheduler.service.ts` contém cron que chama `billing.suspendTenant` depois de sete dias de `subscriptions.status=overdue`. NÃO está demonstrado que o serviço NestJS esteja implantado/ativo; verificar runtime antes de julgar o efeito. Não acionar nem desativar por suposição.
 - **Aceite:** checkout inicial Sandbox continua homologado conforme evidência anterior; renovação automática, cancelamento, estorno e chargeback com evento verdadeiro continuam **pendentes de E2E**. Sem mudanças financeiras ou chamadas ao provedor nesta rodada.
+
+
+## AUD-01 — Verificações autorizadas em produção Sandbox (21/10/2026)
+
+Autorização expressa do responsável para testes em produção, pois o ambiente e clientes são de sandbox/QA. Rodada executada sem disparos externos nem alterações destrutivas.
+
+- Vercel projeto `kyra-atende` identificado como framework Next.js; **não prova** se a pasta `api/` (NestJS) está implantada em outro serviço. No banco `subscriptions`: 3 `active`, 1 `trial`, 0 `overdue`; consulta a logs de Vercel por `suspendTenant` nos últimos sete dias sem entradas. A rotina NestJS que suspende `overdue` após carência existe no código, mas **status runtime não comprovado**, sem cenário real para exercício no momento.
+- Integridade de dados: 0 bookings com `client_id` referindo a cliente de outro tenant; esta consulta não substitui teste HTTP/concorrência.
+- WhatsApp outbox: 3 registros totais, **0 nos estados** `unknown`, `reconcile`, `sending` ou `accepted` na inspeção. Não constitui prova de reprocessamento em falhas.
+- IA: `ai_chat_quota_claims` com 0 registros. Não demonstra comportamento sob concorrência.
+- Tentativa HTTP direta ao Portal via ambiente executor falhou por resolução DNS (`Could not resolve host: www.kyraatende.com.br`); não atribuir resposta 401 nem sucesso E2E.
+- Pendências dependentes de integração ativa e testes HTTP permanecem abertas. Sandbox permite exercitá-las, mas a conexão usada nesta rodada não forneceu executor HTTP acessível; não inventar evidências.
