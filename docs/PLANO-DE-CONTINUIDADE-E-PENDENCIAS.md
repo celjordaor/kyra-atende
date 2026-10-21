@@ -439,3 +439,10 @@ A pesquisa dos arquivos disponibilizados no contexto do Project não retornou o 
 - Encerrada **a rodada de verificações solicitada**: autorização de contatos, primeira mensagem autorizada (aceite informado pelo usuário), idempotência de claim e transição terminal (testes SQL com ROLLBACK).
 - **Não equivale a homologação E2E completa da Evolution**: webhook duplicado real, falha efetiva de IA/provedor, entrega ambígua, recuperação de processamento e isolamento com múltiplos tenants permanecem sem prova de aceite. Manter esses riscos registrados para rodada dedicada, sem reenvio automático em situação ambígua.
 - Próxima frente ativa: **Agenda e Dashboard — homologação funcional dos ajustes publicados**, incluindo agendamentos em datas futuras, dias com bloqueios e consistência de indicadores. Nenhuma mudança no motor de disponibilidade sem novo aceite.
+
+### Aceite funcional da Agenda — 20/10/2026
+
+- **Validado pelo usuário:** os agendamentos de **03/12/2026** aparecem corretamente na Agenda da TDSoft.
+- **Validado pelo usuário:** os dias fechados são sinalizados corretamente na interface.
+- Esses dois cenários da Agenda estão homologados funcionalmente. Permanecem fora deste aceite os indicadores financeiros e demais dados do Dashboard, ainda a conferir.
+- Próxima atividade: homologação dos KPIs e das seções do Dashboard com a empresa de teste.
