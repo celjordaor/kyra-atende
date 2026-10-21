@@ -28,3 +28,11 @@ Arquivos PNG transparentes `kyra-atende-icon-{16,32,48,72,180,192,512}.png`, var
 
 ## Direção da marca
 Lilás/violeta, azul-acinzentado e ciano em ilustrações, sobre fundos claros ou roxo profundo; manter o aspecto tridimensional da identidade fornecida. Tokens visuais já propostos na E1.2. Ajustes finais de contraste e variações seguem o aceite visual.
+
+
+## E1 — Primeira aplicação da marca (21/10/2026)
+- PR #21 integrado à `main`, merge `6a13e5b2a36364e592d8cfbc098e066817dca684`, checks Quality Gates e Static Security concluídos com sucesso.
+- Ícone **derivado do arquivo oficial fornecido** incluído em `public/brand/kyra-atende-icon.svg` (SVG auto-contido com imagem WebP comprimida para exibição na interface; **não substitui os originais** preservados na Biblioteca).
+- `components/templates/AuthLayout.tsx` substitui a letra `K` genérica pelo ícone oficial nas versões desktop e mobile. `app/layout.tsx` anuncia o ícone da marca nos metadados e alinha a themeColor violeta.
+- **Ainda não executado:** importação binária dos PNGs PWA 192/512 e favicon.ico, da logo vertical completa e do avatar da IA. As imagens de landing seguem reservadas para a E5. Não alegar que os ícones instalados do PWA foram substituídos nesta PR.
+- Deploy de produção `dpl_4UowgRyAyP8JLFxrjYEjGrb3hu6s` visto em `BUILDING` após merge; conferir READY e visualizar login em desktop/mobile para homologação.
