@@ -420,3 +420,9 @@ A pesquisa dos arquivos disponibilizados no contexto do Project não retornou o 
 - A fila atual registra só telefone/metadados antes da autorização; por isso aprovar IA não processa o texto original. Solução condicionada a armazenar **somente o ID técnico da primeira mensagem e o JID** e recuperar o texto pela Evolution apenas após a decisão do proprietário.
 - Critérios: nunca persistir conteúdo não autorizado no Supabase; identificação exata da mensagem; nenhuma resposta duplicada em decisões concorrentes; preservar integração com outras empresas; falhar fechado e sinalizar pendência se a Evolution não encontrar o evento.
 - Não realizar automaticamente reenvio quando o estado da entrega for incerto.
+
+### Aceite funcional informado pelo usuário — 20/10/2026
+
+- **Validado pelo usuário:** cenário da primeira mensagem respondida pela IA após autorização de contato no WhatsApp/Evolution, sem necessidade de reenviar a solicitação.
+- O comportamento de colocar contatos desconhecidos na fila de autorização também foi confirmado pelo usuário; um número adicional visto na fila era um contato pessoal distinto, não um problema de identificação.
+- Este aceite refere-se ao **fluxo funcional observado**, não encerra a homologação técnica E2E completa da Evolution. Permanecem abertos os testes de eventos duplicados, falha de IA, entrega ambígua, reconciliação, isolamento por tenant e recuperação de processamento.
