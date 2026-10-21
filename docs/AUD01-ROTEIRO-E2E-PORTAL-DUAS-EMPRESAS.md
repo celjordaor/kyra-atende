@@ -32,3 +32,10 @@ Status: aguardando contas QA com OTP verificado (21/10/2026).
 
 ## Gate
 Sem identidades verificadas e testes HTTP reais, não marcar E2E como aprovado. Manter itens P2 de experiência/Design System no backlog.
+
+## Empresas homologadas pelo responsável (21/10/2026)
+
+- **A:** `babi-moda-plus-s35o` — 0 clientes, 0 serviços/profissionais ativos, 0 reservas, 0 convites, 0 memberships.
+- **B:** `tdsoft-btqu` — 4 clientes, 3 serviços/profissionais ativos, 39 reservas, 4 convites, 0 memberships. Dos convites, 1 consumido e válido, 3 não consumidos e válidos. Um convite consumido válido corresponde a cliente com e-mail cadastrado.
+- O responsável autorizou usar as duas empresas para homologação, não autorizou envio para contatos reais. Próximo passo: obter duas caixas QA acessíveis e executar autenticação OTP pelo frontend, gerar configuração mínima da Babi pelos fluxos oficiais, convite/booking teste com e-mails QA, sem persistir identidades artificiais por SQL.
+- Até autenticação real e vinculação comprovada, o teste de isolamento entre duas sessões continua **bloqueado por pré-requisito**, não reprovado nem aprovado.
