@@ -567,3 +567,10 @@ A pesquisa dos arquivos disponibilizados no contexto do Project não retornou o 
 - PR #12 merged, commit `0bb3e024`; Quality Gates e Static Security Check do commit final aprovados. Migration `20261021131221_api_rate_limit_retention` aplicada ao Supabase e timestamp alinhado ao Git; teste transacional com ROLLBACK confirmou limite 2 com terceira tentativa negada, sem contadores persistidos.
 - Deploy produção `0bb3e024` estava `BUILDING` na última consulta; preview do commit anterior apresentou ERROR, e deve ser investigado se afetar o deploy final. Não marcar publicação dessa correção como pronta até READY.
 - Acessos HTTP diretos permaneceram bloqueados nos meios de teste disponíveis; teste real HTTP 429/Retry-After, confiança do IP na Vercel e configuração efetiva do OTP Supabase continuam pendentes.
+
+### AUD-01 — confirmação de deploy de retenção e regressão de quota (21/10/2026)
+- Vercel confirmou `READY` do commit `0bb3e024`, incluindo retenção oportunista dos contadores; commit subsequente de documentação cancelado não compromete a publicação do aplicativo.
+- Supabase: 0 contadores de limite, 0 vencidos; execução de função RPC bloqueada a `anon`/`authenticated` (apenas backend service role).
+- Regressão SQL transacional com rollback: numa janela de 60 segundos, 3 pedidos permitidos e o 4º negado, com retry_after > 0. Sem contadores persistidos.
+- **Pendente:** teste HTTP 429/Retry-After na borda, prova de confiança dos cabeçalhos de IP encaminhados, verificar limites reais de envio e verificação OTP no Supabase Auth e inspeção da retenção após expiração. A limpeza oportunista não garante execução quando não há tráfego; monitorar aumento e considerar agendamento controlado.
+- Não confundir sucesso SQL e `READY` com aceite HTTP E2E.
