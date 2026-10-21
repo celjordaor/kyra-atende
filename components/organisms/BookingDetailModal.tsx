@@ -14,13 +14,13 @@ export function BookingDetailModal({booking,onClose}:{booking:BookingDetail|null
  const financial=booking?.status==='completed'
  return <Modal open={!!booking} onClose={onClose} size="lg" title={financial?'Ficha de finalização':'Detalhes do agendamento'}
   footer={<div style={{display:'flex',justifyContent:'flex-end'}}><Button variant="secondary" onClick={onClose}>Fechar</Button></div>}>
-  {booking&&<div style={{display:'grid',gridTemplateColumns:'repeat(2,minmax(0,1fr))',gap:'16px',fontSize:'14px',color:'var(--ink-body)'}}>
+  {booking&&<div className="kyra-booking-detail-grid" style={{display:'grid',gridTemplateColumns:'repeat(2,minmax(0,1fr))',gap:'16px',fontSize:'14px',color:'var(--ink-body)'}}>
     {([
       ['Cliente',booking.client_name],['Serviço',booking.service],['Profissional',booking.professional??'Não informado'],
       ['Início',date(booking.start_at)],['Término',date(booking.end_at)],
       ['Status',({completed:'Concluído',confirmed:'Confirmado',pending:'Pendente',cancelled:'Cancelado'} as Record<string,string>)[booking.status]??booking.status],
     ] as [string,string][]).map(([label,value])=><div key={label}><div style={{color:'var(--muted)',fontSize:'12px',marginBottom:4}}>{label}</div><strong>{value}</strong></div>)}
-    {financial&&<div style={{gridColumn:'1 / -1',borderTop:'1px solid var(--border)',paddingTop:14,display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
+    {financial&&<div className="kyra-booking-financial-grid" style={{gridColumn:'1 / -1',borderTop:'1px solid var(--border)',paddingTop:14,display:'grid',gridTemplateColumns:'repeat(2,minmax(0,1fr))',gap:14}}>
       {([
         ['Valor registrado',booking.price_charged==null?'Não informado':money(booking.price_charged)],
         ['Desconto',money(booking.discount??0)],
@@ -32,5 +32,6 @@ export function BookingDetailModal({booking,onClose}:{booking:BookingDetail|null
     </div>}
     {booking.notes&&<div style={{gridColumn:'1/-1'}}><div style={{fontSize:12,color:'var(--muted)'}}>Observações</div><p style={{whiteSpace:'pre-wrap'}}>{booking.notes}</p></div>}
   </div>}
+  <style>{`@media (max-width: 560px) { .kyra-booking-detail-grid, .kyra-booking-financial-grid { grid-template-columns: minmax(0,1fr) !important; } }`}</style>
  </Modal>
 }
