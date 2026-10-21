@@ -27,6 +27,33 @@ export default function CadastroPage() {
     setLoading(true)
     setError(null)
 
+    // Validação server-side exclusiva do cadastro de empresas.
+    // Uma tentativa repetida apresenta acesso direto ao login.
+    try {
+      const result = await fetch('/api/auth/signup-email-check', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({email:form.email.trim()}),
+      })
+      if (!result.ok) {
+        setError(result.status === 429
+          ? 'Muitas tentativas. Aguarde alguns minutos antes de tentar novamente.'
+          : 'Não foi possível validar o e-mail. Tente novamente.')
+        setLoading(false)
+        return
+      }
+      const check = await result.json()
+      if (check.exists === true) {
+        setError('Usuário já cadastrado. Faça login para continuar.')
+        setLoading(false)
+        return
+      }
+      if (check.exists !== false) throw new Error('Invalid lookup response')
+    } catch {
+      setError('Não foi possível validar o e-mail. Tente novamente.')
+      setLoading(false)
+      return
+    }
+
     const supabase = createClient()
 
     // 1. Cria o usuário no Supabase Auth
@@ -149,7 +176,12 @@ export default function CadastroPage() {
         />
 
         {error && (
-          <p style={{ fontSize: '14px', color: 'var(--red)', margin: 0 }}>{error}</p>
+          <div role="alert" style={{ fontSize: '14px', color: 'var(--red)', margin: 0 }}>
+            <p>{error}</p>
+            {error === 'Usuário já cadastrado. Faça login para continuar.' && (
+              <a href="/login" style={{ color: 'var(--brand)', fontWeight: 600 }}>Ir para o login →</a>
+            )}
+          </div>
         )}
 
         <Button variant="primary" type="submit" loading={loading} fullWidth>

@@ -10,8 +10,8 @@ export default function ConfirmarEmailClient() {
 
   return (
     <AuthLayout
-      title="Confira seu e-mail"
-      subtitle="Se o cadastro puder ser concluído, você receberá uma mensagem com as instruções de confirmação."
+      title="Verifique sua solicitação"
+      subtitle="Esta solicitação não confirma a criação de uma nova conta."
     >
       <div style={{ textAlign: 'center', padding: '8px 0 24px' }}>
         {/* Ícone envelope */}
@@ -31,13 +31,13 @@ export default function ConfirmarEmailClient() {
         </div>
 
         <p style={{ fontSize: '15px', color: 'var(--ink-soft)', lineHeight: '1.7', margin: '0 0 8px' }}>
-          Solicitação registrada para
+          E-mail informado
         </p>
         <p style={{ fontSize: '16px', fontWeight: 600, color: 'var(--ink)', margin: '0 0 24px' }}>
           {email}
         </p>
         <p style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: '1.6', margin: '0 0 32px' }}>
-          Confira a caixa de entrada e o spam. Caso já tenha uma conta com esse e-mail, entre normalmente ou utilize a recuperação de senha.
+          Se você ainda não possui conta, confira sua caixa de entrada e o spam. Se já utiliza este e-mail no Kyra Atende, faça login ou recupere sua senha.
         </p>
 
         <a
@@ -46,6 +46,7 @@ export default function ConfirmarEmailClient() {
         >
           Ir para o login
         </a>
+        <p style={{ margin: "16px 0 0" }}><a href="/recuperar-senha" style={{ color: "var(--brand)", fontSize: "14px", textDecoration: "underline" }}>Recuperar minha senha</a></p>
       </div>
     </AuthLayout>
   )
