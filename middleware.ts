@@ -19,6 +19,7 @@ const PUBLIC_PATHS = new Set([
   '/auth/callback',
   '/recuperar-senha',
   '/nova-senha',
+  '/portal',
 ])
 
 // Prefixos que não precisam de sessão
