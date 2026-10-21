@@ -6,7 +6,7 @@
  */
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createHash } from 'node:crypto'
-import { canUse, assertWithinLimit, incrementUsage, getLimit, getUsage } from '@/lib/entitlements'
+import { canUse, getLimit, getUsage } from '@/lib/entitlements'
 import { dispatchPush } from '@/lib/push'
 import { processWhatsappMessage } from '@/lib/ai'
 
@@ -203,14 +203,13 @@ export interface OutboundMessage {
 
 /** Envia mensagem com verificação de entitlement. */
 export async function sendMessage(msg: OutboundMessage): Promise<void> {
-  const limitErr = await assertWithinLimit(msg.tenantId, 'whatsapp_monthly_limit', 'whatsapp_messages_sent')
-  if (limitErr) throw new Error('Limite de WhatsApp atingido')
-
-  await sendViaEvolution(msg)
+  const limit = await getLimit(msg.tenantId, 'whatsapp_monthly_limit')
+  if (typeof limit !== 'number') throw new Error('Limite de WhatsApp inválido')
+  await sendViaEvolution(msg, limit)
 }
 
 /** Envia diretamente via Evolution API (sem verificar entitlements). */
-async function sendViaEvolution(msg: OutboundMessage): Promise<void> {
+async function sendViaEvolution(msg: OutboundMessage, monthlyLimit: number): Promise<void> {
   const url = evolutionUrl()
   const key = evolutionKey()
   if (!url || !key) {
@@ -219,23 +218,19 @@ async function sendViaEvolution(msg: OutboundMessage): Promise<void> {
 
   const supabase = createAdminClient()
   // Persistir a intenção ANTES de contactar o provedor. Se falhar, não enviar.
-  const { data: tracking, error: trackingError } = await supabase
-    .from('whatsapp_outbox')
-    .insert({
-      tenant_id: msg.tenantId,
-      to_number: msg.to.replace(/\D/g, ''),
-      body_sha256: createHash('sha256').update(msg.body).digest('hex'),
-      status: 'sending',
+  const { data: trackingId, error: trackingError } = await supabase.rpc('claim_whatsapp_outbound_quota', {
+    p_tenant: msg.tenantId,
+    p_to: msg.to.replace(/\D/g, ''),
+    p_body_sha256: createHash('sha256').update(msg.body).digest('hex'),
+    p_limit: monthlyLimit,
+  })
+  if (trackingError) {
+    console.error('[whatsapp] reserva de envio indisponível', {
+      tenantId: msg.tenantId, code: trackingError.code,
     })
-    .select('id')
-    .single()
-  if (trackingError || !tracking) {
-    console.error('[whatsapp] não foi possível registrar intenção de envio', {
-      tenantId: msg.tenantId,
-      code: trackingError?.code,
-    })
-    throw new Error('Registro de envio indisponível. Mensagem não enviada.')
+    throw new Error('Reserva de quota indisponível. Mensagem não enviada.')
   }
+  if (!trackingId) throw new Error('Limite mensal de WhatsApp atingido')
 
   // Um timeout pode acontecer depois de a Evolution entregar a mensagem.
   // Portanto, resultado ambíguo fica "unknown", sem retry automático.
@@ -249,20 +244,20 @@ async function sendViaEvolution(msg: OutboundMessage): Promise<void> {
   } catch {
     await supabase.from('whatsapp_outbox')
       .update({ status: 'unknown', updated_at: new Date().toISOString() })
-      .eq('id', tracking.id)
+      .eq('id', trackingId)
     throw new Error('Resultado do envio incerto. Verificar na Evolution antes de reenviar.')
   }
 
   if (!res.ok) {
     await supabase.from('whatsapp_outbox')
       .update({ status: 'rejected', provider_http_status: res.status, updated_at: new Date().toISOString() })
-      .eq('id', tracking.id)
+      .eq('id', trackingId)
     throw new Error(`Evolution API rejeitou o envio (HTTP ${res.status})`)
   }
 
   const { error: acceptedError } = await supabase.from('whatsapp_outbox')
     .update({ status: 'accepted', provider_http_status: res.status, updated_at: new Date().toISOString() })
-    .eq('id', tracking.id)
+    .eq('id', trackingId)
   if (acceptedError) {
     console.error('[whatsapp] falha no status de aceite', { tenantId: msg.tenantId, code: acceptedError.code })
   }
@@ -278,26 +273,25 @@ async function sendViaEvolution(msg: OutboundMessage): Promise<void> {
   if (historyError || !history) {
     await supabase.from('whatsapp_outbox')
       .update({ status: 'reconcile', updated_at: new Date().toISOString() })
-      .eq('id', tracking.id)
+      .eq('id', trackingId)
     console.error('[whatsapp] envio aceito, histórico falhou', {
       tenantId: msg.tenantId,
       code: historyError?.code,
-      trackingId: tracking.id,
+      trackingId,
     })
     throw new Error('Envio aceito pelo provedor, mas histórico falhou; conciliação manual necessária.')
   }
 
-  const { error: recordedError } = await supabase.from('whatsapp_outbox')
-    .update({ status: 'recorded', history_message_id: history.id, updated_at: new Date().toISOString() })
-    .eq('id', tracking.id)
-  if (recordedError) {
-    console.error('[whatsapp] histórico gravado, status de controle pendente', {
-      tenantId: msg.tenantId, trackingId: tracking.id, code: recordedError.code,
+  // Estado final + contador alterados atomicamente, sob o mesmo lock do claim.
+  const { data: settled, error: recordedError } = await supabase.rpc('finalize_whatsapp_outbound_quota', {
+    p_tenant: msg.tenantId, p_outbox: trackingId, p_history: history.id,
+  })
+  if (recordedError || settled !== true) {
+    console.error('[whatsapp] histórico gravado, liquidação de quota pendente', {
+      tenantId: msg.tenantId, trackingId, code: recordedError?.code,
     })
+    throw new Error('Mensagem aceita; conciliação de quota pendente. Não reenviar automaticamente.')
   }
-
-  // Incrementa contador
-  await incrementUsage(msg.tenantId, 'whatsapp_messages_sent')
 
   // Alerta a 80% do limite
   const limit = (await getLimit(msg.tenantId, 'whatsapp_monthly_limit')) as number
