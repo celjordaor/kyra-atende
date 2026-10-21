@@ -655,3 +655,14 @@ Autorização expressa do responsável para testes em produção, pois o ambient
 - O único cron de reset identificado previamente está em `api/src/billing/scheduler.service.ts` (NestJS); deployment principal Vercel é Next.js e execução do NestJS não foi comprovada.
 - **Conclusão:** teste SQL de concorrência da quota está aprovado, mas virada mensal **NÃO homologada**. Possível bloqueio indevido no início do próximo mês caso contador não seja zerado; não induzir reset manual em produção.
 - Correção sugerida isolada: definir autoridade única do mês UTC no banco, inicialização/reinício atômico sob o mesmo lock do claim, conciliação de mensagens aceitas no ciclo anterior e teste de transição com ROLLBACK, preservando resultados ambíguos. Evitar executar dois resetters simultâneos sem alinhamento.
+
+
+## AUD-01 — Virada mensal de quota WhatsApp transacional (21/10/2026)
+
+- PR #18 integrado, merge `0788dea96ce8eb6d583a5e43f91aa4839839277a`. Migração remota aplicada como `20261021225918_whatsapp_monthly_quota_cycle` e arquivo local sincronizado.
+- RPCs existentes foram alteradas de forma isolada, mantendo o lock por tenant. `claim_whatsapp_outbound_quota`: cria/ancora `reset_at` ao começo do mês UTC; contador legado com `reset_at IS NULL` preserva consumo atual; quando `reset_at` é anterior ao ciclo, zera valor dentro do lock antes de contar reservas pendentes apenas do ciclo atual.
+- `finalize_whatsapp_outbound_quota`: liquida registro `recorded` com idempotência; só soma quota mensal se a tentativa foi iniciada no mês corrente. Mensagem de mês anterior não consome saldo novo. Status ambíguos continuam pendentes de conciliação, sem retry automático.
+- Teste SQL `BEGIN/ROLLBACK`: saldo legado preservado e ancorado, excedente negado, ciclo anterior simulado e zerado, nova reserva aceita, liquidação única + contador = 1, duplicidade negada; passou sem erro e deixou base original intacta.
+- Dois workflows GitHub `AUD-01 Quality Gates` e `AUD-01 Static Security & Quality Checks` no head PR #18 concluíram `success`.
+- Deploy de produção `dpl_3EVpXGQHvHGo2yzFKCZpj2mdP9Yy` foi observado **BUILDING** logo após o merge; confirmar `READY` antes do aceite da aplicação publicada.
+- Pendente teste operacional na virada calendário real (1º dia UTC) e HTTP de envios externos/concorrência. A correção remove a dependência do cron NestJS para reset do fluxo atual Next.js; não prova ausência de scheduler NestJS paralelo.
