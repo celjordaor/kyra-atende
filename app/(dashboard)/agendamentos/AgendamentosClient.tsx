@@ -843,6 +843,7 @@ export default function AgendamentosClient({ initialBookings, professionals, ser
   const [clientModal, setClientModal]         = useState(false)
   const [completeRow, setCompleteRow]         = useState<BookingRow | null>(null)
   const [detailRow, setDetailRow] = useState<BookingRow | null>(null)
+  const [operationNotice, setOperationNotice] = useState<string | null>(null)
   const [form, setForm]                       = useState<BookingForm>(() => blankBookingForm(services.filter(s => (s as any).is_active !== false)))
   const [saving, setSaving]                   = useState(false)
   const [deleting, setDeleting]               = useState(false)
@@ -930,6 +931,7 @@ export default function AgendamentosClient({ initialBookings, professionals, ser
           discount:       raw.discount ?? 0,
         }
         setBookings(bs => bs.map(b => b.id === editRow.id ? updated : b))
+        setOperationNotice('Agendamento atualizado com sucesso.')
       } else {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const raw = await api.post<any>('/bookings', payload)
@@ -954,6 +956,7 @@ export default function AgendamentosClient({ initialBookings, professionals, ser
           client_status:   raw.client_status ?? null,
         }
         setBookings(bs => [created, ...bs])
+        setOperationNotice('Agendamento criado com sucesso.')
       }
       setModalOpen(false)
       router.refresh()
@@ -969,6 +972,7 @@ export default function AgendamentosClient({ initialBookings, professionals, ser
     try {
       await api.delete(`/bookings/${editRow.id}`)
       setBookings(bs => bs.map(b => b.id === editRow.id ? { ...b, status: 'cancelled' } : b))
+      setOperationNotice('Horário desmarcado com sucesso.')
       setModalOpen(false)
       router.refresh()
     } catch (e) {
@@ -986,6 +990,7 @@ export default function AgendamentosClient({ initialBookings, professionals, ser
         : `/bookings/${row.id}/cancel`
       await api.post(endpoint, {})
       setBookings(bs => bs.map(b => b.id === row.id ? { ...b, status: newStatus } : b))
+      setOperationNotice(newStatus === 'confirmed' ? 'Agendamento confirmado com sucesso.' : 'Agendamento cancelado com sucesso.')
       router.refresh()
     } catch (error) {
       setFormErrors({ api: error instanceof ApiError ? error.message : 'Não foi possível alterar o status.' })
@@ -1107,6 +1112,13 @@ export default function AgendamentosClient({ initialBookings, professionals, ser
   return (
     <>
 
+      {operationNotice && (
+        <div role="status" aria-live="polite" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 16, background: 'var(--brand-faint)', color: 'var(--brand-active)', border: '1px solid var(--brand-dim)', padding: '12px 16px', borderRadius: 'var(--r-md)' }}>
+          <span>{operationNotice}</span>
+          <button type="button" aria-label="Dispensar confirmação" onClick={() => setOperationNotice(null)} style={{ background: 'transparent', border: 'none', color: 'inherit', cursor: 'pointer', fontSize: 18 }}>×</button>
+        </div>
+      )}
+
       {/* ── Barra de filtros ─────────────────────────────────────────────── */}
       <div style={{ marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
 
@@ -1221,7 +1233,7 @@ export default function AgendamentosClient({ initialBookings, professionals, ser
         booking={completeRow}
         services={services}
         onClose={() => setCompleteRow(null)}
-        onDone={updated => { setBookings(bs => bs.map(b => b.id === updated.id ? updated : b)); router.refresh() }}
+        onDone={updated => { setBookings(bs => bs.map(b => b.id === updated.id ? updated : b)); setOperationNotice('Serviço concluído com sucesso.'); router.refresh() }}
       />
 
       {/* Client create modal (nested) */}
@@ -1231,6 +1243,7 @@ export default function AgendamentosClient({ initialBookings, professionals, ser
         onCreated={(id, name, phone) => {
           setForm(f => ({ ...f, client_id: id, client_name: name, client_phone: phone }))
           setClientModal(false)
+          setOperationNotice('Cliente cadastrado com sucesso.')
         }}
       />
     </>
