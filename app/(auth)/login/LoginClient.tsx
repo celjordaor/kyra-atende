@@ -23,6 +23,11 @@ export default function LoginClient() {
   const [password, setPassword] = useState('')
   const [loading,  setLoading]  = useState(false)
   const [error,    setError]    = useState<string | null>(null)
+  const callbackError = searchParams.get('error') === 'callback_indisponivel'
+    ? 'Não foi possível validar o link agora. Verifique sua conexão e tente abrir o link novamente.'
+    : searchParams.get('error') === 'link_invalido'
+      ? 'Link inválido ou expirado. Solicite um novo link se necessário.'
+      : null
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
@@ -86,9 +91,9 @@ export default function LoginClient() {
           disabled={loading}
         />
 
-        {error && (
-          <p style={{ fontSize: '14px', color: 'var(--red)', margin: 0 }}>
-            {error}
+        {(error || callbackError) && (
+          <p role="alert" style={{ fontSize: '14px', color: 'var(--red)', margin: 0 }}>
+            {error || callbackError}
           </p>
         )}
 
