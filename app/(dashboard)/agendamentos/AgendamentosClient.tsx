@@ -573,12 +573,12 @@ function DateRangePicker({ from, to, onChange }: {
     for (let d=1; d<=total; d++) cells.push(d)
     return (
       <div>
-        <div className="kyra-agendamentos-modal-fields" style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', marginBottom: '4px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', marginBottom: '4px' }}>
           {['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'].map(h => (
             <div key={h} style={{ textAlign: 'center', fontSize: '11px', color: 'var(--muted)', fontWeight: 500, padding: '3px 0' }}>{h}</div>
           ))}
         </div>
-        <div className="kyra-agendamentos-modal-fields" style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '1px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '1px' }}>
           {cells.map((day, i) => {
             if (!day) return <div key={`n${i}`} />
             const dt = new Date(y, m, day); dt.setHours(0,0,0,0)
