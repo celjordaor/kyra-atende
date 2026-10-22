@@ -12,21 +12,24 @@ export function SwRegister() {
     if (window.location.origin !== 'https://www.kyraatende.com.br') return;
     if (!('serviceWorker' in navigator)) return;
 
-    // Registra na navegação inicial (não bloqueia o carregamento da página)
-    window.addEventListener('load', () => {
+    // A montagem pode ocorrer após o evento load (hidratação/rotas client-side).
+    const register = () => {
       navigator.serviceWorker
         .register('/sw.js', { scope: '/' })
         .then((reg) => {
-          if (process.env.NODE_ENV === 'development') {
-            console.log('[SW] Registrado:', reg.scope);
-          }
+          if (process.env.NODE_ENV === 'development') console.log('[SW] Registrado:', reg.scope);
         })
         .catch((err) => {
-          if (process.env.NODE_ENV === 'development') {
-            console.warn('[SW] Falha no registro:', err);
-          }
+          if (process.env.NODE_ENV === 'development') console.warn('[SW] Falha no registro:', err);
         });
-    });
+    };
+
+    if (document.readyState === 'complete') {
+      register();
+    } else {
+      window.addEventListener('load', register, { once: true });
+    }
+    return () => window.removeEventListener('load', register);
   }, []);
 
   return null;
