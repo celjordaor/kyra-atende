@@ -392,7 +392,7 @@ function Topbar({ userName, userEmail, userAvatarUrl, onSignOut, headerActions, 
       {/* Kyra brand */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
         <img
-          src="/kyra-icon.png"
+          src="/brand/kyra-atende-icon.svg?v=2"
           alt="Kyra Atende"
           width={32}
           height={32}
