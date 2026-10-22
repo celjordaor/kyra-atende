@@ -201,10 +201,10 @@ export default function CadastroPage() {
         </Button>
 
         <p style={{ textAlign: 'center', fontSize: '13px', color: 'var(--muted)', margin: 0 }}>
-          Ao criar sua conta você concorda com os{' '}
+          Documentos legais em revisão: consulte os{' '}
           <a href="/termos" style={{ color: 'var(--brand)', textDecoration: 'none' }}>Termos de Uso</a>
           {' '}e a{' '}
-          <a href="/politica-de-privacidade" style={{ color: 'var(--brand)', textDecoration: 'none' }}>Política de Privacidade</a>.
+          <a href="/politica-de-privacidade" style={{ color: 'var(--brand)', textDecoration: 'none' }}>Política de Privacidade</a>. Nenhum aceite jurídico será presumido por este aviso.
         </p>
 
         <p style={{ textAlign: 'center', fontSize: '14px', color: 'var(--muted)', margin: 0 }}>
