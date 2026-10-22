@@ -1183,7 +1183,7 @@ export default function AgendamentosClient({ initialBookings, professionals, ser
               {(row.status === 'pending' || row.status === 'confirmed') && <Button variant="secondary" size="sm" onClick={() => openEdit(row)}>Editar</Button>}
               {row.status === 'pending' && <Button variant="secondary" size="sm" onClick={() => void handleStatusChange(row, 'confirmed')}>Confirmar</Button>}
               {row.status === 'confirmed' && <Button variant="secondary" size="sm" onClick={() => setCompleteRow(row)}>Concluir</Button>}
-              {(row.status === 'pending' || row.status === 'confirmed') && <Button variant="danger" size="sm" onClick={() => void handleStatusChange(row, 'cancelled')}>Cancelar</Button>
+              {(row.status === 'pending' || row.status === 'confirmed') && <Button variant="danger" size="sm" onClick={() => void handleStatusChange(row, 'cancelled')}>Cancelar</Button>}
               <Button variant="ghost" size="sm" onClick={() => setDetailRow(row)}>Detalhes</Button>
             </div>
           </article>
