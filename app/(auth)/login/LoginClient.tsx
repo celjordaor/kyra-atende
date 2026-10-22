@@ -13,15 +13,20 @@ export default function LoginClient() {
   const requestedNext = searchParams.get('next') ?? '/dashboard'
   // Evita redirecionamentos externos ou esquemas como javascript: após o login.
   const destinationPath = requestedNext.split(/[?#]/, 1)[0]
-  const authDestinations = new Set([
-    '/', '/login', '/cadastro', '/cadastro/confirmar', '/cadastro/concluir',
-    '/recuperar-senha', '/nova-senha', '/auth/callback',
-  ])
+  // Retornos do login são apenas telas autenticadas, nunca endpoints ou páginas públicas.
+  const allowedDestinations = [
+    '/dashboard', '/agenda', '/agendamentos', '/bi', '/clientes',
+    '/configuracoes', '/ia', '/perfil', '/profissionais',
+    '/relatorios', '/servicos', '/whatsapp', '/superadmin',
+  ]
+  const allowedScreen = allowedDestinations.some(path =>
+    destinationPath === path || destinationPath.startsWith(path + '/'),
+  )
   const next = requestedNext.startsWith('/') &&
     !requestedNext.startsWith('//') &&
     !requestedNext.includes('\\') &&
     !/[\u0000-\u001f]/.test(requestedNext) &&
-    !authDestinations.has(destinationPath)
+    allowedScreen
     ? requestedNext
     : '/dashboard'
 
