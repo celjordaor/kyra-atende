@@ -188,7 +188,26 @@ export function ServicosClient({ rows: initialRows }: Props) {
         </div>
       )}
 
-      <div id="servicos-table">
+      <style>{`@media (max-width: 700px) { .kyra-services-desktop { display: none !important; } .kyra-services-mobile { display: grid !important; } }`}</style>
+      <div className="kyra-services-mobile" style={{ display: 'none', gap: 12 }}>
+        {rows.length === 0 && <p style={{ color: 'var(--muted)' }}>Nenhum serviço cadastrado.</p>}
+        {rows.map(row => (
+          <article key={row.id} style={{ padding: 16, minWidth: 0, background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 'var(--r-lg)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+              <strong style={{ color: 'var(--ink)', overflowWrap: 'anywhere' }}>{row.name}</strong>
+              <StatusBadge status={row.is_active ? 'active' : 'suspended'} />
+            </div>
+            {row.description && <p style={{ fontSize: 13, color: 'var(--muted)', overflowWrap: 'anywhere', margin: '8px 0' }}>{row.description}</p>}
+            <div style={{ fontSize: 13, color: 'var(--ink-body)', marginTop: 8 }}>Duração: {row.duration_minutes} min</div>
+            <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--ink)', marginTop: 4 }}>{formatCurrency(row.price)}</div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 14 }}>
+              <Button variant="secondary" size="sm" onClick={() => openEdit(row)}>Editar</Button>
+              <Button variant={row.is_active ? 'danger' : 'secondary'} size="sm" disabled={!!loading[row.id]} onClick={() => void handleToggleActive(row)}>{loading[row.id] ? 'Atualizando…' : row.is_active ? 'Desativar' : 'Reativar'}</Button>
+            </div>
+          </article>
+        ))}
+      </div>
+      <div className="kyra-services-desktop" id="servicos-table">
         <DataTable
           columns={COLUMNS}
           rows={rows}
