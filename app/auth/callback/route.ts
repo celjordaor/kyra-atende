@@ -34,9 +34,13 @@ export async function GET(request: NextRequest) {
       if (!error) {
         const user = exchange.user
         // Novas contas precisam finalizar o provisionamento após confirmar e-mail.
-        const destination = user?.user_metadata?.company && !user?.app_metadata?.tenant_id
-          ? '/cadastro/concluir'
-          : next === '/nova-senha' ? '/nova-senha' : '/dashboard'
+        // Recuperação de senha tem prioridade sobre provisionamento pendente.
+        // Apenas destinos internos pré-aprovados podem ser usados.
+        const destination = next === '/nova-senha'
+          ? '/nova-senha'
+          : user?.user_metadata?.company && !user?.app_metadata?.tenant_id
+            ? '/cadastro/concluir'
+            : '/dashboard'
         return NextResponse.redirect(new URL(destination, origin))
       }
     } catch {
