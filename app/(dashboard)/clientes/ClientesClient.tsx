@@ -600,6 +600,7 @@ export function ClientesClient({ rows: initialRows }: { rows: ClientRow[] }) {
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 12 }}>
               <Button variant="secondary" size="sm" onClick={() => openHistory(client)}>Histórico</Button>
               <Button variant="secondary" size="sm" onClick={() => openEdit(client)}>Editar</Button>
+              <SendEmailBadge clientId={client.id} hasEmail={!!client.email} />
               <Button variant="danger" size="sm" onClick={() => setDeleteTarget(client)}>Excluir</Button>
             </div>
           </article>
