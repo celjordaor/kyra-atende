@@ -127,7 +127,7 @@ function blankForm(services: ServiceRow[] = []): BookingForm {
 
 function ErrorBox({ msg }: { msg: string }) {
   return (
-    <div style={{
+    <div role="alert" aria-live="assertive" style={{
       background: 'color-mix(in srgb, var(--red) 10%, transparent)',
       border: '1px solid var(--red)', borderRadius: 'var(--r-md)',
       padding: '10px 14px', color: 'var(--red)', fontSize: '13px',
