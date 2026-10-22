@@ -412,7 +412,7 @@ function ClientCreateModal({ open, onClose, onCreated }: ClientCreateModalProps)
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
           <SectionHeader title="Informações" />
           <FormField label="Nome" required value={form.name} onChange={v => set('name', v)} placeholder="Nome completo" />
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+          <div className="kyra-agendamentos-modal-fields" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
             <FormField label="Telefone" type="telefone" value={form.phone} onChange={v => set('phone', v)} placeholder="(00) 00000-0000" />
             <FormField label="E-mail" type="email" value={form.email} onChange={v => set('email', v)} placeholder="cliente@email.com" />
           </div>
@@ -421,7 +421,7 @@ function ClientCreateModal({ open, onClose, onCreated }: ClientCreateModalProps)
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
           <SectionHeader title="Dados pessoais" optional />
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+          <div className="kyra-agendamentos-modal-fields" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
             <FormField label="CPF / Documento" type="cpf" value={form.cpf} onChange={v => set('cpf', v)} placeholder="000.000.000-00" />
             <FormField label="Data de nascimento" type="date" value={form.birth_date} onChange={v => set('birth_date', v)} />
           </div>
@@ -429,7 +429,7 @@ function ClientCreateModal({ open, onClose, onCreated }: ClientCreateModalProps)
             <div style={{ fontSize: '13px', fontWeight: 500, color: 'var(--ink)', marginBottom: '8px' }}>Gênero</div>
             <GenderPicker value={form.gender} onChange={v => set('gender', v)} />
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+          <div className="kyra-agendamentos-modal-fields" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
             <FormField label="Nacionalidade" value={form.nationality} onChange={v => set('nationality', v)} placeholder="Ex: Brasileira" />
             <FormField label="Profissão" value={form.profession} onChange={v => set('profession', v)} placeholder="Ex: Médica" />
           </div>
@@ -437,18 +437,18 @@ function ClientCreateModal({ open, onClose, onCreated }: ClientCreateModalProps)
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
           <SectionHeader title="Endereço" optional />
-          <div style={{ display: 'grid', gridTemplateColumns: '160px 1fr', gap: '12px' }}>
+          <div className="kyra-agendamentos-modal-fields" style={{ display: 'grid', gridTemplateColumns: '160px 1fr', gap: '12px' }}>
             <FormField label="CEP" type="cep" value={form.cep} onChange={v => set('cep', v)}
               onCepFilled={d => setForm(f => ({ ...f, logradouro: d.logradouro ?? f.logradouro, bairro: d.bairro ?? f.bairro, cidade: d.localidade ?? f.cidade, estado: d.uf ?? f.estado }))}
               placeholder="00000-000" />
             <FormField label="Logradouro" value={form.logradouro} onChange={v => set('logradouro', v)} placeholder="Rua, Av, Alameda…" />
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr 1fr', gap: '12px' }}>
+          <div className="kyra-agendamentos-modal-fields" style={{ display: 'grid', gridTemplateColumns: '120px 1fr 1fr', gap: '12px' }}>
             <FormField label="Número" value={form.numero} onChange={v => set('numero', v)} placeholder="123" />
             <FormField label="Complemento" value={form.complemento} onChange={v => set('complemento', v)} placeholder="Apto, Sala…" />
             <FormField label="Bairro" value={form.bairro} onChange={v => set('bairro', v)} placeholder="Bairro" />
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+          <div className="kyra-agendamentos-modal-fields" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
             <FormField label="Estado" type="select" value={form.estado} onChange={v => set('estado', v)} options={ESTADOS} />
             <FormField label="Cidade" value={form.cidade} onChange={v => set('cidade', v)} placeholder="Cidade" />
           </div>
@@ -791,7 +791,7 @@ function CompleteModal({ open, booking, services, onClose, onDone }: CompleteMod
         )}
 
         {/* Valor cobrado + Desconto */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+        <div className="kyra-agendamentos-modal-fields" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
           <FormField
             label="Valor cobrado"
             required
@@ -1119,6 +1119,8 @@ export default function AgendamentosClient({ initialBookings, professionals, ser
         </div>
       )}
 
+      <style>{`@media (max-width: 640px) { .kyra-agendamentos-modal-fields { grid-template-columns: minmax(0, 1fr) !important; } }`}</style>
+
       {/* ── Barra de filtros ─────────────────────────────────────────────── */}
       <div style={{ marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
 
@@ -1198,7 +1200,7 @@ export default function AgendamentosClient({ initialBookings, professionals, ser
             )}
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+          <div className="kyra-agendamentos-modal-fields" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
             <SearchableSelect label="Serviço" required value={form.service_id}
               onChange={v => { setF('service_id', v); setFormErrors(e => ({ ...e, service: undefined })) }}
               options={serviceOptions}
@@ -1208,7 +1210,7 @@ export default function AgendamentosClient({ initialBookings, professionals, ser
               options={profOptions} />
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '3fr 2fr', gap: '12px' }}>
+          <div className="kyra-agendamentos-modal-fields" style={{ display: 'grid', gridTemplateColumns: '3fr 2fr', gap: '12px' }}>
             <FormField label="Data de início" required type="date" value={form.start_date}
               onChange={v => { setF('start_date', v); setFormErrors(e => ({ ...e, datetime: undefined })) }}
               error={formErrors.datetime} />
@@ -1216,7 +1218,7 @@ export default function AgendamentosClient({ initialBookings, professionals, ser
               onChange={v => { setF('start_time', v); setFormErrors(e => ({ ...e, datetime: undefined })) }} />
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '3fr 2fr', gap: '12px' }}>
+          <div className="kyra-agendamentos-modal-fields" style={{ display: 'grid', gridTemplateColumns: '3fr 2fr', gap: '12px' }}>
             <FormField label="Data de término" type="date" value={form.end_date} onChange={v => setF('end_date', v)} />
             <FormField label="Hora de término" type="time" value={form.end_time} onChange={v => setF('end_time', v)} />
           </div>
