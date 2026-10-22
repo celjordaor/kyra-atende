@@ -274,7 +274,8 @@ export function DashboardBookingsSection({ todayBookings, nextBookings, nextLabe
 
   return (
     <>
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: '20px', alignItems: 'start' }}>
+    <style>{`@media (max-width: 850px) { .kyra-dashboard-columns { grid-template-columns: minmax(0, 1fr) !important; } }`}</style>
+    <div className="kyra-dashboard-columns" style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: '20px', alignItems: 'start' }}>
 
       {/* ══ Coluna esquerda ══ */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
