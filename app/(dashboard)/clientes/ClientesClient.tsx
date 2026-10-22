@@ -588,7 +588,25 @@ export function ClientesClient({ rows: initialRows }: { rows: ClientRow[] }) {
         </div>
       </div>
 
+      <style>{`@media (max-width: 700px) { .kyra-clients-desktop-table { display: none !important; } .kyra-clients-mobile-cards { display: grid !important; } }`}</style>
+      <div className="kyra-clients-mobile-cards" style={{ display: 'none', gap: 12 }}>
+        {filtered.length === 0 && <p style={{ color: 'var(--muted)' }}>Nenhum cliente encontrado.</p>}
+        {filtered.slice(0, 25).map(client => (
+          <article key={client.id} style={{ padding: 16, border: '1px solid var(--border)', borderRadius: 'var(--r-lg)', background: 'var(--surface-2)', minWidth: 0 }}>
+            <strong style={{ color: 'var(--ink)', overflowWrap: 'anywhere' }}>{client.name}</strong>
+            <div style={{ fontSize: 13, color: 'var(--muted)', marginTop: 6, overflowWrap: 'anywhere' }}>{client.phone || 'Sem telefone'}{client.email ? ` · ${client.email}` : ''}</div>
+            <div style={{ fontSize: 13, color: 'var(--ink-soft)', marginTop: 6 }}>{[client.cidade, client.estado].filter(Boolean).join(' / ') || 'Cidade não informada'}</div>
+            <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 4 }}>Cliente desde {new Date(client.created_at).toLocaleDateString('pt-BR')}</div>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 12 }}>
+              <Button variant="secondary" size="sm" onClick={() => openHistory(client)}>Histórico</Button>
+              <Button variant="secondary" size="sm" onClick={() => openEdit(client)}>Editar</Button>
+              <Button variant="danger" size="sm" onClick={() => setDeleteTarget(client)}>Excluir</Button>
+            </div>
+          </article>
+        ))}
+      </div>
       {/* Tabela */}
+      <div className="kyra-clients-desktop-table">
       <DataTable
         columns={COLUMNS}
         rows={filtered}
@@ -597,6 +615,7 @@ export function ClientesClient({ rows: initialRows }: { rows: ClientRow[] }) {
         }
         pagination={{ page: 1, pageSize: 25, total: filtered.length }}
       />
+      </div>
 
       <Modal open={!!historyClient} onClose={() => setHistoryClient(null)} title={historyClient ? `Histórico de agendamentos — ${historyClient.name}` : 'Histórico'} size="lg">
         <div style={{display:'flex',flexDirection:'column',gap:12}}>
