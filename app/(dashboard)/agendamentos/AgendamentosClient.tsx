@@ -163,11 +163,14 @@ function SearchableSelect({ label, value, onChange, options, required, error }: 
         {required && <span style={{ color: 'var(--red)', marginLeft: '3px' }} aria-hidden="true">*</span>}
       </span>
 
-      <div ref={wrapRef} style={{ position: 'relative' }}>
+      <div ref={wrapRef} style={{ position: 'relative' }} onKeyDown={e => {
+        if (e.key === 'Escape' && open) { e.stopPropagation(); setOpen(false); setQuery('') }
+      }}>
         {/* Trigger */}
         <button
           type="button"
           onClick={handleOpen}
+          aria-label={label}
           aria-haspopup="listbox"
           aria-expanded={open}
           style={{
@@ -209,6 +212,7 @@ function SearchableSelect({ label, value, onChange, options, required, error }: 
                 value={query}
                 onChange={e => setQuery(e.target.value)}
                 placeholder="Buscar..."
+                aria-label={`Buscar em ${label}`}
                 style={{ width: '100%', boxSizing: 'border-box', padding: '6px 8px 6px 30px', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--surface-2)', color: 'var(--ink)', fontSize: '13px', outline: 'none' }} />
             </div>
             {/* Lista de opções */}
@@ -256,7 +260,7 @@ function SearchableSelect({ label, value, onChange, options, required, error }: 
 // ── ErrorBox ─────────────────────────────────────────────────────────────────
 function ErrorBox({ msg }: { msg: string }) {
   return (
-    <div style={{ background: 'color-mix(in srgb, var(--red) 10%, transparent)', border: '1px solid var(--red)', borderRadius: '8px', padding: '10px 14px', color: 'var(--red)', fontSize: '13px', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+    <div role="alert" aria-live="assertive" style={{ background: 'color-mix(in srgb, var(--red) 10%, transparent)', border: '1px solid var(--red)', borderRadius: '8px', padding: '10px 14px', color: 'var(--red)', fontSize: '13px', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: '1px' }}><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
       <span>{msg}</span>
     </div>
