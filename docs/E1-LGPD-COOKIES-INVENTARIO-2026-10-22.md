@@ -33,3 +33,11 @@ O proprietário confirmou a homologação visual/funcional do popup de cookies a
 ## Continuidade E1 — autenticação
 
 A captura anterior do login indicava ícone quebrado no celular. O `AuthLayout.tsx` apontava para `/brand/kyra-atende-icon.svg`, que encapsula uma imagem WebP em um SVG; para reduzir incompatibilidade no navegador/PWA, alterou-se apenas a referência visual para `/icons/kyra-icon.png`, arquivo existente no repositório. A correção exige confirmação visual após o deploy; não muda credenciais nem fluxos de login.
+
+## Aceite da jornada de cadastro — 22/10/2026
+
+O responsável informou ter realizado e aprovado a jornada de cadastro e primeiro acesso («fiz a jornada. deu tudo certo»). Registrar como **aceite funcional pelo responsável** para o cenário executado. Não implica teste automatizado completo de entrega de e-mails em todos os navegadores, recuperação de senha ou múltiplos tenants.
+
+## Validação de ícone e PWA
+
+O PR #57, commit de merge `efcdc2f24efd4a86ecdeea8ddaf88642001af4a3`, foi confirmado `READY` em produção. Os ícones antigos PNG permanecem fisicamente em `public/icons/` e `public/kyra-icon.png`, embora as referências principais de metadata/manifest/telas tenham sido alteradas. Compatibilidade específica de ícones PWA em dispositivos que não suportem SVG permanece pendente de confirmação visual e geração de variantes PNG a partir da imagem aprovada.
