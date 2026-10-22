@@ -115,7 +115,7 @@ export default async function DashboardPage(){
    <h1 style={{fontSize:22,fontWeight:600,color:'var(--ink)',margin:'0 0 4px'}}>{greeting}{tenantName?`, ${tenantName}`:''} 👋</h1>
    <p style={{fontSize:14,color:'var(--muted)',margin:0}}>{now.toLocaleDateString('pt-BR',{timeZone:tz,weekday:'long',day:'numeric',month:'long'})}{countPending>0?` · ${countPending} aguardando confirmação`:''}</p>
   </div>
-  <div id="stat-tiles" style={{display:'grid',gridTemplateColumns:'repeat(7,minmax(0,1fr))',gap:10}}>
+  <div id="stat-tiles" className="kyra-mobile-stats" style={{display:'grid',gridTemplateColumns:'repeat(7,minmax(0,1fr))',gap:10}}>
    <StatTile label="Agendamentos hoje" value={todayBookings.length} icon="calendar" color="blue" compact/>
    <StatTile label="Agendamentos mês" value={monthBookings.length} icon="chart" color="green" compact/>
    <StatTile label="Pendentes" value={countPending} icon="clock" color="orange" compact/>
@@ -124,6 +124,7 @@ export default async function DashboardPage(){
    <StatTile label="Receita este mês" value={brl(revenueMonth)} icon="dollar" color="blue" formatNumber={false} compact/>
    <StatTile label="Taxa de confirmação" value={taxaConfirmacao} icon="check" color="blue" suffix="%" compact/>
   </div>
-  <div id="dashboard-content"><DashboardBookingsSection todayBookings={todayBookings} nextBookings={nextBookings} nextLabel={nextLabel} nextTitle={nextTitle} pendingBookings={pendingBookings} newClients={newClients} topServices={topServices}/></div>
+  <style>{`@media (max-width: 700px) { .kyra-mobile-stats { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; } } @media (max-width: 370px) { .kyra-mobile-stats { grid-template-columns: minmax(0, 1fr) !important; } }`}</style>
+   <div id="dashboard-content"><DashboardBookingsSection todayBookings={todayBookings} nextBookings={nextBookings} nextLabel={nextLabel} nextTitle={nextTitle} pendingBookings={pendingBookings} newClients={newClients} topServices={topServices}/></div>
  </div>
 }
