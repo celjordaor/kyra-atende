@@ -206,7 +206,7 @@ export function CompleteModal({ open, booking, onClose, onDone }: CompleteModalP
         )}
 
         {/* Valor cobrado + Desconto */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+        <div className="kyra-complete-form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
           <FormField
             label="Valor cobrado"
             required
@@ -248,6 +248,8 @@ export function CompleteModal({ open, booking, onClose, onDone }: CompleteModalP
           </span>
         </div>
       </div>
+
+      <style>{`@media (max-width: 640px) { .kyra-complete-form-grid { grid-template-columns: minmax(0, 1fr) !important; } }`}</style>
     </Modal>
   )
 }
