@@ -54,7 +54,11 @@ export default function LoginClient() {
         return
       }
 
-      router.push(next)
+      // Contas confirmadas ainda sem tenant concluem o provisionamento primeiro.
+      // A rota de conclusão verifica sessão e dados novamente no backend.
+      const authenticatedUser = result.data.user
+      const needsSetup = Boolean(authenticatedUser?.email_confirmed_at && authenticatedUser.user_metadata?.company && !authenticatedUser.app_metadata?.tenant_id)
+      router.replace(needsSetup ? '/cadastro/concluir' : next)
       router.refresh()
     } catch (err) {
       setError(
