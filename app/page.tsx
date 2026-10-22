@@ -1,5 +1,7 @@
 'use client'
 
+import CookieSettingsButton from '@/components/organisms/CookieSettingsButton'
+
 import React, { useState } from 'react'
 
 const FEATURES = [
@@ -203,7 +205,6 @@ function FinalCTA() {
 function Footer() {
   const links = [
     { label:'Privacidade', href:'/politica-de-privacidade' },
-    { label:'Cookies', href:'/cookies' },
     { label:'Termos', href:'/termos' },
     { label:'Entrar', href:'/login' },
     { label:'Criar conta', href:'#' },
@@ -219,6 +220,7 @@ function Footer() {
       </div>
       <div style={{ display:'flex', gap:'24px', flexWrap:'wrap' }}>
         {links.map((l) => <a key={l.label} href={l.href} style={{ color:'rgba(255,255,255,0.6)', textDecoration:'none' }}>{l.label}</a>)}
+        <CookieSettingsButton light />
       </div>
     </footer>
   )

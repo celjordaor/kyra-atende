@@ -1,5 +1,7 @@
 'use client'
 
+import CookieSettingsButton from '@/components/organisms/CookieSettingsButton'
+
 import React from 'react'
 
 export interface AuthLayoutProps {
@@ -69,7 +71,7 @@ export function AuthLayout({ children, leftPanel, title, subtitle }: AuthLayoutP
           © {new Date().getFullYear()} Kyra Atende · Todos os direitos reservados
           {' · '}<a href="/termos" style={{ color: 'var(--brand)' }}>Termos de Uso</a>
           {' · '}<a href="/politica-de-privacidade" style={{ color: 'var(--brand)' }}>Privacidade</a>
-          {' · '}<a href="/cookies" style={{ color: 'var(--brand)' }}>Cookies</a>
+          {' · '}<CookieSettingsButton />
         </p>
       </div>
 
