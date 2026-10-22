@@ -67,6 +67,8 @@ export function AuthLayout({ children, leftPanel, title, subtitle }: AuthLayoutP
 
         <p style={{ marginTop: '40px', fontSize: '12px', color: 'var(--subtle)', textAlign: 'center' }}>
           © {new Date().getFullYear()} Kyra Atende · Todos os direitos reservados
+          {' · '}<a href="/termos" style={{ color: 'var(--brand)' }}>Termos de Uso</a>
+          {' · '}<a href="/politica-de-privacidade" style={{ color: 'var(--brand)' }}>Privacidade</a>
         </p>
       </div>
 
