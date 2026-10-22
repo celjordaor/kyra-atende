@@ -117,6 +117,7 @@ export default function CadastroPage() {
           company: form.company,
           phone:   form.phone,
         }),
+        signal: AbortSignal.timeout(20000),
       })
   
       if (!setupRes.ok) {
