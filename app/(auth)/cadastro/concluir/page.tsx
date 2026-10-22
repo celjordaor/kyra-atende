@@ -7,10 +7,12 @@ import { createClient } from '@/lib/supabase/client'
 export default function ConcluirCadastro() {
   const router = useRouter()
   const [error, setError] = useState('')
+  const [attempt, setAttempt] = useState(0)
 
   useEffect(() => {
     let alive = true
     async function finish() {
+      setError('')
       try {
         const supabase = createClient()
         const { data: { user }, error: sessionError } = await Promise.race([supabase.auth.getUser(), new Promise<never>((_, reject) => setTimeout(() => reject(new Error('timeout')), 15000))])
@@ -54,13 +56,19 @@ export default function ConcluirCadastro() {
     }
     void finish()
     return () => { alive = false }
-  }, [router])
+  }, [router, attempt])
 
   return (
     <main style={{ maxWidth: 480, margin: '12vh auto', padding: 24, textAlign: 'center' }}>
       <h1>Finalizando sua conta</h1>
       {error
-        ? <p role="alert">{error} <a href="/login">Voltar ao login</a></p>
+        ? <div role="alert" style={{ display: 'grid', gap: 16, justifyItems: 'center' }}>
+            <p>{error}</p>
+            <button type="button" onClick={() => setAttempt(value => value + 1)} style={{ padding: '12px 20px', border: 0, borderRadius: 8, background: 'var(--brand)', color: '#fff', cursor: 'pointer', minHeight: 44 }}>
+              Tentar novamente
+            </button>
+            <a href="/login" style={{ color: 'var(--brand)' }}>Voltar ao login</a>
+          </div>
         : <p>Estamos configurando sua empresa.</p>}
     </main>
   )
