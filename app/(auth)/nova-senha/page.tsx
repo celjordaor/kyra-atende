@@ -27,6 +27,8 @@ export default function NovaSenhaPage() {
       } else {
         setReady(true)
       }
+    }).catch(() => {
+      if (mounted) setError('Não foi possível validar a sessão. Verifique sua conexão e solicite um novo link, se necessário.')
     })
     return () => { mounted = false }
   }, [])
@@ -39,17 +41,20 @@ export default function NovaSenhaPage() {
     setLoading(true)
     setError(null)
 
-    const supabase = createClient()
-    const { error: updateError } = await supabase.auth.updateUser({ password })
-
-    if (updateError) {
-      setError(updateError.message)
+    try {
+      const supabase = createClient()
+      const { error: updateError } = await supabase.auth.updateUser({ password })
+      if (updateError) {
+        setError(updateError.message)
+        return
+      }
+      router.replace('/dashboard')
+      router.refresh()
+    } catch {
+      setError('Não foi possível salvar a nova senha. Verifique sua conexão e tente novamente.')
+    } finally {
       setLoading(false)
-      return
     }
-
-    router.push('/dashboard')
-    router.refresh()
   }
 
   if (!ready) {
@@ -88,7 +93,7 @@ export default function NovaSenhaPage() {
         />
 
         {error && (
-          <p style={{ fontSize: '14px', color: 'var(--red)', margin: 0 }}>{error}</p>
+          <p role="alert" style={{ fontSize: '14px', color: 'var(--red)', margin: 0 }}>{error}</p>
         )}
 
         <Button variant="primary" type="submit" loading={loading} fullWidth>
