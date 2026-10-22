@@ -587,6 +587,7 @@ export default function AgendaClient({ bookings, services, hours, blocks, timezo
         </div>
       )}
 
+      <style>{`@media (max-width: 700px) { .kyra-agenda-days { display: flex !important; overflow-x: auto !important; scroll-snap-type: x mandatory; padding-bottom: 12px; } .kyra-agenda-days > * { flex: 0 0 min(85vw, 330px); min-width: 0; scroll-snap-align: start; } }`}</style>
       {/* ── Top bar ── */}
       <div id="agenda-topbar" style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
 
@@ -657,9 +658,9 @@ export default function AgendaClient({ bookings, services, hours, blocks, timezo
 
         {/* ══ 4 DIAS / SEMANA ══ */}
         {(viewMode === '4dias' || viewMode === 'semana') && (
-          <div style={{
+          <div className="kyra-agenda-days" style={{
             display: 'grid',
-            gridTemplateColumns: `repeat(${gridCols}, 1fr)`,
+            gridTemplateColumns: `repeat(${gridCols}, minmax(0, 1fr))`,
             gap: '10px', alignItems: 'start', overflowX: 'auto',
           }}>
             {gridDays.map(day => (

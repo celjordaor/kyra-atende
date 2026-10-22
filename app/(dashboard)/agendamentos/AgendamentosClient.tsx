@@ -1169,7 +1169,28 @@ export default function AgendamentosClient({ initialBookings, professionals, ser
         </div>
       </div>
 
-      <DataTable columns={columns} rows={filtered} emptyMessage="Nenhum agendamento encontrado." />
+      <style>{`@media (max-width: 700px) { .kyra-bookings-desktop-table { display: none !important; } .kyra-bookings-mobile-cards { display: grid !important; } }`}</style>
+      <div className="kyra-bookings-mobile-cards" style={{ display: 'none', gap: 12 }}>
+        {filtered.length === 0 && <p style={{ color: 'var(--muted)' }}>Nenhum agendamento encontrado.</p>}
+        {filtered.map(row => (
+          <article key={row.id} style={{ padding: 16, border: '1px solid var(--border)', borderRadius: 'var(--r-lg)', background: 'var(--surface-2)', minWidth: 0 }}>
+            <strong style={{ color: 'var(--ink)', overflowWrap: 'anywhere' }}>{row.client_name}</strong>
+            <div style={{ fontSize: 13, color: 'var(--muted)', marginTop: 5 }}>{row.service} · {row.professional || 'Sem profissional'}</div>
+            <div style={{ fontSize: 13, marginTop: 8, color: 'var(--ink-body)' }}>{new Date(row.start_at).toLocaleString('pt-BR')}</div>
+            <div style={{ marginTop: 8 }}><StatusBadge status={row.status} /></div>
+            {row.status === 'completed' && row.price_charged != null && <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 5 }}>{new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(row.price_charged - row.discount)}</div>}
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 12 }}>
+              {(row.status === 'pending' || row.status === 'confirmed') && <Button variant="secondary" size="sm" onClick={() => openEdit(row)}>Editar</Button>}
+              {row.status === 'pending' && <Button variant="secondary" size="sm" onClick={() => void handleStatusChange(row, 'confirmed')}>Confirmar</Button>}
+              {(row.status === 'pending' || row.status === 'confirmed') && <Button variant="secondary" size="sm" onClick={() => setCompleteRow(row)}>Concluir</Button>}
+              <Button variant="ghost" size="sm" onClick={() => setDetailRow(row)}>Detalhes</Button>
+            </div>
+          </article>
+        ))}
+      </div>
+      <div className="kyra-bookings-desktop-table">
+        <DataTable columns={columns} rows={filtered} emptyMessage="Nenhum agendamento encontrado." />
+      </div>
 
       {/* Booking modal */}
       <Modal open={modalOpen} onClose={() => setModalOpen(false)} size="lg"

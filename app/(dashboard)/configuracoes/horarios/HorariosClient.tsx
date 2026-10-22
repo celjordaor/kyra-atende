@@ -19,12 +19,13 @@ export default function HorariosClient(){
   }catch(e){setError(e instanceof Error?e.message:'Falha ao salvar')}finally{setSaving(false)}
  }
  if(!loaded)return <p role="status">{error||'Carregando horários...'}</p>
- return <div style={{display:'flex',flexDirection:'column',gap:16}}>
+ return <div className="kyra-hours" style={{display:'flex',flexDirection:'column',gap:16}}>
+  <style>{`@media (max-width: 640px) { .kyra-hours .kyra-hour-row { flex-wrap: wrap; align-items: stretch !important; } .kyra-hours .kyra-hour-row label { display: flex; flex: 1 1 125px; flex-direction: column; gap: 5px; min-width: 0; } .kyra-hours .kyra-hour-row input { width: 100%; min-width: 0; box-sizing: border-box; padding: 8px; border: 1px solid var(--border); border-radius: 8px; } .kyra-hours .kyra-hour-row button { min-height: 40px; } }`}</style>
   <p style={{fontSize:13,color:'var(--muted)'}}>Configure faixas de atendimento por dia. Adicione dois períodos para representar intervalos de almoço. Estes horários ainda não bloqueiam reservas: a integração com o motor de disponibilidade será feita na próxima etapa.</p>
   {days.map((name,day)=><section key={day} style={{border:'1px solid var(--border)',borderRadius:8,padding:12}}>
    <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:8}}><strong>{name}</strong><button type="button" onClick={()=>add(day)} disabled={hours.length>=42}>Adicionar faixa</button></div>
    {hours.filter(h=>h.weekday===day).length===0?<span style={{fontSize:13,color:'var(--muted)'}}>Sem expediente</span>:null}
-   {hours.map((h,i)=>h.weekday!==day?null:<div key={i} style={{display:'flex',gap:8,alignItems:'center',marginTop:6}}>
+   {hours.map((h,i)=>h.weekday!==day?null:<div key={i} className="kyra-hour-row" style={{display:'flex',gap:8,alignItems:'center',marginTop:6}}>
     <label>Início <input type="time" value={h.start} onChange={e=>setHours(v=>v.map((x,j)=>i===j?{...x,start:e.target.value}:x))}/></label>
     <label>Fim <input type="time" value={h.end} onChange={e=>setHours(v=>v.map((x,j)=>i===j?{...x,end:e.target.value}:x))}/></label>
     <button type="button" onClick={()=>setHours(v=>v.filter((_,j)=>j!==i))}>Remover</button>
