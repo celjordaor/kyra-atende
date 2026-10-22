@@ -15,7 +15,7 @@ export default function CookiesPage() {
         <p>O Kyra Atende utiliza mecanismos de sessão para autenticar usuários e manter o acesso à conta. A aplicação usa o Supabase Auth, cujo funcionamento pode envolver cookies de sessão no navegador.</p>
         <p>O inventário completo de cookies, armazenamento local, provedores externos, finalidades e prazos de retenção ainda está em revisão. Esta página é uma informação técnica provisória, não a Política de Cookies definitiva.</p>
         <h2 style={{ fontSize: 20, marginTop: 24 }}>Preferências e consentimento</h2>
-        <p>Não apresentamos aqui um botão de aceitar ou rejeitar cookies de rastreamento, pois a verificação e classificação dos serviços opcionais ainda precisa ser concluída. Caso sejam encontrados cookies não necessários dependentes de consentimento, eles deverão ficar desativados até uma escolha válida, com opção de rejeitar e de alterar a decisão.</p>
+        <p>O painel de preferências aparece na primeira visita e permite utilizar apenas cookies essenciais. As categorias opcionais ainda não estão habilitadas nesta interface. É possível reabrir o painel a qualquer momento. Cookies não necessários, caso sejam incorporados futuramente, deverão ser bloqueados até uma escolha válida, com opção de rejeição e alteração da decisão.</p>
         <h2 style={{ fontSize: 20, marginTop: 24 }}>Seus dados pessoais</h2>
         <p>A <Link href="/politica-de-privacidade" style={{ color: 'var(--brand)' }}>Política de Privacidade</Link> e os <Link href="/termos" style={{ color: 'var(--brand)' }}>Termos de Uso</Link> ainda aguardam aprovação e publicação. Essas páginas não representam um aceite contratual.</p>
       </article>
