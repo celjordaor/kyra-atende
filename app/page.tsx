@@ -203,6 +203,7 @@ function FinalCTA() {
 function Footer() {
   const links = [
     { label:'Privacidade', href:'/politica-de-privacidade' },
+    { label:'Cookies', href:'/cookies' },
     { label:'Termos', href:'/termos' },
     { label:'Entrar', href:'/login' },
     { label:'Criar conta', href:'#' },
