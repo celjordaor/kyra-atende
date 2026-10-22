@@ -41,9 +41,13 @@ export const metadata: Metadata = {
     'mobile-web-app-capable': 'yes',
   },
   icons: {
-    icon: [{ url: '/brand/kyra-atende-icon.svg?v=2', type: 'image/svg+xml', sizes: 'any' }],
+    icon: [
+      { url: '/brand/kyra-atende-icon.svg?v=2', type: 'image/svg+xml', sizes: 'any' },
+      { url: '/pwa-icon-192.png', type: 'image/png', sizes: '192x192' },
+      { url: '/pwa-icon-512.png', type: 'image/png', sizes: '512x512' },
+    ],
     shortcut: '/brand/kyra-atende-icon.svg?v=2',
-    apple: [{ url: '/brand/kyra-atende-icon.svg?v=2' }],
+    apple: [{ url: '/apple-icon.png', sizes: '180x180', type: 'image/png' }],
   },
 };
 
