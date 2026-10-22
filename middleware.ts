@@ -20,6 +20,9 @@ const PUBLIC_PATHS = new Set([
   '/recuperar-senha',
   '/nova-senha',
   '/portal',
+  '/termos',
+  '/cookies',
+  '/politica-de-privacidade',
 ])
 
 // Prefixos que não precisam de sessão
@@ -29,6 +32,7 @@ const PUBLIC_PREFIXES = [
   '/_next/',
   '/favicon',
   '/icons/',
+  '/brand/',
   '/sw.js',
   '/manifest',
   '/api/',
