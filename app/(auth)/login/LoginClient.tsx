@@ -12,10 +12,16 @@ export default function LoginClient() {
   const searchParams = useSearchParams()
   const requestedNext = searchParams.get('next') ?? '/dashboard'
   // Evita redirecionamentos externos ou esquemas como javascript: após o login.
+  const destinationPath = requestedNext.split(/[?#]/, 1)[0]
+  const authDestinations = new Set([
+    '/', '/login', '/cadastro', '/cadastro/confirmar', '/cadastro/concluir',
+    '/recuperar-senha', '/nova-senha', '/auth/callback',
+  ])
   const next = requestedNext.startsWith('/') &&
     !requestedNext.startsWith('//') &&
     !requestedNext.includes('\\') &&
-    !/[\u0000-\u001f]/.test(requestedNext)
+    !/[\u0000-\u001f]/.test(requestedNext) &&
+    !authDestinations.has(destinationPath)
     ? requestedNext
     : '/dashboard'
 
