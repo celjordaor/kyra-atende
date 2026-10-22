@@ -19,18 +19,23 @@ export default function RecuperarSenhaPage() {
     const supabase    = createClient()
     const redirectTo  = `${window.location.origin}/auth/callback?next=${encodeURIComponent('/nova-senha')}`
 
-    const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo,
-    })
+    try {
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+        redirectTo,
+      })
 
-    if (resetError) {
-      setError(resetError.message)
+      if (resetError) {
+        setError(resetError.message)
+        return
+      }
+
+      // Uma solicitação aceita não confirma entrega nem existência da conta.
+      setSent(true)
+    } catch {
+      setError('Não foi possível solicitar a recuperação agora. Verifique sua conexão e tente novamente.')
+    } finally {
       setLoading(false)
-      return
     }
-
-    setSent(true)
-    setLoading(false)
   }
 
   if (sent) {
@@ -60,8 +65,7 @@ export default function RecuperarSenhaPage() {
           </div>
 
           <p style={{ fontSize: '14px', color: 'var(--ink-soft)', lineHeight: '1.6', margin: '0 0 24px' }}>
-            Enviamos um link para <strong style={{ color: 'var(--ink)' }}>{email}</strong>.
-            Verifique também a pasta de spam.
+            Se houver uma conta para <strong style={{ color: 'var(--ink)' }}>{email}</strong>, o serviço enviará um link de recuperação. Confira também a pasta de spam.
           </p>
 
           <a href="/login" style={{ color: 'var(--brand)', fontSize: '14px', fontWeight: 500, textDecoration: 'none' }}>
