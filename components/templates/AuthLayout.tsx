@@ -16,7 +16,7 @@ function DefaultLeftPanel() {
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', padding: '48px 40px', textAlign: 'center', gap: '32px' }}>
       <div>
         <div style={{ width: '64px', height: '64px', borderRadius: '16px', background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', backdropFilter: 'blur(8px)' }}>
-          <img src="/brand/kyra-atende-icon.svg" alt="Ícone Kyra Atende" width={56} height={51} style={{ objectFit: 'contain' }} />
+          <img src="/icons/kyra-icon.png" alt="Ícone Kyra Atende" width={56} height={51} style={{ objectFit: 'contain' }} />
         </div>
         <h1 style={{ fontSize: '32px', fontWeight: 700, color: '#fff', margin: 0, letterSpacing: '-0.5px' }}>Kyra Atende</h1>
         <p style={{ fontSize: '16px', color: 'rgba(255,255,255,0.75)', margin: '8px 0 0', fontWeight: 400 }}>Agendamentos que funcionam.</p>
@@ -52,7 +52,7 @@ export function AuthLayout({ children, leftPanel, title, subtitle }: AuthLayoutP
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '48px 24px', overflowY: 'auto' }}>
         <div className="kyra-auth-mobile-header" style={{ marginBottom: '32px', textAlign: 'center' }}>
           <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'var(--brand)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
-            <img src="/brand/kyra-atende-icon.svg" alt="Ícone Kyra Atende" width={42} height={38} style={{ objectFit: 'contain' }} />
+            <img src="/icons/kyra-icon.png" alt="Ícone Kyra Atende" width={42} height={38} style={{ objectFit: 'contain' }} />
           </div>
           <span style={{ fontSize: '18px', fontWeight: 700, color: 'var(--ink)' }}>Kyra Atende</span>
         </div>
