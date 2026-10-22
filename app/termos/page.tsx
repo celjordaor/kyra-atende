@@ -1,4 +1,3 @@
-import Link from 'next/link'
 import LegalReturnLink from '@/components/organisms/LegalReturnLink'
 
 export const metadata = {
