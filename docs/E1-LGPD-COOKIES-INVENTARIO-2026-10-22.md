@@ -25,3 +25,11 @@
 ANPD, Guia orientativo Cookies e proteção de dados pessoais: https://www.gov.br/anpd/pt-br/centrais-de-conteudo/materiais-educativos-e-publicacoes/guia_orientativo_cookies_e_protecao_de_dados_pessoais
 
 **Status:** transparência provisória e links implementados; conformidade jurídica e inventário dinâmico ainda não homologados.
+
+## Homologação de interface — 22/10/2026
+
+O proprietário confirmou a homologação visual/funcional do popup de cookies após a correção de contraste do PR #43. O commit `13d6ae2c0198188d5134dac0fa20809ca7d94c33` alcançou `READY` na Vercel. Este aceite **abrange a interface do aviso**, não substitui o inventário dinâmico de cookies, a aprovação dos documentos legais, nem certifica conformidade integral com a LGPD.
+
+## Continuidade E1 — autenticação
+
+A captura anterior do login indicava ícone quebrado no celular. O `AuthLayout.tsx` apontava para `/brand/kyra-atende-icon.svg`, que encapsula uma imagem WebP em um SVG; para reduzir incompatibilidade no navegador/PWA, alterou-se apenas a referência visual para `/icons/kyra-icon.png`, arquivo existente no repositório. A correção exige confirmação visual após o deploy; não muda credenciais nem fluxos de login.
