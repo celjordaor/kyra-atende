@@ -33,16 +33,16 @@ export default function CookiePreferences() {
   if (!visible) return null
   return (
     <section role="dialog" aria-modal="false" aria-labelledby="kyra-cookie-title"
-      style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 10000, background: '#233E62', color: '#fff', padding: '18px clamp(16px, 3vw, 36px)', boxShadow: '0 -8px 30px rgba(0,0,0,.2)', maxHeight: '75dvh', overflowY: 'auto' }}>
+      style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 10000, background: '#233E62', color: '#fff', padding: '18px clamp(16px, 3vw, 36px)', boxShadow: '0 -8px 30px rgba(0,0,0,.2)', maxHeight: '75dvh', overflowY: 'auto', WebkitTextFillColor: '#fff' }}>
       <div style={{ maxWidth: 1400, margin: '0 auto', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 18 }}>
         <div style={{ flex: '1 1 320px', minWidth: 0, lineHeight: 1.55 }}>
           <strong id="kyra-cookie-title" style={{ fontSize: 16 }}>🍪 Preferências de cookies</strong>
-          <p style={{ fontSize: 13, margin: '6px 0' }}>Utilizamos cookies essenciais para autenticação e funcionamento da plataforma. Ainda não há categorias opcionais de análise ou publicidade habilitadas nesta interface. Você pode consultar nossa <a href="/politica-de-privacidade" style={{ color: '#DCCBFF', textDecoration: 'underline' }}>Política de Privacidade</a> (em revisão).</p>
+          <p style={{ fontSize: 14, margin: '6px 0', color: '#FFFFFF', WebkitTextFillColor: '#FFFFFF' }}>Utilizamos cookies essenciais para autenticação e funcionamento da plataforma. Ainda não há categorias opcionais de análise ou publicidade habilitadas nesta interface. Você pode consultar nossa <a href="/politica-de-privacidade" style={{ color: '#E8DFFF', WebkitTextFillColor: '#E8DFFF', textDecoration: 'underline' }}>Política de Privacidade</a> (em revisão).</p>
           {details && (
-            <div style={{ fontSize: 13, background: 'rgba(255,255,255,.09)', padding: 12, borderRadius: 8 }}>
+            <div style={{ fontSize: 14, color: '#FFFFFF', WebkitTextFillColor: '#FFFFFF', background: 'rgba(255,255,255,.09)', padding: 12, borderRadius: 8 }}>
               <p style={{ margin: 0 }}><strong>Essenciais:</strong> necessários à sessão e segurança; não podem ser desativados por este painel.</p>
               <p style={{ margin: '8px 0 0' }}><strong>Analíticos e marketing:</strong> não disponíveis. Só poderão ser ativados após inventário e implementação de bloqueio até consentimento.</p>
-              <a href="/cookies" style={{ color: '#DCCBFF' }}>Mais informações sobre cookies</a>
+              <a href="/cookies" style={{ color: '#E8DFFF', WebkitTextFillColor: '#E8DFFF' }}>Mais informações sobre cookies</a>
             </div>
           )}
         </div>
