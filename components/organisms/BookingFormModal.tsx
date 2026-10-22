@@ -690,7 +690,7 @@ export function BookingFormModal({
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           {formErrors.api && <ErrorBox msg={formErrors.api} />}
           {loadingData && (
-            <div style={{ textAlign: 'center', color: 'var(--muted)', fontSize: '13px', padding: '8px 0' }}>
+            <div role="status" aria-live="polite" aria-busy="true" style={{ textAlign: 'center', color: 'var(--muted)', fontSize: '13px', padding: '8px 0' }}>
               Carregando dados…
             </div>
           )}
@@ -698,7 +698,7 @@ export function BookingFormModal({
           {/* Cliente */}
           <div>
             <div style={{ fontSize: '13px', fontWeight: 500, color: 'var(--ink)', marginBottom: '6px' }}>
-              Cliente <span style={{ color: 'var(--red)' }}>*</span>
+              Cliente <span style={{ color: 'var(--red)' }} aria-hidden="true">*</span><span className="sr-only"> (obrigatório)</span>
             </div>
             <ClientPicker
               value={form.client_id}
