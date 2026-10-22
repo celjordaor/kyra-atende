@@ -601,6 +601,7 @@ export function BookingFormModal({
   ]
 
   const handleSave = async () => {
+    if (saving || deleting || loadingData) return
     const errs: FormErrors = {}
     if (!form.client_id)  errs.client   = 'Selecione um cliente.'
     if (!form.service_id) errs.service  = 'Selecione um serviço.'
@@ -654,7 +655,7 @@ export function BookingFormModal({
   }
 
   const handleDelete = async () => {
-    if (!editBooking) return
+    if (!editBooking || saving || deleting || loadingData) return
     setDeleting(true)
     try {
       await api.delete(`/bookings/${editBooking.id}`)
@@ -675,12 +676,12 @@ export function BookingFormModal({
         footer={
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
             {isEdit
-              ? <Button variant="danger" onClick={handleDelete} loading={deleting}>Excluir</Button>
+              ? <Button variant="danger" onClick={handleDelete} loading={deleting} disabled={saving || loadingData}>Excluir</Button>
               : <div />
             }
             <div style={{ display: 'flex', gap: '10px' }}>
               <Button variant="ghost" onClick={onClose} disabled={saving || deleting}>Cancelar</Button>
-              <Button variant="primary" onClick={handleSave} loading={saving || loadingData}>
+              <Button variant="primary" onClick={handleSave} loading={saving} disabled={deleting || loadingData}>
                 {isEdit ? 'Salvar alterações' : 'Salvar agendamento'}
               </Button>
             </div>
