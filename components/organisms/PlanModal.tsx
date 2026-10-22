@@ -144,6 +144,8 @@ export function PlanModal({ open, onClose, currentPlan, mode = 'upgrade', isTria
           {PERIODS.map(p => (
             <button
               key={p.key}
+              type="button"
+              aria-pressed={period === p.key}
               onClick={() => setPeriod(p.key)}
               style={{
                 padding: '7px 16px', borderRadius: 'var(--r)', fontSize: 13,
@@ -186,6 +188,8 @@ export function PlanModal({ open, onClose, currentPlan, mode = 'upgrade', isTria
           return (
             <button
               key={plan.key}
+              type="button"
+              aria-pressed={isSelected}
               onClick={() => { if (!isReadOnly && pending === false) setSelected(plan.key) }}
               disabled={(isReadOnly && !isActive) || (!isReadOnly && pending !== false)}
               style={{
@@ -269,14 +273,14 @@ export function PlanModal({ open, onClose, currentPlan, mode = 'upgrade', isTria
 
       {/* Feedback de erro */}
       {error && (
-        <p style={{ fontSize: 13, color: 'var(--red)', margin: '0 0 16px', textAlign: 'center' }}>
+        <p role="alert" style={{ fontSize: 13, color: 'var(--red)', margin: '0 0 16px', textAlign: 'center' }}>
           {error}
         </p>
       )}
 
       {/* Rodapé */}
       {!isReadOnly && (
-        <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', alignItems: 'center' }}>
+        <div className="kyra-plan-actions" style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', alignItems: 'center', flexWrap: 'wrap' }}>
           <span style={{ fontSize: 12, color: 'var(--muted)', marginRight: 'auto' }}>
             Cancele a qualquer momento · Sem multa
           </span>
@@ -296,6 +300,7 @@ export function PlanModal({ open, onClose, currentPlan, mode = 'upgrade', isTria
           </Button>
         </div>
       )}
+      <style>{`@media (max-width: 640px) { .kyra-plan-actions { justify-content: stretch !important; } .kyra-plan-actions > span { width: 100%; margin-bottom: 8px; } .kyra-plan-actions > button { flex: 1 1 auto; } }`}</style>
     </Modal>
   )
 }

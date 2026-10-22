@@ -175,8 +175,10 @@ function SearchableSelect({ label, value, onChange, options, required, error }: 
       <span style={{ fontSize: '13px', fontWeight: 500, color: 'var(--ink-soft)', marginBottom: '4px' }}>
         {label}{required && <span style={{ color: 'var(--red)', marginLeft: '3px' }} aria-hidden>*</span>}
       </span>
-      <div ref={wrapRef} style={{ position: 'relative' }}>
-        <button type="button" onClick={() => { setOpen(v => !v); setQuery('') }} aria-haspopup="listbox" aria-expanded={open}
+      <div ref={wrapRef} style={{ position: 'relative' }} onKeyDown={e => {
+        if (e.key === 'Escape' && open) { e.stopPropagation(); setOpen(false); setQuery('') }
+      }}>
+        <button type="button" onClick={() => { setOpen(v => !v); setQuery('') }} aria-label={label} aria-haspopup="listbox" aria-expanded={open}
           style={{
             width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
             padding: '8px 12px', borderRadius: 'var(--r-md)', cursor: 'pointer', textAlign: 'left',
@@ -205,7 +207,7 @@ function SearchableSelect({ label, value, onChange, options, required, error }: 
                 width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
               </svg>
-              <input ref={inputRef} value={query} onChange={e => setQuery(e.target.value)} placeholder="Buscar..."
+              <input ref={inputRef} value={query} onChange={e => setQuery(e.target.value)} aria-label={`Buscar em ${label}`} placeholder="Buscar..."
                 style={{ width: '100%', boxSizing: 'border-box', padding: '6px 8px 6px 30px', borderRadius: 'var(--r)', border: '1px solid var(--border)', background: 'var(--surface-2)', color: 'var(--ink)', fontSize: '13px', outline: 'none' }} />
             </div>
             <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
