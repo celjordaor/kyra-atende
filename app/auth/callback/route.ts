@@ -29,16 +29,19 @@ export async function GET(request: NextRequest) {
       },
     )
 
-    const { data: exchange, error } = await supabase.auth.exchangeCodeForSession(code)
-
-    if (!error) {
-      const user = exchange.user
-      // Usuários novos precisam provisionar a empresa após confirmar e-mail.
-      // A rota de conclusão valida novamente a sessão no backend.
-      const destination = user?.user_metadata?.company && !user?.app_metadata?.tenant_id
-        ? '/cadastro/concluir'
-        : next === '/nova-senha' ? '/nova-senha' : '/dashboard'
-      return NextResponse.redirect(new URL(destination, origin))
+    try {
+      const { data: exchange, error } = await supabase.auth.exchangeCodeForSession(code)
+      if (!error) {
+        const user = exchange.user
+        // Novas contas precisam finalizar o provisionamento após confirmar e-mail.
+        const destination = user?.user_metadata?.company && !user?.app_metadata?.tenant_id
+          ? '/cadastro/concluir'
+          : next === '/nova-senha' ? '/nova-senha' : '/dashboard'
+        return NextResponse.redirect(new URL(destination, origin))
+      }
+    } catch {
+      // Uma indisponibilidade de rede não deve devolver uma página 500 ao usuário.
+      return NextResponse.redirect(new URL('/login?error=callback_indisponivel', origin))
     }
   }
 
