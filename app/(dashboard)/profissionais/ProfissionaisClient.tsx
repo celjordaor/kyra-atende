@@ -219,7 +219,26 @@ export function ProfissionaisClient({ rows: initialRows }: Props) {
         </div>
       )}
 
-      <div id="prof-table">
+      <style>{`@media (max-width: 700px) { .kyra-professionals-desktop { display: none !important; } .kyra-professionals-mobile { display: grid !important; } }`}</style>
+      <div className="kyra-professionals-mobile" style={{ display: 'none', gap: 12 }}>
+        {rows.length === 0 && <p style={{ color: 'var(--muted)' }}>Nenhum profissional cadastrado.</p>}
+        {rows.map(row => (
+          <article key={row.id} style={{ padding: 16, minWidth: 0, background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 'var(--r-lg)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <Avatar name={row.name} size="sm" />
+              <strong style={{ color: 'var(--ink)', overflowWrap: 'anywhere', flex: 1, minWidth: 0 }}>{row.name}</strong>
+              <StatusBadge status={row.is_active ? 'active' : 'suspended'} />
+            </div>
+            <div style={{ fontSize: 13, color: 'var(--ink-body)', marginTop: 10, overflowWrap: 'anywhere' }}>{row.email || 'E-mail não informado'}</div>
+            <div style={{ fontSize: 13, color: 'var(--muted)', marginTop: 5 }}>{row.phone || 'Telefone não informado'}</div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 14 }}>
+              <Button variant="secondary" size="sm" onClick={() => openEdit(row)}>Editar</Button>
+              <Button variant={row.is_active ? 'danger' : 'secondary'} size="sm" disabled={!!loading[row.id]} onClick={() => void handleToggleActive(row)}>{loading[row.id] ? 'Atualizando…' : row.is_active ? 'Desativar' : 'Reativar'}</Button>
+            </div>
+          </article>
+        ))}
+      </div>
+      <div className="kyra-professionals-desktop" id="prof-table">
         <DataTable
           columns={COLUMNS}
           rows={rows}
