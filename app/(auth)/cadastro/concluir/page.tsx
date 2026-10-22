@@ -13,7 +13,7 @@ export default function ConcluirCadastro() {
     async function finish() {
       try {
         const supabase = createClient()
-        const { data: { user }, error: sessionError } = await supabase.auth.getUser()
+        const { data: { user }, error: sessionError } = await Promise.race([supabase.auth.getUser(), new Promise<never>((_, reject) => setTimeout(() => reject(new Error('timeout')), 15000))])
         if (sessionError || !user?.email_confirmed_at || !user.email) {
           throw new Error('Confirme seu e-mail e faça login para continuar.')
         }
@@ -39,13 +39,13 @@ export default function ConcluirCadastro() {
           throw new Error(result.error || 'Não foi possível finalizar o cadastro.')
         }
         // Atualiza o JWT para disponibilizar app_metadata.tenant_id na RLS.
-        const { error: refreshError } = await supabase.auth.refreshSession()
+        const { error: refreshError } = await Promise.race([supabase.auth.refreshSession(), new Promise<never>((_, reject) => setTimeout(() => reject(new Error('timeout')), 15000))])
         if (refreshError) throw refreshError
         router.replace('/dashboard')
         router.refresh()
       } catch (err) {
         if (!alive) return
-        if (err instanceof Error && (err.name === 'TimeoutError' || err.name === 'AbortError')) {
+        if (err instanceof Error && (err.name === 'TimeoutError' || err.name === 'AbortError' || err.message === 'timeout')) {
           setError('A configuração demorou mais que o esperado. Faça login novamente para verificar sua conta ou tente mais tarde.')
         } else {
           setError(err instanceof Error ? err.message : 'Erro ao finalizar cadastro.')
