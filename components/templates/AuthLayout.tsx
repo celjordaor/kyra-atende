@@ -1,5 +1,6 @@
-import CookieSettingsButton from '@/components/organisms/CookieSettingsButton'
 'use client'
+
+import CookieSettingsButton from '@/components/organisms/CookieSettingsButton'
 
 import React from 'react'
 
