@@ -106,34 +106,40 @@ export default function CadastroPage() {
     }
 
     // 2. Cria tenant + perfil + subscription via API route server-side
-    const setupRes = await fetch('/api/auth/setup-tenant', {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({
-        userId:  data.user.id,
-        email:   form.email,
-        name:    form.name,
-        company: form.company,
-        phone:   form.phone,
-      }),
-    })
-
-    if (!setupRes.ok) {
-      const body = await setupRes.json().catch(() => ({}))
-      setError(body.error ?? 'Erro ao configurar sua empresa. Entre em contato com o suporte.')
+    try {
+      const setupRes = await fetch('/api/auth/setup-tenant', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({
+          userId:  data.user.id,
+          email:   form.email,
+          name:    form.name,
+          company: form.company,
+          phone:   form.phone,
+        }),
+      })
+  
+      if (!setupRes.ok) {
+        const body = await setupRes.json().catch(() => ({}))
+        setError(body.error ?? 'Erro ao configurar sua empresa. Entre em contato com o suporte.')
+        setLoading(false)
+        return
+      }
+  
+      // Atualiza claims do JWT após a criação transacional do tenant.
+      const { error: refreshError } = await supabase.auth.refreshSession()
+      if (refreshError) {
+        setError('Conta criada. Faça login novamente para continuar.')
+        setLoading(false)
+        return
+      }
+      router.replace('/dashboard')
+      router.refresh()
+    } catch {
+      setError('Não foi possível concluir o cadastro. Verifique sua conexão e faça login para continuar.')
+    } finally {
       setLoading(false)
-      return
     }
-
-    // Atualiza claims do JWT após a criação transacional do tenant.
-    const { error: refreshError } = await supabase.auth.refreshSession()
-    if (refreshError) {
-      setError('Conta criada. Faça login novamente para continuar.')
-      setLoading(false)
-      return
-    }
-    router.replace('/dashboard')
-    router.refresh()
   }
 
   return (
