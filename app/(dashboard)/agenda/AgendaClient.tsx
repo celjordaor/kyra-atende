@@ -442,6 +442,7 @@ export default function AgendaClient({ bookings, services, hours, blocks, timezo
   const [detailBk,       setDetailBk]       = useState<Booking | null>(null)   // Modal de detalhes
   const [editModalBk,    setEditModalBk]    = useState<Booking | null>(null)   // Modal de edição (BookingFormModal)
   const [showNewModal,   setShowNewModal]   = useState(false)                  // Modal de novo agendamento (BookingFormModal)
+  const [operationNotice, setOperationNotice] = useState<string | null>(null)
   const [completeModalId, setCompleteModalId] = useState<string | null>(null)  // Modal Concluir serviço
 
   // Booking ativo no CompleteModal — derivado do estado
@@ -537,12 +538,14 @@ export default function AgendaClient({ bookings, services, hours, blocks, timezo
     })
     setShowNewModal(false)
     setEditModalBk(null)
+    setOperationNotice(isEdit ? 'Agendamento atualizado com sucesso.' : 'Agendamento criado com sucesso.')
   }, [])
 
   /** Chamado após excluir um agendamento no BookingFormModal */
   const handleDeleted = useCallback((id: string) => {
     setBkState(prev => prev.filter(b => b.id !== id))
     setEditModalBk(null)
+    setOperationNotice('Agendamento excluído com sucesso.')
   }, [])
 
   // ── Labels de período ──────────────────────────────────────
@@ -576,6 +579,13 @@ export default function AgendaClient({ bookings, services, hours, blocks, timezo
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+
+      {operationNotice && (
+        <div role="status" aria-live="polite" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, background: 'var(--brand-faint)', color: 'var(--brand-active)', border: '1px solid var(--brand-dim)', padding: '12px 16px', borderRadius: 'var(--r-md)' }}>
+          <span>{operationNotice}</span>
+          <button type="button" aria-label="Dispensar confirmação" onClick={() => setOperationNotice(null)} style={{ background: 'transparent', border: 'none', color: 'inherit', cursor: 'pointer', fontSize: 18 }}>×</button>
+        </div>
+      )}
 
       {/* ── Top bar ── */}
       <div id="agenda-topbar" style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
@@ -892,6 +902,7 @@ export default function AgendaClient({ bookings, services, hours, blocks, timezo
               : b
           ))
           setCompleteModalId(null)
+          setOperationNotice('Serviço concluído com sucesso.')
         }}
       />
     </div>
