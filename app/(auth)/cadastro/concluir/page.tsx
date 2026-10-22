@@ -32,6 +32,7 @@ export default function ConcluirCadastro() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ userId: user.id, email: user.email, name, company }),
+          signal: AbortSignal.timeout(20000),
         })
         if (!res.ok) {
           const result = await res.json().catch(() => ({}))
@@ -43,7 +44,12 @@ export default function ConcluirCadastro() {
         router.replace('/dashboard')
         router.refresh()
       } catch (err) {
-        if (alive) setError(err instanceof Error ? err.message : 'Erro ao finalizar cadastro.')
+        if (!alive) return
+        if (err instanceof Error && (err.name === 'TimeoutError' || err.name === 'AbortError')) {
+          setError('A configuração demorou mais que o esperado. Faça login novamente para verificar sua conta ou tente mais tarde.')
+        } else {
+          setError(err instanceof Error ? err.message : 'Erro ao finalizar cadastro.')
+        }
       }
     }
     void finish()
