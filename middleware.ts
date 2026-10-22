@@ -28,7 +28,6 @@ const PUBLIC_PATHS = new Set([
 // Prefixos que não precisam de sessão
 const PUBLIC_PREFIXES = [
   '/agendar/',
-  '/politica',
   '/_next/',
   '/favicon',
   '/icons/',
@@ -70,7 +69,7 @@ export function middleware(request: NextRequest) {
   if (!loggedIn) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
-    url.searchParams.set('next', pathname)
+    url.searchParams.set('next', pathname + request.nextUrl.search)
     return NextResponse.redirect(url)
   }
 
