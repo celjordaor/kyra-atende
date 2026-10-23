@@ -60,3 +60,9 @@
 - PR funcional em preparação: ação **Pesquisa** em agendamentos concluídos no desktop/mobile; modal de seleção do modelo `service_satisfaction` publicado; criação manual de convite e cópia de link. Nenhuma comunicação é disparada automaticamente.
 - Último deploy confirmado: PR #106, commit `d793919d27cd499e65287117af5c5cc8096cf15a`, Vercel `READY`; P12.2 CI aprovado. P12.3 exige CI/merge/deploy próprios e E2E de tenants e links.
 - Próximo: P12.4 automação diária inicialmente desligada, outbox, opt-out, métricas; P12.5 homologação externa.
+
+
+## Continuidade P12.4 — estado mais recente (23/10/2026)
+- P12.3 consolidada em PR #107 / main `13871ec2c371f355dc5534a5c4f3f055d58d4dcb`; deployment verificado READY. Nenhum envio externo.
+- Branch `feat/e3-p124-safe-survey-automation` prepara configuração por tenant, opt-out e outbox retida. Arquivo SQL `supabase/migrations/20261023160000_e3_survey_automation_safe_foundation.sql`; interface e API `GET/PATCH /api/surveys/automation`. Restrição `enabled=false`, `send_channel=disabled`, sem worker ou cron. Conferir migration remota, CI, PR e deploy antes de dizer publicado.
+- P12.4 incompleta: falta processamento elegível/opt-out efetivo, outbox idempotente, monitoramento e relatórios; P12.5 exige homologação de dois tenants e comunicações somente após aprovação.
