@@ -1,7 +1,9 @@
 'use client'
+import { SidePanel } from '@/components/organisms/SidePanel'
+import { BookingSection } from '@/components/organisms/BookingSection'
 
 import { useState, useCallback } from 'react'
-import { DataTable, Modal } from '@/components/organisms'
+import { DataTable } from '@/components/organisms'
 import { Avatar, Button, StatusBadge, FormField } from '@/components/atoms'
 import { api, ApiError } from '@/lib/api'
 import type { Column, RowAction } from '@/components/organisms'
@@ -298,11 +300,11 @@ export function ProfissionaisClient({ rows: initialRows }: Props) {
       />
 
       {/* Modal */}
-      <Modal
+      <SidePanel
         open={modalOpen}
         onClose={closeModal}
         title={editing ? 'Editar profissional' : 'Novo profissional'}
-        size="sm"
+        width={680}
         footer={
           <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
             <Button variant="ghost" size="sm" onClick={closeModal} disabled={saving}>
@@ -328,6 +330,7 @@ export function ProfissionaisClient({ rows: initialRows }: Props) {
             </div>
           )}
 
+          <BookingSection title="Informações do profissional" icon="♙"><div style={{display:'flex',flexDirection:'column',gap:14}}>
           <FormField
             type="text"
             label="Nome"
@@ -352,8 +355,9 @@ export function ProfissionaisClient({ rows: initialRows }: Props) {
             placeholder="(11) 9 9999-9999"
             hint="Opcional"
           />
+          </div></BookingSection>
         </div>
-      </Modal>
+      </SidePanel>
     </div>
   )
 }

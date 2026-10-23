@@ -1,7 +1,9 @@
 'use client'
+import { SidePanel } from '@/components/organisms/SidePanel'
+import { BookingSection } from '@/components/organisms/BookingSection'
 
 import { useState, useCallback } from 'react'
-import { DataTable, Modal } from '@/components/organisms'
+import { DataTable } from '@/components/organisms'
 import { Button, FormField, StatusBadge } from '@/components/atoms'
 import { api, ApiError } from '@/lib/api'
 import type { Column, RowAction } from '@/components/organisms'
@@ -243,11 +245,11 @@ export function ServicosClient({ rows: initialRows }: Props) {
         </>:<DataTable columns={COLUMNS} rows={rows} rowActions={ROW_ACTIONS} emptyMessage="Nenhum registro cadastrado." pagination={{page:1,pageSize:20,total:rows.length}}/>}
       </div>
 
-      <Modal
+      <SidePanel
         open={modalOpen}
         onClose={closeModal}
         title={editing ? 'Editar serviço' : 'Novo serviço'}
-        size="sm"
+        width={680}
         footer={
           <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
             <Button variant="ghost" size="sm" onClick={closeModal} disabled={saving}>Cancelar</Button>
@@ -263,14 +265,16 @@ export function ServicosClient({ rows: initialRows }: Props) {
               {formError}
             </div>
           )}
+          <BookingSection title="Informações do serviço" icon="✦"><div style={{display:'flex',flexDirection:'column',gap:14}}>
           <FormField type="text"     label="Nome do serviço" value={form.name}             onChange={setField('name')}             required placeholder="Ex: Corte de cabelo" />
           <FormField type="textarea" label="Descrição"       value={form.description}      onChange={setField('description')}      placeholder="Breve descrição (opcional)" hint="Aparece na página pública de agendamento" />
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <FormField type="text"     label="Duração (minutos)" value={form.duration_minutes} onChange={setField('duration_minutes')} required placeholder="60" hint="Mín. 5 minutos" />
             <FormField type="currency" label="Preço"             value={form.price}            onChange={setField('price')}            required />
           </div>
+          </div></BookingSection>
         </div>
-      </Modal>
+      </SidePanel>
     </div>
   )
 }

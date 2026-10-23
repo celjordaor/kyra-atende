@@ -151,3 +151,9 @@ Após o ciclo de melhorias do Portal, a continuidade passou a gerar pequenos PRs
 - Clientes mantém dados reais, busca, tabela, ações e formato mobile, com bordas e superfícies lilás suaves. Profissionais e Serviços passam a apresentar **cards com dados existentes** e ações originais. Fotos, especialidades, horários e categorias da imagem eram ilustrativos e não devem aparecer como dados inventados.
 - **Próximo ciclo visual obrigatório, antes de declarar E1 completa:** revisar Agendamentos, Clientes, Serviços, Profissionais, Pesquisas e Configurações (Geral, Assinatura, Horários, Notificações), com consistência de cabeçalhos, filtros, cards, ícones e hierarquia. Revisar modais Novo agendamento; criar/editar cliente, serviço e profissional; Histórico de agendamentos; Ficha de finalização; Pesquisa pós-agendamento; Detalhes; Editar agendamento completo. O fluxo IA Kyra terá experiência diferenciada usando seu ícone original.
 - Manter lógicas e ações existentes. Cada migração de modal requer conferência das validações e foco/mobile. Conferir CI do PR, deploy `READY` do SHA exato, homologação visual em browser e testes operacionais; nada disso é equivalente.
+
+
+## 19. E1 — Formulários de gestão no painel lateral (23/10/2026)
+- Novo/Editar Cliente, Profissional e Serviço passam a usar `SidePanel` existente de 680 px e `BookingSection` com cabeçalhos lilás claro. Preservadas máscaras, campos, validações, ações, integrações e estado dos formulários; janela de exclusão e histórico mantidos sem mudanças neste PR.
+- Próxima etapa E1: Histórico de agendamentos, Ficha de finalização, Pesquisa pós-agendamento, Pesquisas, Configurações (Geral/Assinatura/Horários/Notificações), revisão dos detalhes e a interface distinta da IA Kyra. E2 só após concluir a revisão visual pactuada.
+- Publicação requer CI, merge e deploy READY; E2E visual/móvel e validações de comportamento permanecem separados.
