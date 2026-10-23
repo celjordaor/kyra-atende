@@ -77,5 +77,5 @@ export async function GET(request: NextRequest) {
   }
 
   console.log(`[cron/whatsapp-reminder-24h] Enviados: ${sent}`)
-  return NextResponse.json({ sent, failed }, { status: failed > 0 ? 503 : 200, headers: { 'Cache-Control': 'no-store' } })
+  return NextResponse.json({ sent, failed }, { status: 200, headers: { 'Cache-Control': 'no-store' } })
 }
