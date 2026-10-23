@@ -34,11 +34,13 @@ export default function PortalOverview(){
 
  if(loading)return <p role="status">Consultando seus agendamentos…</p>
  if(error&&!companies.length)return <div><p role="alert">{error}</p><button type="button" onClick={refresh}>Tentar novamente</button></div>
- if(!companies.length)return <p>Nenhuma empresa vinculada.</p>
+ if(!companies.length)return <p>Seu acesso foi verificado, mas ainda não há empresas vinculadas à sua conta. Utilize um convite individual válido para vincular uma empresa. O vínculo não é realizado apenas pelo e-mail ou telefone.</p>
  const selected=companies.find(c=>c.id===company)
  const rows=bookings.filter(b=>b.tenant_id===company)
  return <section style={{display:'flex',flexDirection:'column',gap:14,marginTop:20}}>
-  <label>Empresa <select value={company} onChange={e=>{setCompany(e.target.value);setNewBooking(false)}}>{companies.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></label>
+  {companies.length>1
+   ? <label>Empresa <select value={company} onChange={e=>{setCompany(e.target.value);setNewBooking(false)}}>{companies.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></label>
+   : <p style={{margin:0}}><strong>Empresa:</strong> {companies[0].name}</p>}
   <h2>Meus agendamentos</h2>
   {refreshing&&<p role="status">Atualizando agendamentos…</p>}
   {error&&<p role="alert">{error} <button type="button" onClick={refresh}>Tentar novamente</button></p>}
