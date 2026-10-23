@@ -52,3 +52,29 @@ Após o ciclo de melhorias do Portal, a continuidade passou a gerar pequenos PRs
 - Não criar envios reais nem ativar automação para clientes até aprovação funcional, legal e de comunicação.
 - Separar claramente: `planejado`, `implementado`, `CI aprovado`, `publicado`, `homologado E2E`.
 - Para cada entrega, atualizar o estado do item do roadmap e a próxima ação. Não retomar por iniciativa própria a auditoria do WhatsApp quando o próximo item aprovado for pesquisa.
+
+
+## 6. Retorno obrigatório a E1/E2 e redefinição visual (decisão de 23/10/2026)
+
+**Decisão expressa do proprietário:** a continuidade da E3 **não encerra E1 nem E2**. Depois das entregas de produto já priorizadas, há uma etapa obrigatória de retomada para construir o que permaneceu ausente e homologar o que estiver apenas parcialmente implementado. Não marcar itens como concluídos apenas por CI, existência de rota ou documentação.
+
+### E1 — pendências a retomar
+- Identidade visual e **Design System revisado**, inclusive padrões de **modais centrais, painéis laterais, confirmações e formulários em tela**, com componentes reutilizáveis;
+- Definir dimensões, espaçamentos, tipografia, tokens, badges, seções, estados de carregamento/erro, foco/teclado, acessibilidade, responsividade e comportamento mobile; prototipar e obter aceite visual **antes** de aplicar amplamente;
+- Rever telas prioritárias do sistema contra o padrão aprovado, evitando alterações fragmentadas em produção;
+- Finalizar textos legais de Termos, Privacidade/LGPD, contatos e processos pendentes somente após revisão competente;
+- Validar templates de e-mail e pontos residuais de autenticação/PWA em ambiente adequado.
+
+### E2 — pendências a construir
+- Onboarding guiado **do usuário da empresa/tenant**, distinto do provisionamento de Superadmin;
+- Desativação de profissionais e de serviços com avaliação do impacto nas reservas, opções seguras, avisos e auditoria;
+- Operações administrativas de agenda e outros itens E2 que a matriz de 18 pedidos classificar como incompletos;
+- Testes de isolamento multiempresa, concorrência, permissões e regressão em cada implementação.
+
+### Ordem e checkpoints
+1. **Agora:** E3 / item 12, começando por P12.1 (fundação de pesquisas), depois jornadas, relatórios e homologação conforme a especificação.
+2. **Checkpoint após o item 12:** atualizar matriz dos 18 pedidos com status e evidências; decidir a ordem relativa dos demais itens E3 e o retorno a E1/E2, sem perder nenhum item.
+3. **Retomada formal de E1/E2:** realizar a construção pendente por épicos completos, com o **Design System de modais e telas como frente transversal definida antes da reformulação visual em lote**.
+4. **E4/E5:** manter recorrência, integrações, remetentes, agendamento redesenhado e landing no backlog, respeitando dependências e prioridade explicitamente acordada.
+
+**Regra de proteção:** não considerar a auditoria de WhatsApp, Portal, E1 ou E2 encerrada funcionalmente sem evidências de homologação real; isso também não deve bloquear indefinidamente o avanço das novas funcionalidades aprovadas.
