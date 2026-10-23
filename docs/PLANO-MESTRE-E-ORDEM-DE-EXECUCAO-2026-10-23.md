@@ -128,3 +128,8 @@ Após o ciclo de melhorias do Portal, a continuidade passou a gerar pequenos PRs
 ## 14. P12.4/12.5 — consistência operacional e gates (23/10/2026)
 - Fila retida recebe nova validação transacional por RPC com isolamento por tenant e prevenção de dupla inclusão; visão administrativa acrescenta métricas de retidos, cancelados e opt-outs com limitação explícita de amostra.
 - P12.5: checks automatizados/schema não substituem E2E com duas empresas, consentimento e comunicação em ambiente isolado. Nenhuma automação ativa nem envio autorizado.
+
+
+## 15. Checkpoint E3 → E1 — 23/10/2026
+- E3 item 12: PRs #101–#111 publicaram fundamentos, duas pesquisas, convites, relatório inicial, opt-out e fila retida; #111 READY no commit `af82b3a8f60eaae7f71d4fa69ec41d79d7700f4e`. Envio automático **não implementado/ativado** e P12.5 E2E **não homologada**; não marcar item 12 como totalmente concluído.
+- Retomada E1 aprovada para começar pelo componente reutilizável de painel lateral, com foco, acessibilidade, responsividade, header/footer e tokens, **sem migração massiva de telas**. Próximo ciclo deve criar prévia visual e validar antes do rollout. E2/E4/E5 e 18 pedidos continuam no roadmap.
