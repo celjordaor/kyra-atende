@@ -60,3 +60,24 @@ Regras indispensáveis: RLS por tenant; autoria/verificação em API; tokens nã
 Escalas e perguntas padrão, prazo de convite, canal (e-mail/WhatsApp), validade/retificação de resposta, política de retenção e opt-out. Essas decisões **não bloqueiam o início do modelo técnico e da UX**, mas impedem que disparos sejam ativados em produção sem revisão.
 
 **Próxima ação única:** iniciar **P12.1**. Não abrir outra série de tarefas de testes do Portal ou WhatsApp sem defeito crítico ou ordem explícita.
+
+
+## 8. Início técnico de P12.1 — dependências verificadas em código (23/10/2026)
+A implementação do módulo seguirá o plano mestre, sem disparos externos até aprovação.
+
+**Referências encontradas no repositório:**
+- `supabase/migrations/20261020117000_unify_booking_creation.sql`: `public.create_booking_checked` retorna o UUID de `bookings`, aceita os estados iniciais `pending` ou `confirmed` e faz validação transacional de disponibilidade.
+- `supabase/migrations/20261020118000_atomic_public_client_booking.sql`: `public.create_public_booking_atomic` cria a reserva pública e retorna seu UUID; não acoplar o sucesso da reserva à disponibilidade da pesquisa.
+- `app/api/public/bookings/route.ts`: entrada pública já possui validações e rate limit; convite para pesquisa somente após confirmação do resultado de reserva, nunca antes da persistência.
+- Portal e agendamentos autenticados possuem caminhos próprios; criar serviço compartilhado de emissão de convites, evitando implementar a pesquisa apenas na rota pública.
+- Nenhum módulo de pesquisas foi identificado no inventário nominal do repositório; confirmar schema remoto, políticas e nomes antes da migration.
+
+**Contrato para construção do primeiro bloco funcional:**
+1. Tabelas tenant-scoped para templates versionados e perguntas ordenadas, com `kind` imutável por versão (`booking_experience` ou `service_satisfaction`).
+2. Convites vinculados a tenant + booking + versão, armazenando apenas hash do token; expiração, estados e unicidade por reserva/finalidade/campanha.
+3. Respostas vinculadas ao convite válido e às perguntas da versão publicada; impedir gravação duplicada e acesso cruzado; revogação e expiração sem expor dados da reserva.
+4. Administração permitida apenas a membros autorizados do tenant; leitura pública exclusivamente por token opaco; nunca publicar a chave service role ao navegador.
+5. Começar por templates + APIs + RLS + testes, antes de acrescentar CTA na confirmação e automação. Sem emails, WhatsApp ou mensagens disparadas neste bloco.
+6. Testes obrigatórios: tenant A não lê/escreve tenant B; token inválido/expirado; dupla resposta concorrente; criação repetida do convite; template alterado não altera respostas históricas.
+
+**Checkpoint E1/E2:** após o item 12, voltar ao Plano Mestre, seção 6, para priorização do Design System de modais/painéis e das construções operacionais ainda pendentes. Não interpretar o andamento de P12.1 como conclusão da E1 ou da E2.
