@@ -137,7 +137,8 @@ export default async function EmailTemplatesPage() {
       isActive:  db?.is_active  ?? true,
       variables: (db?.variables as string[] | null) ?? def.variables,
       updatedAt: db?.updated_at ?? null,
-      isCustom:  !!db && (db.subject !== def.subject || db.body_html !== def.html),
+      // Uma linha persistida é uma personalização, mesmo quando só o status muda.
+      isCustom:  !!db,
     }
   })
 
