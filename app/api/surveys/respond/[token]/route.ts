@@ -15,10 +15,14 @@ async function lookup(token:string){
   .eq('token_hash',createHash('sha256').update(token).digest('hex')).maybeSingle()
  if(error||!data||data.status!=='pending'||new Date(data.expires_at).getTime()<=Date.now())return null
  const {data:template}=await db.from('survey_templates')
-  .select('title,kind,status,survey_questions(id,position,label,answer_type,required)')
+  .select('title,kind,status')
   .eq('id',data.template_id).eq('tenant_id',data.tenant_id).maybeSingle()
  if(!template||template.status!=='published')return null
- return {invitation:data,template,db}
+ const {data:questions,error:questionsError}=await db.from('survey_questions')
+  .select('id,position,label,answer_type,required')
+  .eq('template_id',data.template_id).eq('tenant_id',data.tenant_id).order('position')
+ if(questionsError||!questions?.length)return null
+ return {invitation:data,template:{...template,survey_questions:questions},db}
 }
 export async function GET(_request:NextRequest,context:Context){
  const {token}=await context.params
