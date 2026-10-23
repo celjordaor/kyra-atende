@@ -88,6 +88,18 @@ export async function processWhatsappMessage(
       .limit(20),
   ])
 
+  // Não enviar à IA contexto comercial parcial em caso de falha de banco.
+  // O webhook registra o inbound para revisão humana quando esta função falha.
+  if (tenantResult.error || !tenantResult.data?.slug || !tenantResult.data?.name ||
+      servicesResult.error || !Array.isArray(servicesResult.data)) {
+    console.error('[ai] contexto de agendamento indisponível', {
+      tenantId,
+      tenantErrorCode: tenantResult.error?.code,
+      servicesErrorCode: servicesResult.error?.code,
+    })
+    throw new Error('whatsapp_ai_context_unavailable')
+  }
+
   const companyName  = tenantResult.data?.name ?? 'nossa empresa'
   const slug         = tenantResult.data?.slug ?? ''
   const appUrl       = process.env.APP_URL ?? process.env.NEXT_PUBLIC_APP_URL ?? 'https://kyraatende.com.br'
