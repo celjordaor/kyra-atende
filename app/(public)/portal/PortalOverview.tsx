@@ -12,6 +12,7 @@ export default function PortalOverview(){
  const [newBooking,setNewBooking]=useState(false)
  const [reload,setReload]=useState(0)
  const [refreshing,setRefreshing]=useState(false)
+ const [uncertainBooking,setUncertainBooking]=useState(false)
  useEffect(()=>{
   let alive=true
   const controller=new AbortController()
@@ -30,7 +31,7 @@ export default function PortalOverview(){
   return()=>{alive=false;controller.abort()}
  },[reload])
  const refresh=()=>{setReload(value=>value+1)}
- const booked=()=>{setNewBooking(false);refresh()}
+ const booked=(uncertain=false)=>{setUncertainBooking(uncertain);setNewBooking(false);refresh()}
 
  if(loading)return <p role="status">Consultando seus agendamentos…</p>
  if(error&&!companies.length)return <div><p role="alert">{error}</p><button type="button" onClick={refresh}>Tentar novamente</button></div>
@@ -43,11 +44,12 @@ export default function PortalOverview(){
    : <p style={{margin:0}}><strong>Empresa:</strong> {companies[0].name}</p>}
   <h2>Meus agendamentos</h2>
   {refreshing&&<p role="status">Atualizando agendamentos…</p>}
+  {uncertainBooking&&<p role="alert">A confirmação anterior não chegou ao navegador. Confira a lista atualizada antes de iniciar outro agendamento. Se não aparecer, confirme com o estabelecimento.</p>}
   {error&&<p role="alert">{error} <button type="button" onClick={refresh}>Tentar novamente</button></p>}
   {rows.length===0?<p>Você ainda não possui agendamentos nesta empresa.</p>:rows.map(b=><div key={b.id} style={{padding:12,border:'1px solid var(--border)',borderRadius:8}}>
    <strong>{new Date(b.start_at).toLocaleString('pt-BR')}</strong> — {b.status==='confirmed'?'Confirmado':b.status==='pending'?'Aguardando confirmação':b.status==='completed'?'Concluído':b.status==='cancelled'?'Cancelado':b.status}
   </div>)}
-  {selected&&<><button type="button" onClick={()=>setNewBooking(v=>!v)}>{newBooking?'Fechar agendamento':'Fazer novo agendamento'}</button>{newBooking&&<PortalNewBooking tenantId={selected.id} onDone={booked}/>}</>}
+  {selected&&<><button type="button" onClick={()=>{setUncertainBooking(false);setNewBooking(v=>!v)}}>{newBooking?'Fechar agendamento':'Fazer novo agendamento'}</button>{newBooking&&<PortalNewBooking tenantId={selected.id} onDone={booked}/>}</>}
   <p style={{fontSize:12,color:'var(--muted)'}}>O portal utiliza o cadastro verificado. Cancelamentos e remarcações continuam indisponíveis enquanto suas regras não forem homologadas.</p>
  </section>
 }
