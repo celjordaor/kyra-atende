@@ -18,9 +18,9 @@ export async function POST() {
 
   try {
     const result = await connectInstance(tenantId)
-    return NextResponse.json(result)
+    return NextResponse.json(result, { headers: { 'Cache-Control': 'private, no-store' } })
   } catch (e) {
-    console.error('[whatsapp/connect]', e)
+    console.error('[whatsapp/connect] falha do provedor', { errorType: e instanceof Error ? e.name : 'unknown' })
     return NextResponse.json({ error: 'Erro ao conectar WhatsApp.' }, { status: 500 })
   }
 }
