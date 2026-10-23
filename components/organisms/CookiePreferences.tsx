@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 
 const KEY = 'kyra-cookie-choice-v1'
-type Choice = 'essential' | 'all'
+type Choice = 'essential'
 type Stored = { choice: Choice; version: 1; updatedAt: string }
 
 // Preferências de terceiros ainda não disponíveis: sem scripts opcionais registrados
@@ -14,7 +14,16 @@ export default function CookiePreferences() {
   useEffect(() => {
     try {
       const value = localStorage.getItem(KEY)
-      setVisible(!value)
+      if (!value) {
+        setVisible(true)
+      } else {
+        const preference: unknown = JSON.parse(value)
+        const valid = typeof preference === 'object' && preference !== null &&
+          'version' in preference && preference.version === 1 &&
+          'choice' in preference && preference.choice === 'essential' &&
+          'updatedAt' in preference && typeof preference.updatedAt === 'string'
+        setVisible(!valid)
+      }
     } catch { setVisible(true) }
     const open = () => { setVisible(true); setDetails(true) }
     window.addEventListener('kyra:open-cookie-preferences', open)
