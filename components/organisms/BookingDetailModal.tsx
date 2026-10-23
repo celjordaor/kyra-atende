@@ -1,5 +1,5 @@
 'use client'
-import { Modal } from '@/components/organisms'
+import {SidePanel,BookingSection} from '@/components/organisms/BookingSection'
 import { Button } from '@/components/atoms'
 
 export type BookingDetail = {
@@ -12,9 +12,9 @@ const date=(s:string)=>new Date(s).toLocaleString('pt-BR',{dateStyle:'short',tim
 const methods:Record<string,string>={pix:'PIX',dinheiro:'Dinheiro',débito:'Débito',crédito:'Crédito',cortesia:'Cortesia'}
 export function BookingDetailModal({booking,onClose}:{booking:BookingDetail|null;onClose:()=>void}){
  const financial=booking?.status==='completed'
- return <Modal open={!!booking} onClose={onClose} size="lg" title={financial?'Ficha de finalização':'Detalhes do agendamento'}
+ return <SidePanel open={!!booking} onClose={onClose} width={680} title={financial?'Ficha de finalização':'Detalhes do agendamento'}
   footer={<div style={{display:'flex',justifyContent:'flex-end'}}><Button variant="secondary" onClick={onClose}>Fechar</Button></div>}>
-  {booking&&<div className="kyra-booking-detail-grid" style={{display:'grid',gridTemplateColumns:'repeat(2,minmax(0,1fr))',gap:'16px',fontSize:'14px',color:'var(--ink-body)'}}>
+  {booking&&<BookingSection title="Informações do atendimento" icon="▦"><div className="kyra-booking-detail-grid" style={{display:'grid',gridTemplateColumns:'repeat(2,minmax(0,1fr))',gap:'16px',fontSize:'14px',color:'var(--ink-body)'}}>
     {([
       ['Cliente',booking.client_name],['Serviço',booking.service],['Profissional',booking.professional??'Não informado'],
       ['Início',date(booking.start_at)],['Término',date(booking.end_at)],
@@ -31,7 +31,7 @@ export function BookingDetailModal({booking,onClose}:{booking:BookingDetail|null
       <p style={{gridColumn:'1/-1',fontSize:12,color:'var(--muted)',margin:0}}>Dados financeiros registrados na conclusão. Não substitui comprovante de pagamento.</p>
     </div>}
     {booking.notes&&<div style={{gridColumn:'1/-1'}}><div style={{fontSize:12,color:'var(--muted)'}}>Observações</div><p style={{whiteSpace:'pre-wrap'}}>{booking.notes}</p></div>}
-  </div>}
+  </div></BookingSection>}
   <style>{`@media (max-width: 560px) { .kyra-booking-detail-grid, .kyra-booking-financial-grid { grid-template-columns: minmax(0,1fr) !important; } }`}</style>
- </Modal>
+ </SidePanel>
 }
