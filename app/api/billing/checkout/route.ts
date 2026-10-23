@@ -13,8 +13,36 @@ export async function POST(request: NextRequest) {
   if (!session.ok) return session.response
 
   const { tenantId } = session
-  const body = await request.json().catch(() => null)
-  if (!body || typeof body !== 'object') {
+  // Checkout espera apenas plano e período: rejeitar payloads excessivos
+  // durante a leitura, inclusive quando Content-Length estiver ausente.
+  const maxBytes = 4096
+  const declaredLength = request.headers.get('content-length')
+  if (declaredLength !== null && Number(declaredLength) > maxBytes) {
+    return NextResponse.json({ error: 'Dados muito grandes.' }, { status: 413 })
+  }
+  let body: unknown = null
+  try {
+    const reader = request.body?.getReader()
+    if (!reader) return NextResponse.json({ error: 'Dados inválidos.' }, { status: 400 })
+    const chunks: Uint8Array[] = []
+    let received = 0
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+      received += value.byteLength
+      if (received > maxBytes) {
+        await reader.cancel().catch(() => undefined)
+        return NextResponse.json({ error: 'Dados muito grandes.' }, { status: 413 })
+      }
+      chunks.push(value)
+    }
+    body = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(
+      Buffer.concat(chunks.map(chunk => Buffer.from(chunk))),
+    ))
+  } catch {
+    return NextResponse.json({ error: 'Dados inválidos.' }, { status: 400 })
+  }
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
     return NextResponse.json({ error: 'Dados inválidos.' }, { status: 400 })
   }
   const { plan, period } = body as { plan?: unknown; period?: unknown }
