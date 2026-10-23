@@ -544,15 +544,14 @@ export default function EmailTemplatesClient({
 
           {/* Editor or Preview */}
           {previewOn ? (
-            <div
+            <iframe
+              title="Prévia isolada do e-mail"
+              sandbox=""
+              referrerPolicy="no-referrer"
+              srcDoc={buildPreviewHtml(html, editing.variables)}
               style={{
-                border: '1px solid var(--border)', borderRadius: 'var(--r)',
-                padding: '20px 24px', minHeight: 320,
-                background: 'var(--white)', color: 'var(--ink)',
-                fontSize: 14, lineHeight: 1.7,
-              }}
-              dangerouslySetInnerHTML={{
-                __html: buildPreviewHtml(html, editing.variables),
+                width: '100%', minHeight: 360, border: '1px solid var(--border)',
+                borderRadius: 'var(--r)', background: '#fff',
               }}
             />
           ) : (
