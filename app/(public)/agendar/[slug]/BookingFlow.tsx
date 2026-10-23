@@ -736,6 +736,12 @@ export default function BookingFlow({ tenantId, services, professionals, prefill
         />
       </div>
 
+      <p style={{ fontSize: '12px', color: 'var(--ink-soft)', lineHeight: 1.6, margin: '0 0 16px' }}>
+        Os dados informados serão utilizados para solicitar e gerenciar este agendamento junto à empresa responsável pelo atendimento.
+        Evite inserir informações sensíveis no campo de observações.
+        Consulte as <a href="/politica-de-privacidade" style={{ color: 'var(--brand)', textDecoration: 'underline' }}>informações de privacidade</a> (documento em revisão).
+      </p>
+
       {error && (
         <p style={{ fontSize: '13px', color: 'var(--red)', margin: '0 0 16px' }}>{error}</p>
       )}
