@@ -25,3 +25,5 @@ export type { CompleteModalProps, CompleteModalBooking } from './CompleteModal'
 
 export { BookingFormModal } from './BookingFormModal'
 export type { BookingFormModalProps, BookingToEdit, SavedBooking } from './BookingFormModal'
+
+export { SidePanel } from './SidePanel'
