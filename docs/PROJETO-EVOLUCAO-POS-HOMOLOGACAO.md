@@ -106,3 +106,6 @@ O projeto fica **preparado para planejamento futuro, não autorizado para implem
 
 
 > Execução parcial P12.4: consistência de enfileiramento atômico e indicadores operacionais; a homologação P12.5 real permanece aberta, assim como os demais itens E1/E2/E4/E5 do roadmap.
+
+
+> Checkpoint de 23/10/2026: E3 publicou fluxo de pesquisas e controles de segurança, mas P12.5 E2E e ativação de comunicações permanecem pendentes. Foi iniciada fundação transversal de E1 para painel lateral reutilizável; não existe aceite visual de migração das telas.
