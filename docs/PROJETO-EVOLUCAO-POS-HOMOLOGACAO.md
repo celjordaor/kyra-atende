@@ -91,3 +91,6 @@
 
 ## Resultado e próximo passo
 O projeto fica **preparado para planejamento futuro, não autorizado para implementação imediata**. Abrir E1 somente após G0 e aceite explícito deste roadmap. Registrar dependências e evitar reabrir performance de build suspensa por decisão do usuário.
+
+
+> Atualização de execução de 23/10/2026: o item 12 segue em andamento; P12.2 integrado via PR #106, e P12.3 passou a contar com proposta de ação manual para pesquisa pós-atendimento. O status depende de CI, publicação e E2E; E1/E2/E4/E5 seguem abertos conforme Plano Mestre.
