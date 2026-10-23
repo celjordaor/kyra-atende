@@ -70,7 +70,7 @@ export async function POST(request:NextRequest){
  try{
   const response=await fetch('https://api.resend.com/emails',{
    method:'POST',headers:{Authorization:'Bearer '+process.env.RESEND_API_KEY,'Content-Type':'application/json','Idempotency-Key':'survey-'+data.id},
-   body:JSON.stringify({from:process.env.MAIL_FROM,to:[client.email],subject:'Sua opinião sobre o atendimento — '+(tenant?.name||'Kyra Atende'),html}),
+   body:JSON.stringify({from:process.env.MAIL_FROM,to:[client.email.trim()],subject:'Sua opinião sobre o atendimento — '+(tenant?.name||'Kyra Atende'),html}),
    signal:AbortSignal.timeout(12000),
   })
   const result=await response.json().catch(()=>({}))
