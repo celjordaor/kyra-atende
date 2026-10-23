@@ -116,3 +116,9 @@ A implementação do módulo seguirá o plano mestre, sem disparos externos até
 - Status: **P12.4 parcialmente implementada**. Falta mecanismo de inscrição/descadastramento, avaliação de elegibilidade, consentimento/limites, processamento idempotente, agendamento, provider homologado, relatórios e E2E. Nenhuma ativação autorizada.
 
 - Migration P12.4 aplicada remotamente no Supabase Kyra Atende como versão `20261023160723`, mantendo arquivo Git sincronizado; envio permanece bloqueado.
+
+
+## 13. Incremento P12.4 — opt-out e retenção da outbox (23/10/2026)
+- API administrativa `GET/POST /api/surveys/opt-out` lê/atualiza preferências por finalidade (`booking_experience`, `service_satisfaction`), com checagem de tenant e owner/admin; operações idempotentes pelo índice único.
+- API `GET/POST /api/surveys/outbox` lista até 100 entradas e inclui sob ação explícita convite existente somente se não expirado, pending, template publicado, reserva elegível, cliente identificado e sem opt-out. Unicidade por convite protege inclusão repetida/concorrente. Estado da fila continua `held`, sem despachante.
+- Opt-out é respeitado **no momento de inclusão**; antes de permitir qualquer envio real será obrigatória nova revalidação transacional no momento do claim para neutralizar corridas e alterações posteriores. Falta self-service de descadastro e provas E2E; nenhuma mensagem foi disparada.
