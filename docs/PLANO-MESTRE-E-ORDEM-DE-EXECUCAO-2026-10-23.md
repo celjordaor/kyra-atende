@@ -123,3 +123,8 @@ Após o ciclo de melhorias do Portal, a continuidade passou a gerar pequenos PRs
 ## 13. P12.4 — descadastro pelo cliente (23/10/2026)
 - Tela pública `/pesquisa/[token]` recebe confirmação de descadastro; API segura por token faz opt-out do próprio cliente e propósito, revoga convite pendente e cancela fila retida.
 - Continua sem worker, cron ou disparo; a retenção e o opt-out não substituem gestão de consentimento e homologação. P12.4 ainda parcial e P12.5 E2E pendente; E1/E2/E4/E5 preservadas.
+
+
+## 14. P12.4/12.5 — consistência operacional e gates (23/10/2026)
+- Fila retida recebe nova validação transacional por RPC com isolamento por tenant e prevenção de dupla inclusão; visão administrativa acrescenta métricas de retidos, cancelados e opt-outs com limitação explícita de amostra.
+- P12.5: checks automatizados/schema não substituem E2E com duas empresas, consentimento e comunicação em ambiente isolado. Nenhuma automação ativa nem envio autorizado.

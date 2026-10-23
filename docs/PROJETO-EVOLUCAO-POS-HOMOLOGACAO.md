@@ -103,3 +103,6 @@ O projeto fica **preparado para planejamento futuro, não autorizado para implem
 
 
 > Checkpoint técnico P12.4: incluído caminho público de descadastro com confirmação e token de convite para impedir novas inclusões na fila retida. Item 12 continua aberto, e testes com identidades reais de dois tenants e aceite continuam pendentes.
+
+
+> Execução parcial P12.4: consistência de enfileiramento atômico e indicadores operacionais; a homologação P12.5 real permanece aberta, assim como os demais itens E1/E2/E4/E5 do roadmap.

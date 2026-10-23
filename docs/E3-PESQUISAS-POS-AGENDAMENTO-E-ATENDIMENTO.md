@@ -128,3 +128,9 @@ A implementação do módulo seguirá o plano mestre, sem disparos externos até
 - `POST /api/surveys/unsubscribe/[token]` (com rate limit, token de 64 hex, hash no servidor e expiração) determina tenant, cliente e finalidade exclusivamente do convite validado, e grava opt-out idempotente.
 - Interface pública oferece confirmação do descadastro. A API tenta revogar convite pendente e cancelar sua entrada na fila `held`; se houver falha intermediária retorna erro sem falsamente dizer que concluiu. O opt-out já registrado impede novas entradas pela API administrativa.
 - Fila não é processada, não há worker ou envios reais. Antes de eventual ativação, requer transação única de revalidação/claim, política de consentimento, regras LGPD e QA concorrente/multitenant.
+
+
+## 15. P12.4 — atomicidade da fila e indicadores (23/10/2026)
+- RPC `enqueue_held_survey_invitation` centraliza validação de tenant, convite pendente não expirado, reserva elegível, template publicado e opt-out dentro de uma transação; inserção `ON CONFLICT DO NOTHING` e reconsulta garantem idempotência.
+- API de outbox usa RPC restrita a `service_role`, sem operação de envio; estado permanece `held` ou `cancelled`. Painel exibe contadores de fila retida, cancelamentos e opt-out (amostra máxima de 1.000 entradas, sinalizada).
+- P12.4 não inclui consentimento integral, envio, cron, retentativas, claim transacional de envio ou E2E de dois tenants. P12.5 exige testes de segurança, concorrência e UX antes de homologação.

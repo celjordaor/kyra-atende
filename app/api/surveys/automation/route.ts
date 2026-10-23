@@ -16,13 +16,17 @@ export async function GET(){
  const auth=await authorize()
  if(auth.error)return auth.error
  const db=createAdminClient()
- const [{data:settings,error},{count, error:outboxError}]=await Promise.all([
+ const [{data:settings,error},{data:outbox,error:outboxError},{count:optOutCount,error:optOutError}]=await Promise.all([
   db.from('survey_automation_settings').select('enabled,daily_limit,send_channel,wait_hours,updated_at').eq('tenant_id',auth.tenantId!).maybeSingle(),
-  db.from('survey_outbox').select('id',{count:'exact',head:true}).eq('tenant_id',auth.tenantId!),
+  db.from('survey_outbox').select('state').eq('tenant_id',auth.tenantId!).limit(1000),
+  db.from('survey_contact_opt_outs').select('id',{count:'exact',head:true}).eq('tenant_id',auth.tenantId!),
  ])
- if(error||outboxError)return NextResponse.json({error:'Falha ao consultar configuração.'},{status:503})
+ if(error||outboxError||optOutError)return NextResponse.json({error:'Falha ao consultar configuração.'},{status:503})
  return NextResponse.json({settings:settings??{enabled:false,daily_limit:0,send_channel:'disabled',wait_hours:24},
-  heldCount:count??0,automaticSendingAvailable:false},{headers})
+  heldCount:(outbox??[]).filter(x=>x.state==='held').length,
+  cancelledCount:(outbox??[]).filter(x=>x.state==='cancelled').length,
+  optOutCount:optOutCount??0,metricsLimited:(outbox??[]).length===1000,
+  automaticSendingAvailable:false},{headers})
 }
 export async function PATCH(request:NextRequest){
  const auth=await authorize()
