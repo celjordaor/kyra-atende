@@ -43,7 +43,35 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
   }
 
-  const body = await request.json().catch(() => null)
+  // Limitar o corpo efetivamente recebido, mesmo sem Content-Length.
+  const maxBytes = 256 * 1024
+  const length = request.headers.get('content-length')
+  if (length !== null && Number(length) > maxBytes) {
+    return NextResponse.json({ error: 'Evento muito grande' }, { status: 413 })
+  }
+  let body: { id?: string; event?: string; payment?: { id?: string } } | null = null
+  try {
+    const reader = request.body?.getReader()
+    if (!reader) return NextResponse.json({ error: 'Evento inválido' }, { status: 400 })
+    const parts: Uint8Array[] = []
+    let total = 0
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+      total += value.byteLength
+      if (total > maxBytes) {
+        await reader.cancel().catch(() => undefined)
+        return NextResponse.json({ error: 'Evento muito grande' }, { status: 413 })
+      }
+      parts.push(value)
+    }
+    body = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(
+      Buffer.concat(parts.map(part => Buffer.from(part))),
+    ))
+  } catch {
+    return NextResponse.json({ error: 'Evento inválido' }, { status: 400 })
+  }
+
   if (!body || typeof body.id !== 'string' || typeof body.event !== 'string') {
     return NextResponse.json({ error: 'Evento inválido' }, { status: 400 })
   }
