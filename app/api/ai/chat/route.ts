@@ -149,7 +149,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Resposta gerada, mas o registro financeiro precisa de conciliação.' }, { status: 503 })
     }
     if (!await finishQuota(true)) return NextResponse.json({ error: 'Resposta gerada, mas o consumo de interações exige conciliação.' }, { status: 503 })
-    return NextResponse.json({ reply: result.reply })
+    return NextResponse.json({ reply: result.reply }, { headers: { 'Cache-Control': 'private, no-store' } })
   }
 
   // Fluxo legado enquanto a reserva financeira não for habilitada.
@@ -172,7 +172,7 @@ export async function POST(request: NextRequest) {
       }
     }
     if (!await finishQuota(true)) return NextResponse.json({ error: 'Resposta gerada, mas o consumo de interações exige conciliação.' }, { status: 503 })
-    return NextResponse.json({ reply })
+    return NextResponse.json({ reply }, { headers: { 'Cache-Control': 'private, no-store' } })
   } catch {
     // A chamada Anthropic pode ter concluído antes de perder a resposta.
     // Manter claim reservado para revisão, evitando crédito indevido e reenvio.
