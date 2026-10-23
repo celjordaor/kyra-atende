@@ -1,3 +1,4 @@
+import { enforceApiRateLimit } from '@/lib/api-rate-limit'
 /**
  * app/api/ai/chat/route.ts
  * POST /api/ai/chat — chat interno com IA (dashboard /ia)
@@ -16,6 +17,8 @@ export async function POST(request: NextRequest) {
   if (!session.ok) return session.response
 
   const { tenantId } = session
+  const limited = await enforceApiRateLimit(request, 'aiChat', tenantId)
+  if (limited) return limited
 
   // Entrada não confiável: limitar custo, tamanho do histórico e formato
   // antes de enviar qualquer conteúdo ao provedor de IA.
