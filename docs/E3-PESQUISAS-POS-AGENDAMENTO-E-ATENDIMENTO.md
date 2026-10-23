@@ -83,3 +83,13 @@ A implementação do módulo seguirá o plano mestre, sem disparos externos até
 6. Testes obrigatórios: tenant A não lê/escreve tenant B; token inválido/expirado; dupla resposta concorrente; criação repetida do convite; template alterado não altera respostas históricas.
 
 **Checkpoint E1/E2:** após o item 12, voltar ao Plano Mestre, seção 6, para priorização do Design System de modais/painéis e das construções operacionais ainda pendentes. Não interpretar o andamento de P12.1 como conclusão da E1 ou da E2.
+
+
+## 9. Atualização de implementação após PR #102 (23/10/2026)
+**Código incorporado a `main` no commit `25f15a543365efc7a1b2a587beb9c1d23feb1ac9`:**
+- P12.1: modelos/perguntas versionados, editor e endpoints administrativos (já descritos acima).
+- P12.2, fundação: `supabase/migrations/20261023132446_e3_survey_invitations_responses_foundation.sql`; `app/api/surveys/invitations/route.ts`; `app/api/surveys/respond/[token]/route.ts`; `app/pesquisa/[token]/page.tsx` e `SurveyRespondClient.tsx`.
+
+**Próxima entrega funcional:** verificar regras reais desses arquivos e fechar a integração opcional após reserva confirmada, com visualização administrativa e indicadores iniciais; testar token inválido/expirado, resposta duplicada/concorrente, tenant cruzado, UI móvel e falha não bloqueante da pesquisa. Depois avançar a P12.3 (atendimento concluído), P12.4 (envio manual/automação desligada por padrão, outbox, opt-out e relatórios) e P12.5 (E2E/homologação).
+
+**Rigor do status:** esta atualização confirmou o merge e os arquivos via GitHub. Não confirmou o estado das migrations no Supabase, dois workflows de CI para o SHA, deploy READY, envio real ou teste E2E. Nenhum disparo real está autorizado por este documento. Instruções anteriores que diziam “próxima ação P12.1” ou “iniciar P12.2 criando convites” são históricas; seguir esta seção e o handoff atualizado.
