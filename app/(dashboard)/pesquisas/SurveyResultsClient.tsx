@@ -1,7 +1,7 @@
 'use client'
 import {useEffect,useState} from 'react'
 
-type Row={id:string;title:string;kind:string;status:string;createdAt:string;answeredAt:string|null;answers:Record<string,unknown>|null}
+type Row={id:string;title:string;kind:string;status:string;createdAt:string;answeredAt:string|null;answers:{question:string;value:unknown}[]|null}
 type Result={summary:{total:number;answered:number;notAnswered:number;responseRate:number;limited:boolean};rows:Row[]}
 export default function SurveyResultsClient(){
  const [data,setData]=useState<Result|null>(null)
@@ -45,7 +45,7 @@ export default function SurveyResultsClient(){
      <strong>{r.title}</strong>
      <p style={{color:'var(--muted)',margin:'6px 0'}}>Criado em {formatDate(r.createdAt)} · {r.answeredAt?'Respondido em '+formatDate(r.answeredAt):'Não respondido'}</p>
      {r.answers&&<details><summary>Visualizar respostas</summary><ul>
-      {Object.values(r.answers).map((value,i)=><li key={i}>{typeof value==='boolean'?(value?'Sim':'Não'):String(value)}</li>)}
+      {r.answers.map((answer,i)=><li key={i}><strong>{answer.question}:</strong> {typeof answer.value==='boolean'?(answer.value?'Sim':'Não'):String(answer.value)}</li>)}
      </ul></details>}
     </article>)}
    </div>}
