@@ -5,7 +5,7 @@
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { PLAN_PRICES } from '@/lib/billing-prices'
+import { getPlanPrice } from '@/lib/billing-prices'
 import { timingSafeEqual } from 'node:crypto'
 
 export const runtime = 'nodejs'
@@ -223,7 +223,7 @@ export async function POST(request: NextRequest) {
     }
 
     const [tenantId, plan, period] = parts
-    const expectedAmount = PLAN_PRICES[plan]?.[period]
+    const expectedAmount = getPlanPrice(plan, period)
     if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(tenantId) ||
         !expectedAmount || typeof payment.value !== 'number' ||
         Math.abs(payment.value - expectedAmount) > 0.001) {
