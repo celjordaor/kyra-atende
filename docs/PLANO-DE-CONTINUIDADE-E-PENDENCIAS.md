@@ -715,3 +715,8 @@ O handoff vigente está em `docs/HANDOFF-NOVO-CHAT-2026-10-23.md`. A fila de fun
 
 ## E3/P12.4–P12.5 — consolidação da fila (23/10/2026)
 - Incremento de RPC para transação da fila retida e contadores operacionais; não habilita processamento ou envios. P12.5 ainda requer E2E de duas empresas, opt-out, status e expiração, concorrência, responsividade e validação externa.
+
+
+## E3 → E1 (23/10/2026)
+- PR #111 publicação READY verificada. P12.5 ainda aberta: faltam identidades e dois tenants reais, concorrência, UX, consentimento e homologação externa. Nunca inferir envio automático ou aceite por CI verde.
+- Retomada E1: componente SidePanel transversal com 680px padrão e suporte mobile; homologação visual e uso progressivo ainda pendentes. E2/E4/E5 preservados.
