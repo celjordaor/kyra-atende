@@ -245,14 +245,25 @@ export function ProfissionaisClient({ rows: initialRows }: Props) {
           </article>
         ))}
       </div>
-      <div className="kyra-professionals-desktop" id="prof-table">
-        <DataTable
-          columns={COLUMNS}
-          rows={rows}
-          rowActions={ROW_ACTIONS}
-          emptyMessage="Nenhum profissional cadastrado ainda. Clique em '+ Novo profissional' para começar."
-          pagination={{ page: 1, pageSize: 20, total: rows.length }}
-        />
+      <div className="kyra-professionals-desktop" id="prof-table" style={{border:0,background:'transparent',boxShadow:'none',overflow:'visible'}}>
+        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,260px),1fr))',gap:14}}>
+          {rows.length===0&&<p style={{color:'var(--muted)'}}>Nenhum profissional cadastrado.</p>}
+          {rows.map(row=><article key={row.id} style={{background:'var(--surface-2)',border:'1px solid #e7e1f0',borderRadius:12,padding:16,boxShadow:'0 3px 14px rgba(74,63,102,.06)',minWidth:0}}>
+            <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:14}}>
+              <Avatar name={row.name} size="md"/>
+              <div style={{minWidth:0,flex:1}}><strong style={{display:'block',color:'var(--ink)',overflowWrap:'anywhere'}}>{row.name}</strong><span style={{fontSize:12,color:'var(--muted)'}}>Profissional</span></div>
+              <StatusBadge status={row.is_active?'active':'suspended'}/>
+            </div>
+            <div style={{background:'#f7f4fb',borderRadius:8,padding:'10px 12px',display:'grid',gap:5,fontSize:12,color:'var(--ink-soft)',overflowWrap:'anywhere'}}>
+              <div>{row.email||'E-mail não informado'}</div>
+              <div>{row.phone||'Telefone não informado'}</div>
+            </div>
+            <div style={{display:'flex',gap:8,marginTop:14,flexWrap:'wrap'}}>
+              <Button variant="secondary" size="sm" onClick={()=>openEdit(row)}>Editar perfil</Button>
+              <Button variant={row.is_active?'danger':'secondary'} size="sm" disabled={!!loading[row.id]} onClick={()=>void handleToggleActive(row)}>{loading[row.id]?'Atualizando…':row.is_active?'Desativar':'Reativar'}</Button>
+            </div>
+          </article>)}
+        </div>
       </div>
 
       <GuidedTour
@@ -273,7 +284,7 @@ export function ProfissionaisClient({ rows: initialRows }: Props) {
           {
             target:    '#prof-table',
             title:     'Lista de profissionais',
-            body:      'Edite dados ou ative/desative profissionais diretamente pela tabela. Profissionais inativos não aparecem na agenda de agendamentos.',
+            body:      'Edite dados ou ative/desative profissionais diretamente pelos cards. Profissionais inativos não aparecem na agenda de agendamentos.',
             placement: 'top',
           },
         ]}
