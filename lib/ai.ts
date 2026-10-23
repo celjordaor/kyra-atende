@@ -55,7 +55,10 @@ export async function chat(
     messages,
   })
 
-  const reply      = response.content[0]?.type === 'text' ? response.content[0].text : ''
+  const reply = response.content.filter(block => block.type === 'text').map(block => block.text).join('\n').trim()
+  // Uma resposta sem texto útil não pode ser exibida como atendimento concluído.
+  // O chamador preserva a reserva para conciliação em caso de resposta incerta.
+  if (!reply) throw new Error('ai_empty_response')
   const tokensUsed = (response.usage?.input_tokens ?? 0) + (response.usage?.output_tokens ?? 0)
 
   return { reply, tokensUsed, inputTokens: response.usage?.input_tokens ?? 0, outputTokens: response.usage?.output_tokens ?? 0 }
