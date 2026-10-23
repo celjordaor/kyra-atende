@@ -90,6 +90,7 @@ const ADMIN_NAV: NavItem[] = [
   { href: '/servicos',     label: 'Serviços',       icon: <IconTag /> },
   { href: '/ia',           label: 'IA Kyra',        icon: <img src="/kyra-ai.png" alt="" width={18} height={18} style={{ objectFit: 'contain', display: 'block' }} /> },
   { href: '/whatsapp',     label: 'WhatsApp',       icon: <IconWhatsApp /> },
+  { href: '/pesquisas',    label: 'Pesquisas',      icon: <IconClipboard /> },
   { href: '/relatorios',   label: 'Relatórios',     icon: <IconBarChart /> },
   { href: '/bi',           label: 'BI Dashboard',   icon: <IconTrendingUp /> },
   { href: '/configuracoes',label: 'Configurações',  icon: <IconSettings /> },
