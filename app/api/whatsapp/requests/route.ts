@@ -30,7 +30,7 @@ export async function GET() {
     .order('last_seen_at', { ascending: false })
     .limit(100)
   if (error) return NextResponse.json({ error: 'Não foi possível carregar solicitações.' }, { status: 500 })
-  return NextResponse.json({ contacts: data ?? [] })
+  return NextResponse.json({ contacts: data ?? [] }, { headers: { 'Cache-Control': 'private, no-store' } })
 }
 
 /**
