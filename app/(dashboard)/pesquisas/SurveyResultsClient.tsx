@@ -21,7 +21,7 @@ export default function SurveyResultsClient(){
  const rows=(data?.rows??[]).filter(r=>kind==='all'||r.kind===kind)
  const answered=rows.filter(r=>r.answeredAt!==null).length
  const formatDate=(value:string)=>new Date(value).toLocaleDateString('pt-BR')
- return <section style={{marginTop:28,borderTop:'1px solid var(--border)',paddingTop:20}}>
+ return <section style={{maxWidth:1000,margin:'0 auto',padding:'0 20px 60px',borderTop:'1px solid var(--border)',paddingTop:20}}>
   <h2>Resultados das pesquisas</h2>
   <p style={{color:'var(--muted)'}}>Indicadores dos últimos 500 convites, sem identificar clientes ou reservas.</p>
   <label style={{display:'flex',alignItems:'center',gap:8,flexWrap:'wrap'}}>Finalidade
