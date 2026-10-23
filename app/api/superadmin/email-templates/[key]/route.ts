@@ -35,7 +35,11 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 
   let body: { subject?: string; html?: string; isActive?: boolean }
   try {
-    body = await req.json()
+    const declared = Number(req.headers.get('content-length'))
+    if (Number.isFinite(declared) && declared > 120000) return NextResponse.json({ message: 'Template muito grande.' }, { status: 413 })
+    const raw = await req.text()
+    if (Buffer.byteLength(raw, 'utf8') > 120000) return NextResponse.json({ message: 'Template muito grande.' }, { status: 413 })
+    body = JSON.parse(raw)
   } catch {
     return NextResponse.json({ message: 'Body inválido' }, { status: 400 })
   }
@@ -66,7 +70,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     return NextResponse.json({ message: 'Não foi possível salvar o template.' }, { status: 500 })
   }
 
-  return NextResponse.json({ ok: true })
+  return NextResponse.json({ ok: true }, { headers: { 'Cache-Control': 'private, no-store' } })
 }
 
 // ── DELETE — resetar para padrão ────────────────────────────────────────────
