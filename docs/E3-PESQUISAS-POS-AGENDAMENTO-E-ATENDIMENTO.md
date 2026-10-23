@@ -114,3 +114,5 @@ A implementação do módulo seguirá o plano mestre, sem disparos externos até
 - Configuração por tenant (`survey_automation_settings`) com `enabled=false` e `send_channel=disabled` fixados também por constraints SQL, parâmetros preparatórios de limite diário e espera. UI e API administrativa `GET/PATCH /api/surveys/automation` aceitam somente configuração inativa.
 - Tabelas `survey_contact_opt_outs` e `survey_outbox` preparadas com isolamento por tenant, RLS, privilégios revogados a `anon/authenticated` e acesso somente por `service_role`. Outbox não possui processamento, cron ou envio; estado inicial `held`.
 - Status: **P12.4 parcialmente implementada**. Falta mecanismo de inscrição/descadastramento, avaliação de elegibilidade, consentimento/limites, processamento idempotente, agendamento, provider homologado, relatórios e E2E. Nenhuma ativação autorizada.
+
+- Migration P12.4 aplicada remotamente no Supabase Kyra Atende como versão `20261023160723`, mantendo arquivo Git sincronizado; envio permanece bloqueado.
