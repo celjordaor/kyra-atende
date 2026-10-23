@@ -214,14 +214,26 @@ export function ServicosClient({ rows: initialRows }: Props) {
           </article>
         ))}
       </div>
-      <div className="kyra-services-desktop" id="servicos-table">
-        <DataTable
-          columns={COLUMNS}
-          rows={rows}
-          rowActions={ROW_ACTIONS}
-          emptyMessage="Nenhum serviço cadastrado ainda. Clique em '+ Novo serviço' para começar."
-          pagination={{ page: 1, pageSize: 20, total: rows.length }}
-        />
+      <div className="kyra-services-desktop" id="servicos-table" style={{border:0,background:'transparent',boxShadow:'none',overflow:'visible'}}>
+        <div style={{display:'grid',gap:12}}>
+          {rows.length===0&&<p style={{color:'var(--muted)'}}>Nenhum serviço cadastrado.</p>}
+          {rows.map(row=><article key={row.id} style={{display:'flex',alignItems:'center',gap:16,padding:16,background:'var(--surface-2)',border:'1px solid #e7e1f0',borderRadius:12,boxShadow:'0 3px 14px rgba(74,63,102,.06)',flexWrap:'wrap'}}>
+            <div aria-hidden="true" style={{width:46,height:46,flexShrink:0,display:'grid',placeItems:'center',borderRadius:11,background:'#f1eafa',color:'#72658E',fontSize:23}}>✦</div>
+            <div style={{flex:'1 1 220px',minWidth:0}}>
+              <strong style={{color:'var(--ink)',fontSize:14,overflowWrap:'anywhere'}}>{row.name}</strong>
+              {row.description&&<p style={{fontSize:12,color:'var(--muted)',marginTop:3}}>{row.description}</p>}
+              <div style={{display:'flex',gap:8,flexWrap:'wrap',marginTop:8}}>
+                <span style={{background:'#f2edfa',padding:'3px 9px',borderRadius:7,fontSize:11,color:'#72658E'}}>{row.duration_minutes} minutos</span>
+                <span style={{background:'#f2edfa',padding:'3px 9px',borderRadius:7,fontSize:11,color:'#72658E'}}>{formatCurrency(row.price)}</span>
+              </div>
+            </div>
+            <StatusBadge status={row.is_active?'active':'suspended'}/>
+            <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+              <Button variant="secondary" size="sm" onClick={()=>openEdit(row)}>Editar</Button>
+              <Button variant={row.is_active?'danger':'secondary'} size="sm" disabled={!!loading[row.id]} onClick={()=>void handleToggleActive(row)}>{loading[row.id]?'Atualizando…':row.is_active?'Desativar':'Reativar'}</Button>
+            </div>
+          </article>)}
+        </div>
       </div>
 
       <Modal
