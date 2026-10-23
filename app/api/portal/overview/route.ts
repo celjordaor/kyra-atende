@@ -17,6 +17,9 @@ export async function GET(){
     .eq('tenant_id',m.tenant_id).eq('client_id',m.client_id).order('start_at',{ascending:false}).limit(100)
  ))
  if(results.some(r=>r.error))return NextResponse.json({error:'Falha ao consultar histórico.'},{status:503})
- const bookings=results.flatMap(r=>r.data??[]).sort((a,b)=>b.start_at.localeCompare(a.start_at)).slice(0,200)
+ // O limite de 100 é aplicado por vínculo na consulta; o corte global de 200
+ // escondia históricos de empresas menos recentes. Elimina vínculos duplicados.
+ const bookings=Array.from(new Map(results.flatMap(r=>r.data??[]).map(b=>[b.id,b])).values())
+  .sort((a,b)=>b.start_at.localeCompare(a.start_at))
  return NextResponse.json({companies:tenantRes.data??[],bookings},{headers:{'Cache-Control':'private, no-store'}})
 }
