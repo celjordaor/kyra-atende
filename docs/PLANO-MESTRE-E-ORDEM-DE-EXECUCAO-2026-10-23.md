@@ -86,3 +86,11 @@ Após o ciclo de melhorias do Portal, a continuidade passou a gerar pequenos PRs
 - **P12.3–P12.5 pendentes:** pesquisa pós-atendimento, envio manual, automação diária (desligada até aceite), relatórios e homologação E2E real; não declarar E3 completa.
 - **E1 e E2 seguem abertas** para retomada conforme seção 6. Não substituir o desenvolvimento do item 12 por auditorias repetitivas de Portal e WhatsApp. Essas frentes têm checklist E2E externo pendente.
 - **Disciplina:** a fonte prioritária da próxima sessão é `docs/HANDOFF-NOVO-CHAT-2026-10-23.md`, seguida deste plano e da especificação E3. Confirmar estado `main`/Vercel/Supabase antes de alterações, executar os dois workflows de CI e só então fazer merge. Não inventar resultados de testes com usuários reais.
+
+
+## 8. Reconciliação de continuidade após PR #102 (23/10/2026)
+- Novo HEAD observado antes desta atualização documental: `25f15a543365efc7a1b2a587beb9c1d23feb1ac9`, merge PR #102. PR #103 havia incorporado o handoff anterior; por isso referências a PR #101 como último HEAD são históricas.
+- P12.1 continua presente no código. **P12.2 avançou tecnicamente:** migration `20261023132446_e3_survey_invitations_responses_foundation.sql`, APIs de convite/resposta e formulário público `/pesquisa/[token]` adicionados pelo #102.
+- **Próximo passo:** integrar experiência opcional de feedback à confirmação de reserva, administrar respostas/métricas iniciais e validar segurança e testes da fundação. Não presumir migração aplicada remotamente, deploy READY, CI verde ou E2E do #102 sem consulta explícita.
+- P12.3–P12.5, retorno a E1/E2 e os demais itens dos 18 pedidos mantêm prioridade e condições descritas nas seções anteriores.
+- Ponto de entrada operacional atualizado: `docs/HANDOFF-NOVO-CHAT-2026-10-23.md`. Seção 7 e outras menções a “próxima construção P12.1/P12.2 fundação” descrevem estados históricos e ficam substituídas por esta reconciliação.
