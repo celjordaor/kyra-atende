@@ -1,4 +1,6 @@
 # E3 · Item 12 — Pesquisas pós-agendamento e pós-atendimento
+> **ATUALIZAÇÃO DE EXECUÇÃO — 23/10/2026, após PR #101:** P12.1 tem fundação SQL `20261023044642_e3_survey_template_foundation.sql`, API autenticada `/api/surveys/templates`, tela `/pesquisas` de modelos e perguntas, versões, publicação/pausa e cópia para revisão. Estas funcionalidades constam no código e o commit `88b130f051308818071da509f440b82cbae696f6` foi observado em deploy Vercel `READY`. **O item 12 não está concluído**: faltam convites, tokens e formulários públicos, respostas, gatilhos pós-agendamento/pós-atendimento, envio manual, automação diária, relatórios e testes E2E. **Próxima entrega: P12.2 — jornada de pesquisa rápida pós-agendamento, em partes funcionais seguras.** Não disparar pesquisas reais sem homologação.
+
 **Fonte primária:** `Melhorias Kyra atende.docx`, página 3, item 12.
 **Situação:** próximo módulo a construir; **nenhuma pesquisa completa homologada**.
 **Referência de ordem:** `docs/PLANO-MESTRE-E-ORDEM-DE-EXECUCAO-2026-10-23.md`.
