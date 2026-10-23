@@ -38,7 +38,7 @@ export default function PortalOverview(){
  const selected=companies.find(c=>c.id===company)
  const rows=bookings.filter(b=>b.tenant_id===company)
  return <section style={{display:'flex',flexDirection:'column',gap:14,marginTop:20}}>
-  <label>Empresa <select value={company} onChange={e=>setCompany(e.target.value)}>{companies.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></label>
+  <label>Empresa <select value={company} onChange={e=>{setCompany(e.target.value);setNewBooking(false)}}>{companies.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></label>
   <h2>Meus agendamentos</h2>
   {refreshing&&<p role="status">Atualizando agendamentos…</p>}
   {error&&<p role="alert">{error} <button type="button" onClick={refresh}>Tentar novamente</button></p>}
