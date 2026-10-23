@@ -7,6 +7,7 @@ import { SearchBar } from '@/components/molecules'
 import { Button, StatusBadge, FormField, Avatar } from '@/components/atoms'
 import { api, ApiError } from '@/lib/api'
 import { BookingDetailModal } from '@/components/organisms/BookingDetailModal'
+import { SidePanel, BookingSection } from '@/components/organisms/BookingSection'
 import SatisfactionInviteModal from './SatisfactionInviteModal'
 import type { Column } from '@/components/organisms'
 
@@ -1198,7 +1199,7 @@ export default function AgendamentosClient({ initialBookings, professionals, ser
       </div>
 
       {/* Booking modal */}
-      <Modal open={modalOpen} onClose={() => setModalOpen(false)} size="lg"
+      <SidePanel open={modalOpen} onClose={() => setModalOpen(false)} width={680}
         title={editRow ? 'Editar agendamento' : 'Novo agendamento'}
         footer={
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
@@ -1211,10 +1212,10 @@ export default function AgendamentosClient({ initialBookings, professionals, ser
             </div>
           </div>
         }>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
           {formErrors.api && <ErrorBox msg={formErrors.api} />}
 
-          <div>
+          <BookingSection title="Informações do cliente" icon="♙">
             <div style={{ fontSize: '13px', fontWeight: 500, color: 'var(--ink)', marginBottom: '6px' }}>
               Cliente <span style={{ color: 'var(--red)' }}>*</span>
             </div>
@@ -1228,8 +1229,9 @@ export default function AgendamentosClient({ initialBookings, professionals, ser
             {formErrors.client && (
               <p style={{ margin: '4px 0 0', fontSize: '12px', color: 'var(--red)' }} role="alert">{formErrors.client}</p>
             )}
-          </div>
+          </BookingSection>
 
+          <BookingSection title="Serviço e profissional" icon="✂">
           <div className="kyra-agendamentos-modal-fields" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
             <SearchableSelect label="Serviço" required value={form.service_id}
               onChange={v => { setF('service_id', v); setFormErrors(e => ({ ...e, service: undefined })) }}
@@ -1239,7 +1241,9 @@ export default function AgendamentosClient({ initialBookings, professionals, ser
               onChange={v => setF('professional_id', v)}
               options={profOptions} />
           </div>
+          </BookingSection>
 
+          <BookingSection title="Data e horário" icon="▦">
           <div className="kyra-agendamentos-modal-fields" style={{ display: 'grid', gridTemplateColumns: '3fr 2fr', gap: '12px' }}>
             <FormField label="Data de início" required type="date" value={form.start_date}
               onChange={v => { setF('start_date', v); setFormErrors(e => ({ ...e, datetime: undefined })) }}
@@ -1253,9 +1257,12 @@ export default function AgendamentosClient({ initialBookings, professionals, ser
             <FormField label="Hora de término" type="time" value={form.end_time} onChange={v => setF('end_time', v)} />
           </div>
 
+          </BookingSection>
+          <BookingSection title="Observações" icon="▤">
           <FormField label="Observações" type="textarea" value={form.notes} onChange={v => setF('notes', v)} placeholder="Informações adicionais sobre o agendamento…" />
+          </BookingSection>
         </div>
-      </Modal>
+      </SidePanel>
 
       <BookingDetailModal booking={detailRow} onClose={() => setDetailRow(null)} />
       <SatisfactionInviteModal bookingId={surveyBookingId} onClose={()=>setSurveyBookingId(null)} />
