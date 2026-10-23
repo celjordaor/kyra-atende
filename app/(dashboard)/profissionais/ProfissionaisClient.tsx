@@ -194,8 +194,15 @@ export function ProfissionaisClient({ rows: initialRows }: Props) {
   // ─── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+    <div className="kyra-e1-management" style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
 
+      <style>{` .kyra-e1-management { --e1-accent: #72658E; --e1-light: #f4f0fa; }
+       .kyra-e1-management h1 { letter-spacing:-.4px; }
+       .kyra-e1-management button:focus-visible, .kyra-e1-management a:focus-visible { outline:2px solid var(--sidebar-secondary);outline-offset:2px; }
+       .kyra-e1-management .kyra-clients-desktop-table, .kyra-e1-management .kyra-professionals-desktop, .kyra-e1-management .kyra-services-desktop { border:1px solid #e7e1f0;border-radius:12px;overflow-x:auto;background:var(--surface-2);box-shadow:0 3px 14px rgba(74,63,102,.06); }
+       .kyra-e1-management .kyra-clients-mobile-cards article, .kyra-e1-management .kyra-professionals-mobile article, .kyra-e1-management .kyra-services-mobile article { border-color:#e7e1f0!important;box-shadow:0 3px 14px rgba(74,63,102,.06); }
+       @media(max-width:700px){ .kyra-e1-management {gap:16px!important;} }
+      `}</style>
       {/* Header */}
       <div id="prof-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
         <h1 style={{ fontSize: 22, fontWeight: 600, color: 'var(--ink)', margin: 0 }}>
