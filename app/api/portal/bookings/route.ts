@@ -1,3 +1,4 @@
+import { enforceApiRateLimit } from '@/lib/api-rate-limit'
 import {NextRequest,NextResponse} from 'next/server'
 import {createClient} from '@/lib/supabase/server'
 import {createAdminClient} from '@/lib/supabase/admin'
@@ -24,6 +25,8 @@ export async function GET(request:NextRequest){
  return NextResponse.json({slots:data??[]},{headers:{'Cache-Control':'private, no-store'}})
 }
 export async function POST(request:NextRequest){
+ const limited=await enforceApiRateLimit(request,'portalBooking','create')
+ if(limited)return limited
  const {data:{user}}=await createClient().auth.getUser()
  if(!user||!user.email_confirmed_at)return NextResponse.json({error:'Faça login no portal.'},{status:401})
  const b=await request.json().catch(()=>null)
