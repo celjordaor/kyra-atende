@@ -97,3 +97,6 @@ O projeto fica **preparado para planejamento futuro, não autorizado para implem
 
 
 > Checkpoint P12.4 de 23/10/2026: pesquisa pós-atendimento manual já em main, e fundação da automação inicialmente desligada em construção. O item 12 não está encerrado; dados da fila, opt-out e métricas exigem implementação adicional e homologação E2E. Permanecem preservados os 18 pedidos originais.
+
+
+> Incremento P12.4 de 23/10/2026: APIs administrativas de opt-out e inclusão de convites elegíveis em fila retida adicionadas como execução técnica parcial do item 12. Não equivale a automação ativada, homologação E2E ou encerramento dos 18 pedidos.
