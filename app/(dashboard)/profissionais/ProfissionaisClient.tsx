@@ -3,7 +3,7 @@ import { SidePanel } from '@/components/organisms/SidePanel'
 import { BookingSection } from '@/components/organisms/BookingSection'
 
 import { useState, useCallback } from 'react'
-import { DataTable, Modal } from '@/components/organisms'
+import { DataTable } from '@/components/organisms'
 import { Avatar, Button, StatusBadge, FormField } from '@/components/atoms'
 import { api, ApiError } from '@/lib/api'
 import type { Column, RowAction } from '@/components/organisms'
