@@ -41,3 +41,9 @@ O responsável informou ter realizado e aprovado a jornada de cadastro e primeir
 ## Validação de ícone e PWA
 
 O PR #57, commit de merge `efcdc2f24efd4a86ecdeea8ddaf88642001af4a3`, foi confirmado `READY` em produção. Os ícones antigos PNG permanecem fisicamente em `public/icons/` e `public/kyra-icon.png`, embora as referências principais de metadata/manifest/telas tenham sido alteradas. Compatibilidade específica de ícones PWA em dispositivos que não suportem SVG permanece pendente de confirmação visual e geração de variantes PNG a partir da imagem aprovada.
+
+## Homologação de ícones — confirmação do responsável em 22/10/2026
+
+O responsável confirmou «Tudo certo» após a entrega do PR #59 (ícones para favicon e PWA). O deploy de produção do commit `2dbd4415c8e875ab32a93c7abfee47a4ef5f89e5` foi consultado na Vercel e estava `READY`. **Aceite visual registrado para a identidade dos ícones**, sem afirmar testes automatizados em todos os sistemas operacionais ou compatibilidade de todos os navegadores. Manter a homologação e não reabrir esta frente sem regressão documentada.
+
+**Fronteiras de escopo:** aceite dos ícones não encerra validação jurídica de Termos, Política de Privacidade, inventário dinâmico LGPD ou controles opcionais de cookies.
