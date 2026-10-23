@@ -160,3 +160,9 @@ A implementação do módulo seguirá o plano mestre, sem disparos externos até
 - Corrigida expressão regular com barras invertidas duplicadas na rota de envio manual `POST /api/surveys/invitations`, que rejeitava endereços válidos como `nome@dominio.com` antes de criar o convite. Espaços externos são removidos na validação e no endereço enviado ao Resend.
 - A falha ocorria antes do `INSERT` do convite: uma tentativa com erro `422 Cliente sem e-mail válido cadastrado` não gerava novo convite nem envio. Continua válida a proteção de unicidade para convites efetivamente criados no mesmo agendamento e versão.
 - Não foram enviados e-mails reais durante esta correção; confirmar CI, deploy READY e teste de entrega autorizado em separado.
+
+
+## Ajuste visual compacto da pesquisa pública — 23/10/2026
+- Reduzidos espaçamento vertical, altura do banner, dimensão do ícone, cards de avaliação e rodapé na rota `/pesquisa/[token]`; cabeçalho da empresa com texto branco explícito.
+- Layout mantém fluxo natural sem scroll interno artificial nem esconder a rolagem do navegador. Formulários longos ou telas menores podem exigir rolagem vertical legítima.
+- Preservados envio, resposta, descadastro, token, isolamento e acessibilidade existentes. Validar em desktop/mobile e com mais perguntas; CI e deploy não equivalem a homologação visual real.
