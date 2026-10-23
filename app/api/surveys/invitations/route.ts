@@ -34,7 +34,7 @@ export async function POST(request:NextRequest){
   if(!booking.client_id)return NextResponse.json({error:'Agendamento sem cliente vinculado.'},{status:422})
   const {data:client,error:clientError}=await db.from('clients').select('id,name,email').eq('id',booking.client_id).eq('tenant_id',session.tenantId).maybeSingle()
   if(clientError||!client)return NextResponse.json({error:'Cliente não encontrado.'},{status:422})
-  if(!client.email||!/^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$/.test(client.email))return NextResponse.json({error:'Cliente sem e-mail válido cadastrado.'},{status:422})
+  if(!client.email||!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(client.email.trim()))return NextResponse.json({error:'Cliente sem e-mail válido cadastrado.'},{status:422})
   const {data:optOut,error:optError}=await db.from('survey_contact_opt_outs').select('id').eq('tenant_id',session.tenantId).eq('client_id',client.id).eq('purpose',template.kind).maybeSingle()
   if(optError)return NextResponse.json({error:'Não foi possível conferir o descadastro.'},{status:503})
   if(optOut)return NextResponse.json({error:'Cliente optou por não receber esta categoria de pesquisa.'},{status:409})
