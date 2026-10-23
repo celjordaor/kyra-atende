@@ -7,6 +7,7 @@ import { SearchBar } from '@/components/molecules'
 import { Button, StatusBadge, FormField, Avatar } from '@/components/atoms'
 import { api, ApiError } from '@/lib/api'
 import { BookingDetailModal } from '@/components/organisms/BookingDetailModal'
+import SatisfactionInviteModal from './SatisfactionInviteModal'
 import type { Column } from '@/components/organisms'
 
 const ESTADOS = [
@@ -847,6 +848,7 @@ export default function AgendamentosClient({ initialBookings, professionals, ser
   const [clientModal, setClientModal]         = useState(false)
   const [completeRow, setCompleteRow]         = useState<BookingRow | null>(null)
   const [detailRow, setDetailRow] = useState<BookingRow | null>(null)
+  const [surveyBookingId,setSurveyBookingId]=useState<string|null>(null)
   const [operationNotice, setOperationNotice] = useState<string | null>(null)
   const [form, setForm]                       = useState<BookingForm>(() => blankBookingForm(services.filter(s => (s as any).is_active !== false)))
   const [saving, setSaving]                   = useState(false)
@@ -1010,6 +1012,7 @@ export default function AgendamentosClient({ initialBookings, professionals, ser
         <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end', alignItems: 'center' }}>
           {row.status === 'completed' && <button type="button" title="Visualizar ficha de finalização" aria-label="Visualizar ficha de finalização" onClick={() => setDetailRow(row)}
             style={{width:32,height:32,borderRadius:'50%',border:'none',background:'var(--surface-3)',color:'var(--ink-soft)',cursor:'pointer'}}>◉</button>}
+          {row.status === 'completed' && <Button variant="secondary" size="sm" onClick={()=>setSurveyBookingId(row.id)}>Pesquisa</Button>}
           {/* Editar */}
           {(row.status === 'pending' || row.status === 'confirmed') && (
             <button
@@ -1184,6 +1187,7 @@ export default function AgendamentosClient({ initialBookings, professionals, ser
               {row.status === 'pending' && <Button variant="secondary" size="sm" onClick={() => void handleStatusChange(row, 'confirmed')}>Confirmar</Button>}
               {row.status === 'confirmed' && <Button variant="secondary" size="sm" onClick={() => setCompleteRow(row)}>Concluir</Button>}
               {(row.status === 'pending' || row.status === 'confirmed') && <Button variant="danger" size="sm" onClick={() => void handleStatusChange(row, 'cancelled')}>Cancelar</Button>}
+              {row.status === 'completed' && <Button variant="secondary" size="sm" onClick={()=>setSurveyBookingId(row.id)}>Pesquisa</Button>}
               <Button variant="ghost" size="sm" onClick={() => setDetailRow(row)}>Detalhes</Button>
             </div>
           </article>
@@ -1254,6 +1258,7 @@ export default function AgendamentosClient({ initialBookings, professionals, ser
       </Modal>
 
       <BookingDetailModal booking={detailRow} onClose={() => setDetailRow(null)} />
+      <SatisfactionInviteModal bookingId={surveyBookingId} onClose={()=>setSurveyBookingId(null)} />
 
       {/* Complete service modal */}
       <CompleteModal
