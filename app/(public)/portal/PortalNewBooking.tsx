@@ -29,10 +29,10 @@ export default function PortalNewBooking({tenantId,onDone}:{tenantId:string;onDo
  async function confirm(){
   const slot=slots.find(x=>x.starts_at===chosen);if(!slot)return
   setBusy(true);setMessage('')
-  try{const response=await fetch('/api/portal/bookings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({tenantId,serviceId:service,professionalId:slot.professional_id,startAt:slot.starts_at})})
-   if(!response.ok)throw Error((await response.json()).error||'Não foi possível agendar.')
+  try{const response=await fetch('/api/portal/bookings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({tenantId,serviceId:service,professionalId:slot.professional_id,startAt:slot.starts_at}),signal:AbortSignal.timeout(20000)})
+   if(!response.ok){const result=await response.json().catch(()=>({}));throw Error(result.error||'Não foi possível agendar.')}
    setMessage('Agendamento solicitado com sucesso.');onDone()
-  }catch(e){setMessage(e instanceof Error?e.message:'Não foi possível agendar.')}finally{setBusy(false)}
+  }catch(e){setMessage(e instanceof Error&&(e.name==='TimeoutError'||e.name==='AbortError'||e instanceof TypeError)?'Não foi possível confirmar a resposta do servidor. Verifique seus agendamentos antes de tentar novamente.':e instanceof Error?e.message:'Não foi possível agendar.')}finally{setBusy(false)}
  }
  const available=Array.from(new Map(slots.map(s=>[s.starts_at,s])).values())
  return <section style={{display:'flex',flexDirection:'column',gap:12,padding:16,border:'1px solid var(--border)',borderRadius:10}}>
