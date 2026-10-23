@@ -7,15 +7,29 @@ export default function PortalSignIn(){
  const [phase,setPhase]=useState<'email'|'code'>('email')
  const [busy,setBusy]=useState(false)
  const [message,setMessage]=useState('')
- async function send(e:React.FormEvent){e.preventDefault();setBusy(true);setMessage('')
-  const {error}=await createClient().auth.signInWithOtp({email:email.trim(),options:{shouldCreateUser:true}})
-  setBusy(false);if(error){setMessage('Não foi possível enviar o código. Aguarde e tente novamente.');return}
-  setPhase('code');setMessage('Verifique sua caixa de entrada. Se receber um código, informe abaixo.')
+ async function send(e:React.FormEvent){
+  e.preventDefault();setBusy(true);setMessage('')
+  try {
+   const {error}=await Promise.race([
+    createClient().auth.signInWithOtp({email:email.trim(),options:{shouldCreateUser:true}}),
+    new Promise<never>((_,reject)=>setTimeout(()=>reject(new Error('timeout')),15000)),
+   ])
+   if(error){setMessage('Não foi possível enviar o código. Aguarde e tente novamente.');return}
+   setPhase('code');setMessage('Verifique sua caixa de entrada. Se receber um código, informe abaixo.')
+  }catch{setMessage('Não foi possível conectar para enviar o código. Verifique sua conexão e tente novamente.')}
+  finally{setBusy(false)}
  }
- async function verify(e:React.FormEvent){e.preventDefault();setBusy(true);setMessage('')
-  const {error}=await createClient().auth.verifyOtp({email:email.trim(),token:code.trim(),type:'email'})
-  setBusy(false);if(error){setMessage('Código inválido ou expirado.');return}
-  window.location.assign('/portal')
+ async function verify(e:React.FormEvent){
+  e.preventDefault();setBusy(true);setMessage('')
+  try{
+   const {error}=await Promise.race([
+    createClient().auth.verifyOtp({email:email.trim(),token:code.trim(),type:'email'}),
+    new Promise<never>((_,reject)=>setTimeout(()=>reject(new Error('timeout')),15000)),
+   ])
+   if(error){setMessage('Código inválido ou expirado.');return}
+   window.location.assign('/portal')
+  }catch{setMessage('Não foi possível validar o código agora. Verifique sua conexão e tente novamente.')}
+  finally{setBusy(false)}
  }
  return <form onSubmit={phase==='email'?send:verify} style={{display:'flex',flexDirection:'column',gap:12}}>
   <label>E-mail <input type="email" required value={email} onChange={e=>setEmail(e.target.value)} disabled={busy||phase==='code'} autoComplete="email"/></label>
