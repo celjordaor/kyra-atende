@@ -64,5 +64,7 @@
 
 ## Continuidade P12.4 — estado mais recente (23/10/2026)
 - P12.3 consolidada em PR #107 / main `13871ec2c371f355dc5534a5c4f3f055d58d4dcb`; deployment verificado READY. Nenhum envio externo.
-- Branch `feat/e3-p124-safe-survey-automation` prepara configuração por tenant, opt-out e outbox retida. Arquivo SQL `supabase/migrations/20261023160000_e3_survey_automation_safe_foundation.sql`; interface e API `GET/PATCH /api/surveys/automation`. Restrição `enabled=false`, `send_channel=disabled`, sem worker ou cron. Conferir migration remota, CI, PR e deploy antes de dizer publicado.
+- Branch `feat/e3-p124-safe-survey-automation` prepara configuração por tenant, opt-out e outbox retida. Arquivo SQL `supabase/migrations/20261023160723_e3_survey_automation_safe_foundation.sql`; interface e API `GET/PATCH /api/surveys/automation`. Restrição `enabled=false`, `send_channel=disabled`, sem worker ou cron. Conferir migration remota, CI, PR e deploy antes de dizer publicado.
 - P12.4 incompleta: falta processamento elegível/opt-out efetivo, outbox idempotente, monitoramento e relatórios; P12.5 exige homologação de dois tenants e comunicações somente após aprovação.
+
+- Migration P12.4 aplicada remotamente no Supabase Kyra Atende como versão `20261023160723`, mantendo arquivo Git sincronizado; envio permanece bloqueado.
