@@ -68,3 +68,9 @@
 - P12.4 incompleta: falta processamento elegível/opt-out efetivo, outbox idempotente, monitoramento e relatórios; P12.5 exige homologação de dois tenants e comunicações somente após aprovação.
 
 - Migration P12.4 aplicada remotamente no Supabase Kyra Atende como versão `20261023160723`, mantendo arquivo Git sincronizado; envio permanece bloqueado.
+
+
+## P12.4 — incremento de elegibilidade, opt-out e fila retida (23/10/2026)
+- PR #108 integrado em `476ae01fd9c35d688666bf0cf47fc92ab2f9b28a`; migration `20261023160723` aplicada no Supabase correto. Deploy do #108 ainda requer confirmação `READY` (última consulta BUILDING).
+- Incremento atual em `feat/e3-p124-optout-held-queue`: `GET/POST /api/surveys/opt-out` para owner/admin gerir preferências por cliente tenant-scoped; `GET/POST /api/surveys/outbox` para registrar **manualmente** convites existentes após validar reserva, modelo, prazo, estado, finalidade e opt-out. Outbox só aceita `held`, sem processador.
+- Próximos gates: CI, PR/merge, deploy exato, QA E2E dois tenants e testes de concorrência; P12.4 continua parcial (consentimento, operação de opt-out pelo próprio cliente, retentativas e delivery, relatórios e ativação). Nenhum canal real habilitado.
