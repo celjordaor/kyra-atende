@@ -133,3 +133,8 @@ Após o ciclo de melhorias do Portal, a continuidade passou a gerar pequenos PRs
 ## 15. Checkpoint E3 → E1 — 23/10/2026
 - E3 item 12: PRs #101–#111 publicaram fundamentos, duas pesquisas, convites, relatório inicial, opt-out e fila retida; #111 READY no commit `af82b3a8f60eaae7f71d4fa69ec41d79d7700f4e`. Envio automático **não implementado/ativado** e P12.5 E2E **não homologada**; não marcar item 12 como totalmente concluído.
 - Retomada E1 aprovada para começar pelo componente reutilizável de painel lateral, com foco, acessibilidade, responsividade, header/footer e tokens, **sem migração massiva de telas**. Próximo ciclo deve criar prévia visual e validar antes do rollout. E2/E4/E5 e 18 pedidos continuam no roadmap.
+
+
+## 16. E1 — biblioteca transversal de diálogos e formulários (23/10/2026)
+- Disponibilizados padrões `ConfirmDialog` e `FormSection`, mantendo o `Modal` homologado intacto e reduzindo divergência de ações de confirmação e seções de formulário.
+- Não significa migração nem aceite visual das telas de produto. Rollout por tela com preview e homologação; E2 operacional e demais 18 pedidos permanecem rastreados.
