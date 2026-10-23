@@ -33,14 +33,14 @@ export async function GET(request: NextRequest) {
   const { data: bookings, error } = await supabase
     .from('bookings')
     .select(`
-      id, tenant_id, scheduled_at,
+      id, tenant_id, start_at,
       clients(name, phone),
       professionals(name),
       services(name)
     `)
     .eq('status', 'confirmed')
-    .gte('scheduled_at', from)
-    .lte('scheduled_at', to)
+    .gte('start_at', from)
+    .lte('start_at', to)
 
   if (error) {
     console.error('[cron/whatsapp-reminder-24h]', error)
@@ -48,6 +48,7 @@ export async function GET(request: NextRequest) {
   }
 
   let sent = 0
+  let failed = 0
   for (const booking of bookings ?? []) {
     const client       = booking.clients as unknown as { name: string; phone?: string } | null
     const professional = booking.professionals as unknown as { name: string } | null
@@ -59,15 +60,22 @@ export async function GET(request: NextRequest) {
     const message =
       `Olá, ${client?.name ?? 'cliente'}! 👋\n\n` +
       `Lembramos que você tem um agendamento *amanhã*:\n\n` +
-      `📅 *${formatDateTime(booking.scheduled_at)}*\n` +
+      `📅 *${formatDateTime(booking.start_at)}*\n` +
       `💼 Serviço: ${service?.name ?? '-'}\n` +
       `👤 Profissional: ${professional?.name ?? '-'}\n\n` +
       `Caso precise remarcar ou cancelar, entre em contato conosco.`
 
-    void sendMessage({ to: phone, body: message, tenantId: booking.tenant_id })
-    sent++
+    try {
+      await sendMessage({ to: phone, body: message, tenantId: booking.tenant_id })
+      sent++
+    } catch (err) {
+      failed++
+      console.error('[cron/whatsapp-reminder-24h] envio não concluído', {
+        errorType: err instanceof Error ? err.name : 'unknown',
+      })
+    }
   }
 
   console.log(`[cron/whatsapp-reminder-24h] Enviados: ${sent}`)
-  return NextResponse.json({ sent })
+  return NextResponse.json({ sent, failed }, { status: failed > 0 ? 503 : 200, headers: { 'Cache-Control': 'no-store' } })
 }
