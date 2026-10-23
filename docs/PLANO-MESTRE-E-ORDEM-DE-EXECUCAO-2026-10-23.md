@@ -94,3 +94,9 @@ Após o ciclo de melhorias do Portal, a continuidade passou a gerar pequenos PRs
 - **Próximo passo:** integrar experiência opcional de feedback à confirmação de reserva, administrar respostas/métricas iniciais e validar segurança e testes da fundação. Não presumir migração aplicada remotamente, deploy READY, CI verde ou E2E do #102 sem consulta explícita.
 - P12.3–P12.5, retorno a E1/E2 e os demais itens dos 18 pedidos mantêm prioridade e condições descritas nas seções anteriores.
 - Ponto de entrada operacional atualizado: `docs/HANDOFF-NOVO-CHAT-2026-10-23.md`. Seção 7 e outras menções a “próxima construção P12.1/P12.2 fundação” descrevem estados históricos e ficam substituídas por esta reconciliação.
+
+
+## 9. Continuidade P12.2 — branch funcional (23/10/2026)
+- Branch `feat/e3-p122-survey-results` contém CTA opcional de feedback após criação bem-sucedida de reserva pública **confirmada**, sem envio automático, consulta administrativa de respostas/indicadores e proteção de tenant/papel.
+- O estado é **implementação em revisão**, até que CI, PR, merge, Vercel e testes exigidos tenham evidências. Não confundir código da branch com funcionalidade homologada.
+- Após estabilizar P12.2, seguir P12.3 (CSAT de serviço concluído), P12.4 (fila/automação e indicadores) e P12.5 (QA/E2E); E1/E2 permanecem abertas.

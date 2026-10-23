@@ -93,3 +93,11 @@ A implementação do módulo seguirá o plano mestre, sem disparos externos até
 **Próxima entrega funcional:** verificar regras reais desses arquivos e fechar a integração opcional após reserva confirmada, com visualização administrativa e indicadores iniciais; testar token inválido/expirado, resposta duplicada/concorrente, tenant cruzado, UI móvel e falha não bloqueante da pesquisa. Depois avançar a P12.3 (atendimento concluído), P12.4 (envio manual/automação desligada por padrão, outbox, opt-out e relatórios) e P12.5 (E2E/homologação).
 
 **Rigor do status:** esta atualização confirmou o merge e os arquivos via GitHub. Não confirmou o estado das migrations no Supabase, dois workflows de CI para o SHA, deploy READY, envio real ou teste E2E. Nenhum disparo real está autorizado por este documento. Instruções anteriores que diziam “próxima ação P12.1” ou “iniciar P12.2 criando convites” são históricas; seguir esta seção e o handoff atualizado.
+
+
+## 10. P12.2 — Integração funcional proposta em PR (23/10/2026)
+- Implementação em `feat/e3-p122-survey-results`: API autenticada `GET /api/surveys/results` com escopo por tenant e autorização owner/admin; relatório resumido dos 500 convites mais recentes, sem identificação de clientes, e tela de respostas na administração.
+- Reserva pública confirmada: função `lib/booking-feedback.ts` cria convite de `booking_experience` somente se houver template publicado e status `confirmed`; a resposta do endpoint inclui `surveyUrl` opcional, sem enviar comunicação. Erros do módulo não podem reverter a reserva.
+- UI pública mostra o CTA de feedback após sucesso apenas se houver URL válida. O formulário exige token e expiração e não publica dados de cliente/reserva.
+- **Validação obrigatória antes de classificar como concluído:** CI da branch, deploy do SHA de merge, testes reais de tenant A/B, expirado/repetido/concorrente, reservas com status pending, published/paused, UX responsiva e nenhum disparo externo. A ausência de modelo publicado resulta em sucesso de reserva sem CTA, por desenho.
+- Métricas atuais são volume e taxa de resposta da amostra recente; nota média e paginação completa continuam na evolução P12.4. Não declarar E2E homologado.

@@ -4,6 +4,7 @@ import { createClient } from '@supabase/supabase-js'
 import { dispatchPush } from '@/lib/push'
 import { checkConfiguredAvailability } from '@/lib/availability-validation'
 import { createHash } from 'node:crypto'
+import { createBookingFeedbackLink } from '@/lib/booking-feedback'
 
 function adminClient() {
   return createClient(
@@ -173,7 +174,8 @@ export async function POST(request: NextRequest) {
               : 'Não foi possível confirmar o agendamento com este convite.',
         }, { status: 409 })
       }
-      return NextResponse.json({ id: invitedBookingId }, { status: 201 })
+      const surveyUrl = await createBookingFeedbackLink(tenant_id, invitedBookingId, request.nextUrl.origin)
+      return NextResponse.json({ id: invitedBookingId, surveyUrl }, { status: 201, headers: { 'Cache-Control': 'no-store' } })
     }
 
     // Identificação/criação de cliente e reserva na mesma transação:
@@ -191,7 +193,10 @@ export async function POST(request: NextRequest) {
     const {data:booking,error:bookingError}=await supabase.from('bookings')
       .select('id,client_name,start_at,services!bookings_service_id_fkey(name)')
       .eq('id',bookingId).eq('tenant_id',tenant_id).single()
-    if(bookingError||!booking)return NextResponse.json({id:bookingId},{status:201})
+    if(bookingError||!booking){
+      const surveyUrl=await createBookingFeedbackLink(tenant_id,bookingId,request.nextUrl.origin)
+      return NextResponse.json({id:bookingId,surveyUrl},{status:201,headers:{'Cache-Control':'no-store'}})
+    }
 
     // ── Push ao tenant (fire-and-forget) ────────────────────────────────────
     const serviceName = (booking.services as { name?: string } | null)?.name ?? 'Serviço'
@@ -201,7 +206,8 @@ export async function POST(request: NextRequest) {
       url: '/agendamentos',
     })
 
-    return NextResponse.json({ id: booking.id }, { status: 201 })
+    const surveyUrl=await createBookingFeedbackLink(tenant_id,booking.id,request.nextUrl.origin)
+    return NextResponse.json({ id: booking.id, surveyUrl }, { status: 201, headers: { 'Cache-Control': 'no-store' } })
   } catch (err) {
     console.error('[public/bookings] erro:', err)
     return NextResponse.json({ message: 'Erro interno.' }, { status: 500 })

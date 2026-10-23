@@ -48,3 +48,9 @@
 - Os convites são gerados manualmente por owner/admin e a resposta informa `sent:false`; **não há evidência de disparos automáticos**. Confirmar execução da migration no banco remoto antes de avançar.
 - Próximo incremento de produto: conexão não bloqueante da pesquisa com o sucesso do agendamento, consulta administrativa de respostas e métricas, segurança de token/tenant/concorrência. Depois P12.3 pós-atendimento. Portal e WhatsApp conservam homologação E2E pendente, sem refazer auditorias genéricas.
 - Prompt de retomada pronto para copiar: `docs/PROMPT-NOVO-CHAT-KYRA-ATENDE-2026-10-23.md`.
+
+
+## Execução em andamento — P12.2, branch funcional
+- Branch `feat/e3-p122-survey-results`: integração de feedback opcional e não bloqueante após reserva pública confirmada; link público com token opaco gerado no servidor e não enviado automaticamente; página de resultados administrativos com métricas e escopo por tenant.
+- Conferido: `main` HEAD anterior à branch `3d21d2a529f9de83f217e12b13be3ec9215f260a` (`READY` no Vercel). Supabase `zrszytzlovthyezozqhj` `ACTIVE_HEALTHY`, migrations `20261023044642` e `20261023132446` registradas e tabelas presentes.
+- Os arquivos em branch ainda precisam de CI/PR, merge/deploy e QA/E2E. O fluxo não envia mensagens. Continuar em P12.2 até validar e então P12.3.
