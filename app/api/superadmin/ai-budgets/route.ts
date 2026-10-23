@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 
+const privateNoStore = { 'Cache-Control': 'private, no-store' }
 const plans = ['essencial','cresce','expande','enterprise']
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 async function authorized() {
@@ -38,7 +39,7 @@ export async function GET(){
   if(Date.now()-new Date(x.created_at).getTime()>15*60*1000)row.stale++
   reservations[x.tenant_id]=row
  }
- return NextResponse.json({plans:p.data,overrides:o.data,tenants:t.data,usage,reservations,month:begin.toISOString().slice(0,7),usageLimited:(c.data??[]).length===10000|| (r.data??[]).length===10000})
+ return NextResponse.json({plans:p.data,overrides:o.data,tenants:t.data,usage,reservations,month:begin.toISOString().slice(0,7),usageLimited:(c.data??[]).length===10000|| (r.data??[]).length===10000},{headers:privateNoStore})
 }
 export async function PATCH(req:NextRequest){
  const a=await authorized();if(a.error)return a.error
@@ -47,7 +48,7 @@ export async function PATCH(req:NextRequest){
  if(!Number.isSafeInteger(cents)||cents<0||cents>10000000)return NextResponse.json({error:'Informe valor válido em centavos'},{status:400})
  if(body.scope==='plan'&&plans.includes(body.plan)){
   const {error}=await a.admin!.from('ai_budget_plans').update({monthly_budget_cents:cents,updated_at:new Date().toISOString()}).eq('plan',body.plan)
-  return error?NextResponse.json({error:'Erro ao salvar plano'},{status:500}):NextResponse.json({saved:true})
+  return error?NextResponse.json({error:'Erro ao salvar plano'},{status:500}):NextResponse.json({saved:true},{headers:privateNoStore})
  }
  if(body.scope==='tenant'&&typeof body.tenant_id==='string'&&uuid.test(body.tenant_id)){
   const {data}=await a.admin!.from('tenants').select('id').eq('id',body.tenant_id).maybeSingle()
