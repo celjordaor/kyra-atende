@@ -4,6 +4,8 @@
 **Fonte do pedido:** documento entregue pelo proprietário, `Melhorias Kyra atende.docx` (10 páginas, 18 tópicos).  
 **Referências internas:** `docs/PLANO-DE-CONTINUIDADE-E-PENDENCIAS.md`, `docs/MATRIZ-ACEITE-FUNCIONAL-2026-10-20.md`, `docs/AUDITORIA-CONSOLIDADA-AGENDAMENTOS-2026-10-20.md`, rotas e componentes do repositório em `main`.
 
+> **ATUALIZAÇÃO DE GOVERNANÇA — 23/10/2026:** este arquivo registra o roadmap original e sua situação histórica de 21/10. O projeto já avançou além da fase de backlog. A ordem **atual** de execução está em [Plano Mestre](PLANO-MESTRE-E-ORDEM-DE-EXECUCAO-2026-10-23.md). Por decisão expressa do proprietário, a próxima construção é o **item 12, pesquisas pós-agendamento e pós-atendimento** ([especificação E3](E3-PESQUISAS-POS-AGENDAMENTO-E-ATENDIMENTO.md)). As condições de auditoria mencionadas aqui devem ser tratadas como controles/pendências paralelos, e não como bloqueio automático de novas construções aprovadas.
+
 ## Regras de governança
 1. Esta proposta **não altera escopo e prioridade da auditoria atual**; só iniciar após encerramento formal dos pendentes atuais (inclusive Asaas, E2E e segurança).
 2. "Existe" = arquivo/rota localizada; **não implica homologação E2E**. "Parcial" = estrutura relacionada verificada com lacunas. "Não evidenciado" = requer inventário adicional antes de afirmar inexistência.
