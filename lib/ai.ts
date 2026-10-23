@@ -27,7 +27,7 @@ Regras:
 function getClient(): Anthropic {
   const apiKey = process.env.ANTHROPIC_API_KEY
   if (!apiKey) console.warn('[ai] ANTHROPIC_API_KEY não configurada — IA desativada')
-  return new Anthropic({ apiKey })
+  return new Anthropic({ apiKey, timeout: 20000, maxRetries: 0 })
 }
 
 // ── Chat interno ──────────────────────────────────────────────────────────────
