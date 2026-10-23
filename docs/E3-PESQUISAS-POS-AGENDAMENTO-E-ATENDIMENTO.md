@@ -147,3 +147,10 @@ A implementação do módulo seguirá o plano mestre, sem disparos externos até
 - O endpoint GET agora expõe **somente** nome e URL pública da logo do tenant do convite; não fornece dados do cliente, booking ou contatos.
 - **Envio por e-mail:** não foi habilitado neste incremento. O convite manual continua retornando link, sem comunicação real. Definir provedor, identidade/remetente e autorização antes de implementar o disparo explícito em homologação.
 - Validar layout mobile, versão sem logo, link inválido e links respondidos, acessibilidade, tenant A/B e pipelines de CI/deploy. A prévia visual é referência, não comprovante de E2E.
+
+
+## Envio manual de pesquisa por e-mail — entrega de 23/10/2026
+- No agendamento concluído, ações **Enviar pesquisa por e-mail** (Resend, clique explícito) e **Copiar link** (sem disparo). Reutiliza modelos publicados, verificação owner/admin, tenant e opt-out antes do envio.
+- Convite único por agendamento/versão; auditoria exclusiva `survey_email_dispatches` registra `attempting`, `accepted`, `failed` ou `unknown` e ID do provedor. Aceito pelo provedor não equivale a entregue. Estados incertos não geram retry automático.
+- Em caso de falha ou resultado desconhecido, não repetir disparo automaticamente. Modelo/link já criado não permite novo envio por mesma versão; recuperação/reenvio auditado deve ser funcionalidade futura.
+- Automação de pesquisas continua desligada; nenhuma mensagem de teste foi enviada no deploy. Homologação de entrega de e-mail com destinatário autorizado e testes de dois tenants ainda necessários.
