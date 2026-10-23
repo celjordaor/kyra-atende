@@ -156,24 +156,9 @@ export default function EmailTemplatesClient({
     setError(null)
     try {
       await api.delete(`/superadmin/email-templates/${editing.key}`)
-      const orig = initialTemplates.find(t => t.key === editing.key)!
-      const restored: Template = {
-        ...editing,
-        subject:   orig.subject,
-        html:      orig.html,
-        isActive:  orig.isActive,
-        isCustom:  false,
-        updatedAt: new Date().toISOString(),
-      }
-      setEditing(restored)
-      setSubject(restored.subject)
-      setHtml(restored.html)
-      setIsActive(restored.isActive)
-      setLocalTemplates(prev =>
-        prev.map(t => t.key === editing.key ? restored : t)
-      )
-      setSaved(true)
-      setTimeout(() => setSaved(false), 3000)
+      // Após excluir a personalização, o padrão vigente deve vir do servidor.
+      // initialTemplates pode conter justamente o HTML customizado removido.
+      window.location.reload()
     } catch (e: any) {
       setError(e?.message ?? 'Erro ao restaurar')
     } finally {
