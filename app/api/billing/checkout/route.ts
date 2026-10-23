@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
       chunks.push(value)
     }
     body = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(
-      Buffer.concat(chunks.map(chunk => Buffer.from(chunk)),
+      Buffer.concat(chunks.map(chunk => Buffer.from(chunk))),
     ))
   } catch {
     return NextResponse.json({ error: 'Dados inválidos.' }, { status: 400 })
