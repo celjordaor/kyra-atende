@@ -54,3 +54,9 @@
 - Branch `feat/e3-p122-survey-results`: integração de feedback opcional e não bloqueante após reserva pública confirmada; link público com token opaco gerado no servidor e não enviado automaticamente; página de resultados administrativos com métricas e escopo por tenant.
 - Conferido: `main` HEAD anterior à branch `3d21d2a529f9de83f217e12b13be3ec9215f260a` (`READY` no Vercel). Supabase `zrszytzlovthyezozqhj` `ACTIVE_HEALTHY`, migrations `20261023044642` e `20261023132446` registradas e tabelas presentes.
 - Os arquivos em branch ainda precisam de CI/PR, merge/deploy e QA/E2E. O fluxo não envia mensagens. Continuar em P12.2 até validar e então P12.3.
+
+
+## Continuidade P12.3 — 23/10/2026
+- PR funcional em preparação: ação **Pesquisa** em agendamentos concluídos no desktop/mobile; modal de seleção do modelo `service_satisfaction` publicado; criação manual de convite e cópia de link. Nenhuma comunicação é disparada automaticamente.
+- Último deploy confirmado: PR #106, commit `d793919d27cd499e65287117af5c5cc8096cf15a`, Vercel `READY`; P12.2 CI aprovado. P12.3 exige CI/merge/deploy próprios e E2E de tenants e links.
+- Próximo: P12.4 automação diária inicialmente desligada, outbox, opt-out, métricas; P12.5 homologação externa.
