@@ -140,3 +140,10 @@ A implementação do módulo seguirá o plano mestre, sem disparos externos até
 - O estado remoto e a branch `main` já possuem `survey_automation_settings`, `survey_contact_opt_outs`, `survey_outbox`, RPC atômica `enqueue_held_survey_invitation`, API de configurações e opt-out, e painel de preferências, introduzidos em PRs anteriores. A configuração continua exigindo `enabled=false`, `send_channel=disabled`, sem cron/disparador.
 - Este complemento adiciona o painel **somente leitura** da fila de pesquisas, usando `GET /api/surveys/outbox`, existente e autorizado a owner/admin com filtro de tenant. Exibe no máximo os últimos 100 registros e estados, sem dados pessoais ou ação de disparo.
 - O limite de amostra não equivale ao total histórico. Ainda pendem testes E2E com dois tenants, regras reais de entrega/retentativa mediante homologação, e eventual melhoria de indicadores consolidados.
+
+
+## P12.5 — identidade visual da pesquisa pública (23/10/2026)
+- Revisão visual da página `/pesquisa/[token]`: cabeçalho com gradiente roxo e nome do estabelecimento do tenant, logo HTTPS quando cadastrado, cartão central responsivo, escala 1–5 com estrelas, botões Sim/Não, comentário e estados de sucesso/opt-out.
+- O endpoint GET agora expõe **somente** nome e URL pública da logo do tenant do convite; não fornece dados do cliente, booking ou contatos.
+- **Envio por e-mail:** não foi habilitado neste incremento. O convite manual continua retornando link, sem comunicação real. Definir provedor, identidade/remetente e autorização antes de implementar o disparo explícito em homologação.
+- Validar layout mobile, versão sem logo, link inválido e links respondidos, acessibilidade, tenant A/B e pipelines de CI/deploy. A prévia visual é referência, não comprovante de E2E.
