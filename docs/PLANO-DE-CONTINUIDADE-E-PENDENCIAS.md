@@ -697,3 +697,8 @@ Autorização expressa do responsável para testes em produção, pois o ambient
 
 ## Atualização de transição — 23/10/2026, PR #102
 O handoff vigente está em `docs/HANDOFF-NOVO-CHAT-2026-10-23.md`. A fila de funcionalidades **não** se resume às pendências deste inventário: a prioridade de produto permanece **E3/item 12**, com P12.1 e a fundação de P12.2 presentes no repositório após o merge #102. Prosseguir com integração pós-confirmação, respostas/métricas e testes sem reabrir rodadas genéricas de Portal/WhatsApp. Este documento acompanha homologações externas e riscos; não bloqueia automaticamente desenvolvimento aprovado. CI/deploy/migrations do PR #102 e E2E externos não foram conferidos nesta atualização.
+
+
+## E3/P12.4 — preparação segura (23/10/2026)
+- P12.3 integrado no PR #107, produção READY confirmada para o SHA do merge `13871ec2c371f355dc5534a5c4f3f055d58d4dcb`.
+- P12.4 estruturada como configuração inicialmente inativa por tenant e outbox sem despacho. Opt-out modelado mas processamento/consentimento não homologados. Não considerar o Item 12 encerrado. Fonte prioritária: `docs/HANDOFF-NOVO-CHAT-2026-10-23.md`.

@@ -108,3 +108,11 @@ A implementação do módulo seguirá o plano mestre, sem disparos externos até
 - Convite é criado pela API autenticada existente, que exige owner/admin, tenant igual, reserva concluída e unicidade por reserva/modelo. Link retornado uma única vez e copiado manualmente; resposta pelo formulário público existente.
 - **Não há envio automático ou comunicação real.** Reenvio do mesmo convite não é suportado; não mostrar sucesso de envio, pois só o link é gerado.
 - Conferir CI, deploy e E2E de papéis/tenant e duplicidades antes de declarar homologado. P12.4 continua com automação e outbox desligadas por padrão.
+
+
+## 12. P12.4 — fundação segura, sem acionamento externo (23/10/2026)
+- Configuração por tenant (`survey_automation_settings`) com `enabled=false` e `send_channel=disabled` fixados também por constraints SQL, parâmetros preparatórios de limite diário e espera. UI e API administrativa `GET/PATCH /api/surveys/automation` aceitam somente configuração inativa.
+- Tabelas `survey_contact_opt_outs` e `survey_outbox` preparadas com isolamento por tenant, RLS, privilégios revogados a `anon/authenticated` e acesso somente por `service_role`. Outbox não possui processamento, cron ou envio; estado inicial `held`.
+- Status: **P12.4 parcialmente implementada**. Falta mecanismo de inscrição/descadastramento, avaliação de elegibilidade, consentimento/limites, processamento idempotente, agendamento, provider homologado, relatórios e E2E. Nenhuma ativação autorizada.
+
+- Migration P12.4 aplicada remotamente no Supabase Kyra Atende como versão `20261023160723`, mantendo arquivo Git sincronizado; envio permanece bloqueado.
