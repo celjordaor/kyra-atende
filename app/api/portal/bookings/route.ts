@@ -1,6 +1,7 @@
 import {NextRequest,NextResponse} from 'next/server'
 import {createClient} from '@/lib/supabase/server'
 import {createAdminClient} from '@/lib/supabase/admin'
+const validDate=(value:string)=>{const d=new Date(value+'T00:00:00Z');return /^\d{4}-\d{2}-\d{2}$/.test(value)&&!Number.isNaN(d.getTime())&&d.toISOString().slice(0,10)===value}
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 export async function GET(request:NextRequest){
  const {data:{user}}=await createClient().auth.getUser()
@@ -17,7 +18,7 @@ export async function GET(request:NextRequest){
   if(services.error||professionals.error)return NextResponse.json({error:'Não foi possível carregar os serviços.'},{status:503})
   return NextResponse.json({services:services.data,professionals:professionals.data},{headers:{'Cache-Control':'private, no-store'}})
  }
- if(!service||!uuid.test(service)||!date||!/^\d{4}-\d{2}-\d{2}$/.test(date)||!Number.isFinite(Date.parse(date+'T00:00:00Z'))||(professional&&!uuid.test(professional)))return NextResponse.json({error:'Consulta inválida.'},{status:400})
+ if(!service||!uuid.test(service)||!date||!validDate(date)||(professional&&!uuid.test(professional)))return NextResponse.json({error:'Consulta inválida.'},{status:400})
  const {data,error}=await db.rpc('get_available_slots',{p_tenant:tenant,p_service:service,p_date:date,p_professional:professional||null})
  if(error)return NextResponse.json({error:'Não foi possível consultar horários.'},{status:503})
  return NextResponse.json({slots:data??[]},{headers:{'Cache-Control':'private, no-store'}})
@@ -33,5 +34,5 @@ export async function POST(request:NextRequest){
  if(!member)return NextResponse.json({error:'Empresa não vinculada.'},{status:403})
  const {data,error}=await db.rpc('create_portal_booking',{p_identity:user.id,p_tenant:b.tenantId,p_client:member.client_id,p_service:b.serviceId,p_professional:b.professionalId,p_start:b.startAt,p_notes:b.notes??null})
  if(error)return NextResponse.json({error:error.code==='23P01'?'Esse horário não está mais disponível. Escolha outro.':'Não foi possível registrar o agendamento.'},{status:error.code==='23P01'?409:400})
- return NextResponse.json({id:data},{status:201})
+ return NextResponse.json({id:data},{status:201,headers:{'Cache-Control':'private, no-store'}})
 }
