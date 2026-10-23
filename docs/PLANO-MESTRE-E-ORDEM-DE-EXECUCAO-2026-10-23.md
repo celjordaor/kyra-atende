@@ -1,4 +1,6 @@
 # Kyra Atende — Plano mestre de trabalho e ponto de retomada
+> **Checkpoint atualizado 23/10/2026 — PR #102:** `main` SHA `25f15a543365efc7a1b2a587beb9c1d23feb1ac9` está `READY` na Vercel. P12.1 permanece implementado; P12.2 agora possui fundação de convites/respostas, geração manual de token seguro e formulário público no código (migration `20261023132446_e3_survey_invitations_responses_foundation.sql`). Faltam confirmar migration no Supabase remoto, conectar pesquisa ao sucesso do agendamento, consultar respostas/métricas no painel e realizar E2E. P12.3–P12.5 permanecem pendentes. **Ponto de retomada autoritativo:** `docs/HANDOFF-NOVO-CHAT-2026-10-23.md`. As referências abaixo a PR #101 são históricas, não o último HEAD.
+
 **Reconciliado em:** 23/10/2026
 **Estado:** diretriz operacional ativa para planejamento; não declara funcionalidades concluídas sem evidência.
 
