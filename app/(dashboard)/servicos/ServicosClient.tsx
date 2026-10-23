@@ -96,6 +96,7 @@ export function ServicosClient({ rows: initialRows }: Props) {
   const [saving,    setSaving]    = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
   const [error,     setError]     = useState<string | null>(null)
+  const [displayMode, setDisplayMode] = useState<'cards'|'table'>('cards')
 
   function setField(field: keyof ServiceForm) {
     return (v: string) => setForm(prev => ({ ...prev, [field]: v }))
@@ -214,7 +215,12 @@ export function ServicosClient({ rows: initialRows }: Props) {
           </article>
         ))}
       </div>
+      <div style={{display:'flex',justifyContent:'flex-end',gap:8}} aria-label="Modo de exibição de serviços">
+        <Button variant={displayMode==='cards'?'primary':'secondary'} size="sm" onClick={()=>setDisplayMode('cards')}>Cards</Button>
+        <Button variant={displayMode==='table'?'primary':'secondary'} size="sm" onClick={()=>setDisplayMode('table')}>Tabela</Button>
+      </div>
       <div className="kyra-services-desktop" id="servicos-table" style={{border:0,background:'transparent',boxShadow:'none',overflow:'visible'}}>
+        {displayMode==='cards'?<>
         <div style={{display:'grid',gap:12}}>
           {rows.length===0&&<p style={{color:'var(--muted)'}}>Nenhum serviço cadastrado.</p>}
           {rows.map(row=><article key={row.id} style={{display:'flex',alignItems:'center',gap:16,padding:16,background:'var(--surface-2)',border:'1px solid #e7e1f0',borderRadius:12,boxShadow:'0 3px 14px rgba(74,63,102,.06)',flexWrap:'wrap'}}>
@@ -234,6 +240,7 @@ export function ServicosClient({ rows: initialRows }: Props) {
             </div>
           </article>)}
         </div>
+        </>:<DataTable columns={COLUMNS} rows={rows} rowActions={ROW_ACTIONS} emptyMessage="Nenhum registro cadastrado." pagination={{page:1,pageSize:20,total:rows.length}}/>}
       </div>
 
       <Modal
