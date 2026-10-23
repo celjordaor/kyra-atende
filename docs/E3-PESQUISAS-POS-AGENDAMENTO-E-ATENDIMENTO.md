@@ -134,3 +134,9 @@ A implementação do módulo seguirá o plano mestre, sem disparos externos até
 - RPC `enqueue_held_survey_invitation` centraliza validação de tenant, convite pendente não expirado, reserva elegível, template publicado e opt-out dentro de uma transação; inserção `ON CONFLICT DO NOTHING` e reconsulta garantem idempotência.
 - API de outbox usa RPC restrita a `service_role`, sem operação de envio; estado permanece `held` ou `cancelled`. Painel exibe contadores de fila retida, cancelamentos e opt-out (amostra máxima de 1.000 entradas, sinalizada).
 - P12.4 não inclui consentimento integral, envio, cron, retentativas, claim transacional de envio ou E2E de dois tenants. P12.5 exige testes de segurança, concorrência e UX antes de homologação.
+
+
+## P12.4 — Complemento de observabilidade de fila (23/10/2026)
+- O estado remoto e a branch `main` já possuem `survey_automation_settings`, `survey_contact_opt_outs`, `survey_outbox`, RPC atômica `enqueue_held_survey_invitation`, API de configurações e opt-out, e painel de preferências, introduzidos em PRs anteriores. A configuração continua exigindo `enabled=false`, `send_channel=disabled`, sem cron/disparador.
+- Este complemento adiciona o painel **somente leitura** da fila de pesquisas, usando `GET /api/surveys/outbox`, existente e autorizado a owner/admin com filtro de tenant. Exibe no máximo os últimos 100 registros e estados, sem dados pessoais ou ação de disparo.
+- O limite de amostra não equivale ao total histórico. Ainda pendem testes E2E com dois tenants, regras reais de entrega/retentativa mediante homologação, e eventual melhoria de indicadores consolidados.
