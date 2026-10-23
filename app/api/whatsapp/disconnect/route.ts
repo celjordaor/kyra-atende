@@ -12,6 +12,11 @@ export async function DELETE() {
 
   const { tenantId } = session
 
-  await disconnectInstance(tenantId)
-  return new NextResponse(null, { status: 204 })
+  try {
+    await disconnectInstance(tenantId)
+    return new NextResponse(null, { status: 204 })
+  } catch (error) {
+    console.error('[whatsapp/disconnect] erro no provedor', { errorType: error instanceof Error ? error.name : 'unknown' })
+    return NextResponse.json({ error: 'Não foi possível desconectar o WhatsApp. Tente novamente.' }, { status: 502 })
+  }
 }
