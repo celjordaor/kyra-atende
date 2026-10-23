@@ -128,9 +128,9 @@ function Sidebar({ variant, tenantName, tenantLogoUrl, onClose, collapsed = fals
   }
 
   return (
-    <aside style={{ width: collapsed ? '64px' : '240px', minWidth: collapsed ? '64px' : '240px', transition: 'width 180ms ease, min-width 180ms ease', height: '100%', background: 'var(--surface-2)', borderRight: '1px solid var(--border)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+    <aside style={{ width: collapsed ? '64px' : '240px', minWidth: collapsed ? '64px' : '240px', transition: 'width 180ms ease, min-width 180ms ease', height: '100%', background: isSuperAdmin ? 'var(--surface-2)' : 'var(--sidebar-primary)', borderRight: isSuperAdmin ? '1px solid var(--border)' : '1px solid var(--sidebar-secondary)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       {/* Tenant branding — shown only on mobile where topbar logo is hidden */}
-      <div className="kyra-sidebar-brand" style={{ padding: '16px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '10px', minHeight: '64px' }}>
+      <div className="kyra-sidebar-brand" style={{ padding: '16px', borderBottom: '1px solid var(--sidebar-secondary)', display: 'flex', alignItems: 'center', gap: '10px', minHeight: '64px' }}>
         {tenantLogoUrl ? (
           <img src={tenantLogoUrl} alt={tenantName ?? 'Logo'} style={{ width: '28px', height: '28px', borderRadius: 'var(--r)', objectFit: 'contain' }} />
         ) : (
@@ -139,13 +139,13 @@ function Sidebar({ variant, tenantName, tenantLogoUrl, onClose, collapsed = fals
           </div>
         )}
         <div style={{ overflow: 'hidden', flex: 1 }}>
-          <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--ink)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          <div style={{ fontSize: '13px', fontWeight: 600, color: isSuperAdmin ? 'var(--ink)' : '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {isSuperAdmin ? 'SuperAdmin' : (tenantName ?? 'Kyra Atende')}
           </div>
           {isSuperAdmin && <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '1px' }}>Painel administrativo</div>}
         </div>
         {onClose && (
-          <button onClick={onClose} aria-label="Fechar menu" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', padding: '4px', borderRadius: 'var(--r)', display: 'flex', alignItems: 'center' }}>
+          <button onClick={onClose} aria-label="Fechar menu" style={{ background: 'none', border: 'none', cursor: 'pointer', color: isSuperAdmin ? 'var(--muted)' : '#fff', padding: '4px', borderRadius: 'var(--r)', display: 'flex', alignItems: 'center' }}>
             <IconX />
           </button>
         )}
@@ -158,12 +158,12 @@ function Sidebar({ variant, tenantName, tenantLogoUrl, onClose, collapsed = fals
             return (
               <li key={item.href}>
                 <Link href={item.href} onClick={onClose} title={collapsed ? item.label : undefined} aria-label={collapsed ? item.label : undefined}
-                  style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: collapsed ? '9px 14px' : '9px 12px', borderRadius: 'var(--r-md)', fontSize: '14px', fontWeight: active ? 600 : 400, color: active ? 'var(--brand)' : 'var(--ink-soft)', background: active ? 'var(--brand-faint)' : 'transparent', textDecoration: 'none', transition: 'background 150ms, color 150ms' }}
-                  onMouseEnter={(e) => { if (!active) { e.currentTarget.style.background = 'var(--surface-3)'; e.currentTarget.style.color = 'var(--ink-body)' } }}
-                  onMouseLeave={(e) => { if (!active) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--ink-soft)' } }}
+                  style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: collapsed ? '9px 14px' : '9px 12px', borderRadius: 'var(--r-md)', fontSize: '14px', fontWeight: active ? 600 : 400, color: isSuperAdmin ? (active ? 'var(--brand)' : 'var(--ink-soft)') : '#fff', background: isSuperAdmin ? (active ? 'var(--brand-faint)' : 'transparent') : (active ? 'var(--sidebar-accent)' : 'transparent'), textDecoration: 'none', transition: 'background 150ms, color 150ms' }}
+                  onMouseEnter={(e) => { if (!active) { e.currentTarget.style.background = isSuperAdmin ? 'var(--surface-3)' : 'var(--sidebar-secondary)'; e.currentTarget.style.color = isSuperAdmin ? 'var(--ink-body)' : '#fff' } }}
+                  onMouseLeave={(e) => { if (!active) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = isSuperAdmin ? 'var(--ink-soft)' : '#fff' } }}
                   aria-current={active ? 'page' : undefined}
                 >
-                  <span style={{ color: active ? 'var(--brand)' : 'var(--muted)', flexShrink: 0, display: 'flex', alignItems: 'center' }}>{item.icon}</span>
+                  <span style={{ color: isSuperAdmin ? (active ? 'var(--brand)' : 'var(--muted)') : '#fff', flexShrink: 0, display: 'flex', alignItems: 'center' }}>{item.icon}</span>
                   {!collapsed && item.label}
                 </Link>
               </li>

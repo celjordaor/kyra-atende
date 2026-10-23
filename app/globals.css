@@ -8,6 +8,11 @@
 @tailwind utilities;
 
 :root {
+  /* ── Sidebar aprovada E1 ────────────────────────────── */
+  --sidebar-primary: #4A3F66;
+  --sidebar-secondary: #72658E;
+  --sidebar-accent: #8E82AA;
+
   /* ── Marca ─────────────────────────────────────────── */
   --brand:        #6941A5;
   --brand-hover:  #59358F;

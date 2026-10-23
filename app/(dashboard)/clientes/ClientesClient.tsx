@@ -562,7 +562,12 @@ export function ClientesClient({ rows: initialRows }: { rows: ClientRow[] }) {
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+    <div className="kyra-e1-management" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      <style>{`
+        .kyra-e1-management h1{letter-spacing:-.4px}
+        .kyra-e1-management .kyra-clients-desktop-table{border:1px solid #e7e1f0;border-radius:12px;overflow-x:auto;background:var(--surface-2);box-shadow:0 3px 14px rgba(74,63,102,.06)}
+        .kyra-e1-management .kyra-clients-mobile-cards article{border-color:#e7e1f0!important;box-shadow:0 3px 14px rgba(74,63,102,.06)}
+      `}</style>
 
       {/* Cabeçalho */}
       <div id="clientes-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
