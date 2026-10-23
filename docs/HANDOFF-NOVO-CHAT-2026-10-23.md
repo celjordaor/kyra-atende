@@ -1,47 +1,43 @@
 # Kyra Atende — Handoff oficial para novo chat
-**Data de verificação:** 23/10/2026
-**Objetivo:** preservar estado real e decisões; NÃO iniciar auditorias repetitivas quando o próximo épico de produto já está priorizado.
+**Atualização:** 23/10/2026 (reconciliação após PR #102)  
+**Fonte de verdade:** código e histórico de `main`, Plano Mestre, especificação E3 e evidências de CI/deploy/Supabase. Este documento não equivale a homologação E2E.
 
-## 1. Repositório, produção e fonte de verdade
+## Identificadores
 - GitHub: `celjordaor/kyra-atende`, branch `main`.
-- Vercel: projeto `prj_JIxzGtz8u4yvbvSc3GJJLEhbrf4c`; equipe `team_CKMFW37A7GB9ZJDP9DhmE1N1`; site `https://www.kyraatende.com.br`.
-- Último commit de `main` e deploy `READY` verificados na preparação deste handoff: `88b130f051308818071da509f440b82cbae696f6`, PR #101. Este documento será integrado em commit posterior; na retomada, **reconsultar HEAD e deploy** em vez de usar o SHA histórico como HEAD atual.
-- Supabase do Kyra Atende: projeto `zrszytzlovthyezozqhj`. Confirmar projeto/scope antes de toda migration; consultar histórico remoto e não reaplicar versão já registrada.
-- CI que deve passar para cada alteração: `AUD-01 Quality Gates` e `AUD-01 Static Security & Quality Checks`. Só fazer merge com ambos `completed/success` no SHA do PR. Checar deploy `READY` para o SHA final.
+- HEAD observado: `25f15a543365efc7a1b2a587beb9c1d23feb1ac9` — merge PR #102 (pesquisas, convites e respostas). **Reconsultar HEAD antes de qualquer edição.**
+- Vercel: projeto `prj_JIxzGtz8u4yvbvSc3GJJLEhbrf4c`, equipe `team_CKMFW37A7GB9ZJDP9DhmE1N1`, domínio `https://www.kyraatende.com.br`. **Deploy de #102 não verificado nesta reconciliação.**
+- Supabase **Kyra Atende**: `zrszytzlovthyezozqhj`. Confirmar escopo, migrations e schema remoto antes de migração; nunca utilizar outro projeto Kyra por engano.
+- Workflows exigidos: `AUD-01 Quality Gates` e `AUD-01 Static Security & Quality Checks`. **Resultado dos checks no SHA #102 não revalidado nesta reconciliação.**
 
-## 2. Ordem de prioridade, expressamente definida
-A matriz de 18 pedidos está em `docs/PROJETO-EVOLUCAO-POS-HOMOLOGACAO.md`, com ordem vigente em `docs/PLANO-MESTRE-E-ORDEM-DE-EXECUCAO-2026-10-23.md`.
-- **AGORA: E3, item 12 — Pesquisas pós-agendamento e pós-atendimento**.
-- **Estado observado até PR #101:** P12.1 fundação de modelos e perguntas já implementada (migration `20261023044642_e3_survey_template_foundation.sql`, API `app/api/surveys/templates/route.ts`, tela `app/(dashboard)/pesquisas/SurveyTemplatesClient.tsx`). Criação de rascunho, versões, publicar/pausar e nova revisão no código. Existe deploy READY, mas não há prova de E2E com dois tenants.
-- **PRÓXIMO BLOCO: P12.2 — pesquisa rápida pós-agendamento**: contrato de convites/token opaco e expiração, formulário público que não revela cliente/reserva, escrita idempotente de resposta, disponibilidade após confirmação da reserva, sem bloquear o agendamento, acesso administrativo às respostas e métricas iniciais. Validar banco remoto/migrations antes de criar schema. Entregar blocos substanciais, sem disparar emails/WhatsApp reais.
-- **P12.3:** pesquisa de satisfação **após atendimento concluído**, configurável, com envio manual elegível.
-- **P12.4:** automação diária desligada por padrão, fila/outbox, limites, opt-out e relatórios. Sem ativação real sem aprovação.
-- **P12.5:** homologação multitenant/E2E. Nunca confundir deploy READY ou CI com homologação.
-- **RETORNAR a E1/E2 depois conforme checkpoints do Plano Mestre:** Design System visual de modais, painéis laterais e telas; documentos legais definitivos; onboarding guiado do tenant; desativação segura de serviços e profissionais; administração de agenda. E4/E5 ficam no backlog rastreado.
+## Prioridade atual definida pelo proprietário
+**E3, item 12 — duas pesquisas diferentes: facilidade após agendar e satisfação após atendimento concluído.** NÃO substituir por outra rodada genérica de auditoria de Portal/WhatsApp. As pendências E2E externas continuam registradas e só interrompem a evolução por defeito crítico ou orientação expressa.
 
-## 3. Estado de Portal e WhatsApp
-- Portal: PRs #63–#72 e consolidação #71 com checks; existe histórico técnico em `docs/E1-PORTAL-VALIDACAO-CONSOLIDADA-2026-10-22.md`. O usuário decidiu realizar **homologação funcional do portal posteriormente**. Não reabrir sem defeito evidenciado.
-- WhatsApp/Evolution: PR #73 e rodadas posteriores de auditoria; checklist consolidado em `docs/operacao/WHATSAPP-VALIDACAO-GLOBAL-2026-10-23.md`. Existência dos controles no código **não comprova E2E com mensagem real**; testes externos exigem número isolado de homologação. Não reiniciar ciclos genéricos de WhatsApp salvo incidente crítico ou ordem expressa.
-- E1 LGPD: avisos técnicos e páginas provisórias; política e termos finais ainda dependem de dados formais do controlador e revisão jurídica. Não apresentar textos pendentes como aprovados.
-- E1/E2 não foram declaradas encerradas; preservar decisões e aceites visuais já dados.
+### O que existe no repositório
+- **P12.1** modelos/perguntas versionados, administração e publicação/pausa: `supabase/migrations/20261023044642_e3_survey_template_foundation.sql`, `app/api/surveys/templates/route.ts`, `app/(dashboard)/pesquisas/SurveyTemplatesClient.tsx`.
+- **P12.2 (fundação adicionada no PR #102)**: `supabase/migrations/20261023132446_e3_survey_invitations_responses_foundation.sql`, `app/api/surveys/invitations/route.ts`, `app/api/surveys/respond/[token]/route.ts`, `app/pesquisa/[token]/page.tsx` e `SurveyRespondClient.tsx`.
+- **Não afirmar conclusão de P12.2 ainda**: o merge comprova arquivos/código, não prova ativação de CTA após agendamento, integração de todos os caminhos de reserva, métricas administrativas, migration aplicada remotamente, checks/deploy no SHA #102 ou E2E com contas reais.
 
-## 4. Regras não negociáveis de execução
-1. Sempre **ler o arquivo relevante antes de desenvolver ou corrigir**; usar Plano Mestre, especificação atual e este handoff.
-2. Trabalhar em **análise -> implementação/ajustes -> testes reais disponíveis -> CI -> PR/merge -> verificação Vercel**, mantendo migrations e Git alinhados.
-3. Agrupar correções de um fluxo em uma rodada consolidada; evitar inúmeros PRs cosméticos, doc-only ou revisões da mesma tela sem evidência.
-4. Isolamento multitenant e RLS, papéis owner/admin, rate limits, transações e idempotência; não publicar service role nem dados pessoais em respostas públicas.
-5. Não disparar mensagens, pesquisas ou cobranças reais nem mexer em números/instâncias compartilhados sem homologação/autorização específica.
-6. Não alterar visual homologado incidentalmente; identidade principal diferenciada (laranja/lilás/cinza; evitar azul/verde).
-7. Relatar separadamente **implementado**, **CI aprovado**, **deploy READY**, **teste E2E feito** e **homologado pelo proprietário**.
-8. Usuário quer ritmo acelerado, entregas prontas e continuidade sem repetir perguntas já resolvidas.
+### Próxima execução funcional, sem reabrir escopo
+1. Ler este arquivo, `docs/PLANO-MESTRE-E-ORDEM-DE-EXECUCAO-2026-10-23.md`, `docs/PROJETO-EVOLUCAO-POS-HOMOLOGACAO.md` e `docs/E3-PESQUISAS-POS-AGENDAMENTO-E-ATENDIMENTO.md`.
+2. Confirmar HEAD, PR #102/CI, deploy Vercel e versões de migration no Supabase correto. Inspecionar as novas APIs/tabelas e garantir tenant, autorização, token opaco/expiração, idempotência e tratamento seguro de erros.
+3. Concluir **P12.2** como funcionalidade utilizável: disponibilizar CTA opcional de pesquisa **após reserva confirmada** nos fluxos aplicáveis (sem bloquear agendamento), entregar visualização administrativa de respostas e métricas iniciais; reusar infraestrutura existente, sem duplicar tabelas/rotas.
+4. Validar token inválido/expirado, resposta repetida/concorrente, convites duplicados, ausência de vazamento de dados, tenant A/B, fluxo de reservas e acessibilidade/mobile. Rodar testes locais disponíveis e os dois gates de CI; PR/merge e checar deploy `READY` do SHA exato. Se indisponíveis, registrar bloqueio — jamais inventar teste.
+5. Seguir **P12.3** (satisfação pós-atendimento com ação manual elegível), **P12.4** (automação diária desligada por padrão, outbox, opt-out, limites e relatórios) e **P12.5** (homologação E2E). **Não disparar mensagens, pesquisas ou cobranças reais sem autorização e ambiente apropriado.**
+6. Atualizar a especificação E3, este handoff, o Plano Mestre e a matriz dos 18 itens **na mesma entrega funcional**, preservando o histórico de status e as evidências.
 
-## 5. Roteiro exato do novo chat
-1. Ler este handoff, `docs/PLANO-MESTRE-E-ORDEM-DE-EXECUCAO-2026-10-23.md` e `docs/E3-PESQUISAS-POS-AGENDAMENTO-E-ATENDIMENTO.md`.
-2. Consultar HEAD da branch `main`, deploy da Vercel, migrations e schema relevantes do Supabase; reconciliar qualquer commit posterior ao PR #101.
-3. Examinar a base de templates e perguntas já criada antes de estender schema. Evitar duplicar tabelas ou recadastrar migrations.
-4. Entregar **P12.2** em um PR funcional, com API e formulário público protegidos, testes de token inválido/expirado, resposta duplicada e tenant cruzado; não bloquear reserva nem ativar disparo de comunicação.
-5. Após CI verde, fazer merge e verificar `READY`; registrar estado e próxima ação no Plano Mestre e na especificação E3.
-6. Manter checklist de homologação real do Portal e WhatsApp pendente para o proprietário/teste isolado, sem dizer que passou.
+## Frentes paralelas que não devem sumir
+- **AUD-01:** encerramento técnico com ressalvas; HTTP com identidades reais de dois tenants e demais testes externos não presumidos.
+- **Portal:** consolidação prévia; homologação funcional final foi adiada pelo proprietário. Não reabrir sem motivo novo.
+- **Evolution/WhatsApp:** revisão técnica global em `docs/operacao/WHATSAPP-VALIDACAO-GLOBAL-2026-10-23.md`; E2E real exige número/instância isolados; não executar envios reais em números compartilhados.
+- **IA monetária/Asaas:** limites/configuração de produção e testes externos devem ser verificados em trilho próprio.
+- **E1:** Design System, modais e painéis laterais, LGPD/textos legais definitivos, autenticação/PWA e visual ainda requerem retomada conforme Plano Mestre.
+- **E2 do roadmap:** onboarding guiado por tenant, desativação segura de profissionais/serviços, operações de agenda; não confundir com documento técnico chamado E2 sobre IA.
+- **E4/E5:** recorrência, integrações, remetente verificado, nova UX de agendamentos e landing preservados no backlog.
 
-## 6. Limites de comprovação deste handoff
-Esta transição consultou repositório e Vercel, **não executou testes E2E autenticados, mensagens reais, provas de envio de pesquisas, nem inspeção SQL remota do estado atual**. O próximo chat deve confirmar as condições que dependem do estado remoto em vez de inferi-las da existência de migrations.
+## Disciplina obrigatória
+- Ler arquivos relevantes antes de desenvolver; conferir contexto atualizado em GitHub/Supabase/Vercel.
+- Agrupar **análise + correção + validação + commit + revisão + documentação** numa rodada por funcionalidade; não multiplicar PRs cosméticos ou doc-only.
+- Manter migrations e Git sincronizados, RLS, autorização, isolamento, idempotência, logs sem PII e secrets fora do cliente.
+- Respeitar identidade visual aprovada e componentes reaproveitáveis; preferir laranja/lilás/cinza, não azul/verde como marca principal.
+- Distinguir **código implementado / teste automatizado aprovado / migration remota verificada / deploy READY / E2E executado / homologação do proprietário**. Nada disso é sinônimo.
+- Não confundir esta reconciliação documental com execução de build, teste, CI, deploy ou validação SQL: apenas HEAD e arquivos GitHub foram conferidos neste trabalho.
