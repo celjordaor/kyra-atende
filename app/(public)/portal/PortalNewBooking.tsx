@@ -3,7 +3,7 @@ import {useEffect,useRef,useState} from 'react'
 type Service={id:string;name:string;duration_minutes:number}
 type Professional={id:string;name:string}
 type Slot={professional_id:string;starts_at:string;ends_at:string}
-export default function PortalNewBooking({tenantId,onDone}:{tenantId:string;onDone:()=>void}){
+export default function PortalNewBooking({tenantId,onDone}:{tenantId:string;onDone:(uncertain?:boolean)=>void}){
  const submissionPending=useRef(false)
  const [services,setServices]=useState<Service[]>([])
  const [professionals,setProfessionals]=useState<Professional[]>([])
@@ -77,7 +77,7 @@ export default function PortalNewBooking({tenantId,onDone}:{tenantId:string;onDo
    if(uncertain){
     setConfirmationUncertain(true)
     setMessage('Não recebemos confirmação do servidor. Confira seus agendamentos antes de tentar novamente.')
-    onDone()
+    onDone(true)
    }else setMessage(e instanceof Error?e.message:'Não foi possível agendar.')
   }finally{submissionPending.current=false;setBusy(false)}
  }
