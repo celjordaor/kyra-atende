@@ -164,7 +164,7 @@ export async function handleWebhook(payload: EvolutionWebhookPayload): Promise<v
       console.error('[whatsapp] resposta automática não concluída', {
         tenantId,
         messageId,
-        failure: err instanceof Error ? err.message : 'unknown',
+        errorType: err instanceof Error ? err.name : 'unknown',
       })
       await dispatchPush(tenantId, 'whatsapp.unhandled', {
         title: 'WhatsApp precisa de atendimento',

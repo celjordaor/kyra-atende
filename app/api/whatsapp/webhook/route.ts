@@ -28,10 +28,29 @@ export async function POST(request: NextRequest) {
   if (Number.isFinite(declaredBytes) && declaredBytes > maxBytes) {
     return NextResponse.json({ error: 'Payload muito grande' }, { status: 413 })
   }
-  const raw = await request.text().catch(() => '')
-  if (Buffer.byteLength(raw, 'utf8') > maxBytes) {
-    return NextResponse.json({ error: 'Payload muito grande' }, { status: 413 })
+  // Limitar bytes enquanto lê: request.text() carregaria o payload inteiro
+  // antes de verificar o tamanho, mesmo sem Content-Length.
+  if (!request.body) return NextResponse.json({ error: 'Payload inválido' }, { status: 400 })
+  const reader = request.body.getReader()
+  const chunks: Uint8Array[] = []
+  let total = 0
+  try {
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+      total += value.byteLength
+      if (total > maxBytes) {
+        await reader.cancel().catch(() => {})
+        return NextResponse.json({ error: 'Payload muito grande' }, { status: 413 })
+      }
+      chunks.push(value)
+    }
+  } catch {
+    return NextResponse.json({ error: 'Payload inválido' }, { status: 400 })
+  } finally {
+    reader.releaseLock()
   }
+  const raw = Buffer.concat(chunks.map(chunk => Buffer.from(chunk)), total).toString('utf8')
   const body = (() => { try { return JSON.parse(raw) } catch { return null } })()
   const instance = body?.instance
   if (!body || typeof body.event !== 'string' || typeof instance !== 'string' ||
