@@ -321,6 +321,7 @@ export async function connectInstance(
   const res = await fetch(`${url}/instance/create`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', apikey: key },
+    signal: AbortSignal.timeout(15000),
     body: JSON.stringify({
       instanceName:     tenantId,
       qrcode:           true,
@@ -357,6 +358,7 @@ async function getQRCode(tenantId: string): Promise<{ qrcode?: string; status: s
 
   const res = await fetch(`${url}/instance/connect/${tenantId}`, {
     headers: { apikey: key },
+    signal: AbortSignal.timeout(15000),
   })
   if (!res.ok) return { status: 'error' }
 
@@ -378,6 +380,7 @@ export async function getConnectionStatus(tenantId: string): Promise<ConnectionS
 
   const res = await fetch(`${url}/instance/connectionState/${tenantId}`, {
     headers: { apikey: key },
+    signal: AbortSignal.timeout(15000),
   })
   if (!res.ok) return { connected: false, status: 'disconnected' }
 
@@ -389,10 +392,12 @@ export async function getConnectionStatus(tenantId: string): Promise<ConnectionS
 export async function disconnectInstance(tenantId: string): Promise<void> {
   const url = evolutionUrl()
   const key = evolutionKey()
-  if (!url || !key) return
+  if (!url || !key) throw new Error('Evolution API não configurada')
 
-  await fetch(`${url}/instance/logout/${tenantId}`, {
+  const response = await fetch(`${url}/instance/logout/${tenantId}`, {
     method:  'DELETE',
     headers: { apikey: key },
-  }).catch(console.error)
+    signal: AbortSignal.timeout(15000),
+  })
+  if (!response.ok) throw new Error(`Evolution API retornou HTTP ${response.status} na desconexão`)
 }
