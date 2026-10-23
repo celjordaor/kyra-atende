@@ -101,3 +101,10 @@ A implementação do módulo seguirá o plano mestre, sem disparos externos até
 - UI pública mostra o CTA de feedback após sucesso apenas se houver URL válida. O formulário exige token e expiração e não publica dados de cliente/reserva.
 - **Validação obrigatória antes de classificar como concluído:** CI da branch, deploy do SHA de merge, testes reais de tenant A/B, expirado/repetido/concorrente, reservas com status pending, published/paused, UX responsiva e nenhum disparo externo. A ausência de modelo publicado resulta em sucesso de reserva sem CTA, por desenho.
 - Métricas atuais são volume e taxa de resposta da amostra recente; nota média e paginação completa continuam na evolução P12.4. Não declarar E2E homologado.
+
+
+## 11. P12.3 — Pesquisa pós-atendimento manual (23/10/2026)
+- Nova ação `Pesquisa` em agendamentos concluídos e modal de seleção de versões publicadas do tipo `service_satisfaction`.
+- Convite é criado pela API autenticada existente, que exige owner/admin, tenant igual, reserva concluída e unicidade por reserva/modelo. Link retornado uma única vez e copiado manualmente; resposta pelo formulário público existente.
+- **Não há envio automático ou comunicação real.** Reenvio do mesmo convite não é suportado; não mostrar sucesso de envio, pois só o link é gerado.
+- Conferir CI, deploy e E2E de papéis/tenant e duplicidades antes de declarar homologado. P12.4 continua com automação e outbox desligadas por padrão.
