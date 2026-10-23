@@ -1,4 +1,6 @@
 'use client'
+import { SidePanel } from '@/components/organisms/SidePanel'
+import { BookingSection } from '@/components/organisms/BookingSection'
 
 import React, { useState, useMemo, useCallback } from 'react'
 import { DataTable, Modal } from '@/components/organisms'
@@ -643,11 +645,11 @@ export function ClientesClient({ rows: initialRows }: { rows: ClientRow[] }) {
       <BookingDetailModal booking={bookingDetail} onClose={() => setBookingDetail(null)}/>
 
       {/* ── Modal criar / editar ─────────────────────────────────────── */}
-      <Modal
+      <SidePanel
         open={modalOpen}
         onClose={() => setModalOpen(false)}
         title={editTarget ? 'Editar cliente' : 'Novo cliente'}
-        size="lg"
+        width={680}
         footer={
           <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
             <Button variant="ghost" size="md" onClick={() => setModalOpen(false)} disabled={saving}>
@@ -671,8 +673,7 @@ export function ClientesClient({ rows: initialRows }: { rows: ClientRow[] }) {
           )}
 
           {/* ── Seção: Informações ──────────────────────────────────── */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-            <SectionHeader icon="👤" title="Informações" />
+          <BookingSection title="Informações do cliente" icon="♙"><div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
 
             <FormField
               type="text"
@@ -708,11 +709,10 @@ export function ClientesClient({ rows: initialRows }: { rows: ClientRow[] }) {
               placeholder="Preferências, alergias, informações importantes…"
               rows={3}
             />
-          </div>
+          </div></BookingSection>
 
           {/* ── Seção: Dados pessoais ───────────────────────────────── */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-            <SectionHeader icon="🪪" title="Dados pessoais" optional />
+          <BookingSection title="Dados pessoais (opcional)" icon="▤"><div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
               <FormField
@@ -751,11 +751,10 @@ export function ClientesClient({ rows: initialRows }: { rows: ClientRow[] }) {
                 placeholder="Ex: Professora, Engenheiro…"
               />
             </div>
-          </div>
+          </div></BookingSection>
 
           {/* ── Seção: Endereço ─────────────────────────────────────── */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-            <SectionHeader icon="📍" title="Endereço" optional />
+          <BookingSection title="Endereço (opcional)" icon="⌖"><div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
 
             <div style={{ display: 'grid', gridTemplateColumns: '160px 1fr', gap: '12px' }}>
               <FormField
@@ -815,9 +814,9 @@ export function ClientesClient({ rows: initialRows }: { rows: ClientRow[] }) {
                 placeholder="Cidade"
               />
             </div>
-          </div>
+          </div></BookingSection>
         </div>
-      </Modal>
+      </SidePanel>
 
       {/* ── Modal confirmar exclusão ───────────────────────────────── */}
       <Modal
