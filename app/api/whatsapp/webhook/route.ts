@@ -50,6 +50,7 @@ export async function POST(request: NextRequest) {
   } finally {
     reader.releaseLock()
   }
+  if (total === 0) return NextResponse.json({ error: 'Payload inválido' }, { status: 400 })
   const raw = Buffer.concat(chunks.map(chunk => Buffer.from(chunk)), total).toString('utf8')
   const body = (() => { try { return JSON.parse(raw) } catch { return null } })()
   const instance = body?.instance
