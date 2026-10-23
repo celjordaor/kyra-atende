@@ -154,3 +154,9 @@ A implementação do módulo seguirá o plano mestre, sem disparos externos até
 - Convite único por agendamento/versão; auditoria exclusiva `survey_email_dispatches` registra `attempting`, `accepted`, `failed` ou `unknown` e ID do provedor. Aceito pelo provedor não equivale a entregue. Estados incertos não geram retry automático.
 - Em caso de falha ou resultado desconhecido, não repetir disparo automaticamente. Modelo/link já criado não permite novo envio por mesma versão; recuperação/reenvio auditado deve ser funcionalidade futura.
 - Automação de pesquisas continua desligada; nenhuma mensagem de teste foi enviada no deploy. Homologação de entrega de e-mail com destinatário autorizado e testes de dois tenants ainda necessários.
+
+
+## Correção pontual — validação de endereço de e-mail (23/10/2026)
+- Corrigida expressão regular com barras invertidas duplicadas na rota de envio manual `POST /api/surveys/invitations`, que rejeitava endereços válidos como `nome@dominio.com` antes de criar o convite. Espaços externos são removidos na validação e no endereço enviado ao Resend.
+- A falha ocorria antes do `INSERT` do convite: uma tentativa com erro `422 Cliente sem e-mail válido cadastrado` não gerava novo convite nem envio. Continua válida a proteção de unicidade para convites efetivamente criados no mesmo agendamento e versão.
+- Não foram enviados e-mails reais durante esta correção; confirmar CI, deploy READY e teste de entrega autorizado em separado.
