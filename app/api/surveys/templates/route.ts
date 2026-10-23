@@ -47,3 +47,31 @@ export async function POST(request:NextRequest){
  }
  return NextResponse.json({id:data,status:'draft'},{status:201,headers:{'Cache-Control':'private, no-store'}})
 }
+
+export async function PATCH(request:NextRequest){
+ const session=await requireSession()
+ if(!session.ok)return session.response
+ const {data:profile,error:profileError}=await session.supabase.from('profiles')
+  .select('role').eq('id',session.userId).eq('tenant_id',session.tenantId).maybeSingle()
+ if(profileError||!profile||!['owner','admin'].includes(profile.role))
+  return NextResponse.json({error:'Sem permissão para alterar pesquisas.'},{status:403})
+ const body=await request.json().catch(()=>null)
+ const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+ if(!body||typeof body.id!=='string'||!uuid.test(body.id)||!['published','paused'].includes(body.status))
+  return NextResponse.json({error:'Operação inválida.'},{status:400})
+ const db=createAdminClient()
+ // Não editar conteúdo de versões já publicadas; somente a situação da versão.
+ const {data:existing,error:lookupError}=await db.from('survey_templates')
+  .select('id,status').eq('id',body.id).eq('tenant_id',session.tenantId).maybeSingle()
+ if(lookupError)return NextResponse.json({error:'Não foi possível verificar o modelo.'},{status:503})
+ if(!existing)return NextResponse.json({error:'Modelo não localizado.'},{status:404})
+ if(existing.status===body.status)return NextResponse.json({id:body.id,status:body.status},{headers:{'Cache-Control':'private, no-store'}})
+ if(existing.status==='paused'&&body.status==='published')
+  return NextResponse.json({error:'Uma versão pausada não pode ser republicada. Crie uma nova versão.'},{status:409})
+ const {data,error}=await db.from('survey_templates').update({status:body.status,updated_at:new Date().toISOString()})
+  .eq('id',body.id).eq('tenant_id',session.tenantId).eq('status',existing.status)
+  .select('id,status').maybeSingle()
+ if(error)return NextResponse.json({error:'Não foi possível alterar o modelo.'},{status:503})
+ if(!data)return NextResponse.json({error:'O modelo foi alterado por outra operação. Atualize a lista.'},{status:409})
+ return NextResponse.json(data,{headers:{'Cache-Control':'private, no-store'}})
+}

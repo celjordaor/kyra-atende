@@ -13,6 +13,7 @@ export default function SurveyTemplatesClient(){
  const [kind,setKind]=useState('booking_experience')
  const [questions,setQuestions]=useState<Question[]>([blank()])
  const [reload,setReload]=useState(0)
+ const [changingId,setChangingId]=useState<string|null>(null)
  useEffect(()=>{
   let alive=true
   const controller=new AbortController()
@@ -38,6 +39,27 @@ export default function SurveyTemplatesClient(){
    setTitle('');setQuestions([blank()]);setMessage('Modelo salvo como rascunho. Nenhuma pesquisa foi enviada.');setReload(n=>n+1)
   }catch(e){setError(e instanceof Error&&['TimeoutError','AbortError'].includes(e.name)?'Resposta inconclusiva. Consulte a lista antes de tentar salvar novamente.':e instanceof Error?e.message:'Não foi possível salvar.')}
   finally{setSaving(false)}
+ }
+ async function changeStatus(template:Template,status:'published'|'paused'){
+  if(changingId)return
+  setChangingId(template.id);setError('');setMessage('')
+  try{
+   const response=await fetch('/api/surveys/templates',{method:'PATCH',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({id:template.id,status}),signal:AbortSignal.timeout(15000)})
+   const data=await response.json().catch(()=>({}))
+   if(!response.ok)throw Error(data.error||'Não foi possível alterar o modelo.')
+   setMessage(status==='published'?'Modelo publicado para uso futuro. Nenhuma pesquisa foi enviada.':'Modelo pausado. Nenhuma pesquisa foi enviada.')
+   setReload(n=>n+1)
+  }catch(e){setError(e instanceof Error?e.message:'Não foi possível alterar o modelo.')}
+  finally{setChangingId(null)}
+ }
+ function createRevision(template:Template){
+  setKind(template.kind)
+  setTitle(template.title)
+  setQuestions((template.survey_questions??[]).slice().sort((a,b)=>a.position-b.position)
+   .map(q=>({label:q.label,answer_type:q.answer_type as Question['answer_type'],required:q.required})))
+  setMessage('Modelo copiado para um novo rascunho. Salve para criar uma nova versão.')
+  window.scrollTo({top:0,behavior:'smooth'})
  }
  const field={width:'100%',maxWidth:640,padding:'10px 12px',border:'1px solid var(--border)',borderRadius:8,background:'var(--surface)',color:'var(--ink)'} as const
  return <main style={{maxWidth:1000,margin:'0 auto',padding:'24px 20px 60px',color:'var(--ink)'}}>
@@ -82,6 +104,11 @@ export default function SurveyTemplatesClient(){
     <strong>{t.title}</strong> <span style={{color:'var(--muted)'}}>· versão {t.version} · {t.status==='draft'?'Rascunho':t.status}</span>
     <p style={{margin:'8px 0',color:'var(--muted)'}}>{t.kind==='booking_experience'?'Experiência de agendamento':'Satisfação com atendimento'}</p>
     <ol>{(t.survey_questions??[]).slice().sort((a,b)=>a.position-b.position).map(q=><li key={q.id}>{q.label}</li>)}</ol>
+    <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+     <button type="button" disabled={saving||!!changingId} onClick={()=>createRevision(t)}>Criar nova versão</button>
+     {t.status==='draft'&&<button type="button" disabled={!!changingId} onClick={()=>changeStatus(t,'published')}>Publicar modelo</button>}
+     {t.status==='published'&&<button type="button" disabled={!!changingId} onClick={()=>changeStatus(t,'paused')}>Pausar modelo</button>}
+    </div>
    </article>)}
    <button type="button" disabled={loading} onClick={()=>setReload(n=>n+1)}>Atualizar lista</button>
   </section>
