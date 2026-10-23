@@ -702,3 +702,8 @@ O handoff vigente está em `docs/HANDOFF-NOVO-CHAT-2026-10-23.md`. A fila de fun
 ## E3/P12.4 — preparação segura (23/10/2026)
 - P12.3 integrado no PR #107, produção READY confirmada para o SHA do merge `13871ec2c371f355dc5534a5c4f3f055d58d4dcb`.
 - P12.4 estruturada como configuração inicialmente inativa por tenant e outbox sem despacho. Opt-out modelado mas processamento/consentimento não homologados. Não considerar o Item 12 encerrado. Fonte prioritária: `docs/HANDOFF-NOVO-CHAT-2026-10-23.md`.
+
+
+## E3/P12.4 — opt-out e fila retida (23/10/2026)
+- APIs tenant-scoped administrativas criadas para opt-out e inclusão manual de convites elegíveis na outbox `held`. Ainda não existe processamento/despacho automático, ou ativação de canais; revalidação transacional pré-envio e consentimento permanecem bloqueios.
+- Fonte de status atual: handoff oficial e Plano Mestre. E2E dois tenants, checks de concorrência e validação do último deploy devem ser evidenciados separadamente.
