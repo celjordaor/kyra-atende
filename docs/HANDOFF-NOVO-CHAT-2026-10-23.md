@@ -80,3 +80,9 @@
 - PR #109 integrado à main no commit `0de38d736beb6c6df632585e65d4848390073c49`; Vercel READY confirmado.
 - Nova branch `feat/e3-p124-self-service-unsubscribe`: pesquisa pública inclui ação confirmada para descadastrar da finalidade vinculada ao token. `POST /api/surveys/unsubscribe/[token]` valida hash opaco, expiração, tenant, cliente e finalidade; grava preferência e cancela convite pendente/entrada held. Sem envios.
 - P12.4 continua parcial: revalidação/claim transacional e provedor, consentimento formal, métricas avançadas e E2E real pendentes. Seguir CI/merge/deploy do SHA exato.
+
+
+## P12.4/12.5 — fila atômica e verificação técnica (23/10/2026)
+- PR #110 integrado em `d6718e7ed82d02b141efac0733f9ed681ed7a793`; deploy do SHA deve ser confirmado independentemente.
+- Incremento em `feat/e3-p124-queue-atomic-metrics`: RPC de enqueue retido transacional, rota de outbox atualizada, indicadores resumidos para admin; nenhum worker, cron ou envio.
+- Migration e CI exigem conferência, P12.5 técnica deverá separar SQL/schema/testes de CI de E2E HTTP com identidades de dois tenants e aceite de produto, que seguem sem evidência.
