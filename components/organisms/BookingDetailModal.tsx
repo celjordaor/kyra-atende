@@ -32,6 +32,7 @@ export function BookingDetailModal({booking,onClose}:{booking:BookingDetail|null
     </div>}
     {booking.notes&&<div style={{gridColumn:'1/-1'}}><div style={{fontSize:12,color:'var(--muted)'}}>Observações</div><p style={{whiteSpace:'pre-wrap'}}>{booking.notes}</p></div>}
   </div></BookingSection>}
+  {booking&&<BookingSection title="Acompanhamento" icon="▤"><div style={{display:'grid',gap:8}}><div><span style={{display:'inline-flex',padding:'6px 11px',borderRadius:20,background:'#f0e7ff',color:'#6e36c5',fontSize:12,fontWeight:700}}>{({completed:'Concluído',confirmed:'Confirmado',pending:'Pendente',cancelled:'Cancelado'} as Record<string,string>)[booking.status]??booking.status}</span></div><p style={{fontSize:12,color:'var(--muted)',margin:0}}>Visualização dos dados existentes, sem editar informações.</p></div></BookingSection>}
   <style>{`@media (max-width: 560px) { .kyra-booking-detail-grid, .kyra-booking-financial-grid { grid-template-columns: minmax(0,1fr) !important; } }`}</style>
  </SidePanel>
 }
