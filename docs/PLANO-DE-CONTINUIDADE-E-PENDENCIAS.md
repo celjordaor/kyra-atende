@@ -707,3 +707,7 @@ O handoff vigente está em `docs/HANDOFF-NOVO-CHAT-2026-10-23.md`. A fila de fun
 ## E3/P12.4 — opt-out e fila retida (23/10/2026)
 - APIs tenant-scoped administrativas criadas para opt-out e inclusão manual de convites elegíveis na outbox `held`. Ainda não existe processamento/despacho automático, ou ativação de canais; revalidação transacional pré-envio e consentimento permanecem bloqueios.
 - Fonte de status atual: handoff oficial e Plano Mestre. E2E dois tenants, checks de concorrência e validação do último deploy devem ser evidenciados separadamente.
+
+
+## E3 — descadastro público (23/10/2026)
+- Incremento P12.4 adiciona API de opt-out para quem possui token válido de pesquisa, revogando convite e cancelando fila retida; sem envio. Exige validações CI/deploy e testes externos, não equivale a item 12 homologado.

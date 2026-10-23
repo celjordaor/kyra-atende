@@ -74,3 +74,9 @@
 - PR #108 integrado em `476ae01fd9c35d688666bf0cf47fc92ab2f9b28a`; migration `20261023160723` aplicada no Supabase correto. Deploy do #108 ainda requer confirmação `READY` (última consulta BUILDING).
 - Incremento atual em `feat/e3-p124-optout-held-queue`: `GET/POST /api/surveys/opt-out` para owner/admin gerir preferências por cliente tenant-scoped; `GET/POST /api/surveys/outbox` para registrar **manualmente** convites existentes após validar reserva, modelo, prazo, estado, finalidade e opt-out. Outbox só aceita `held`, sem processador.
 - Próximos gates: CI, PR/merge, deploy exato, QA E2E dois tenants e testes de concorrência; P12.4 continua parcial (consentimento, operação de opt-out pelo próprio cliente, retentativas e delivery, relatórios e ativação). Nenhum canal real habilitado.
+
+
+## P12.4 — opt-out self-service, 23/10/2026
+- PR #109 integrado à main no commit `0de38d736beb6c6df632585e65d4848390073c49`; Vercel READY confirmado.
+- Nova branch `feat/e3-p124-self-service-unsubscribe`: pesquisa pública inclui ação confirmada para descadastrar da finalidade vinculada ao token. `POST /api/surveys/unsubscribe/[token]` valida hash opaco, expiração, tenant, cliente e finalidade; grava preferência e cancela convite pendente/entrada held. Sem envios.
+- P12.4 continua parcial: revalidação/claim transacional e provedor, consentimento formal, métricas avançadas e E2E real pendentes. Seguir CI/merge/deploy do SHA exato.

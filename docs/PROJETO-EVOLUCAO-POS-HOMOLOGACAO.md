@@ -100,3 +100,6 @@ O projeto fica **preparado para planejamento futuro, não autorizado para implem
 
 
 > Incremento P12.4 de 23/10/2026: APIs administrativas de opt-out e inclusão de convites elegíveis em fila retida adicionadas como execução técnica parcial do item 12. Não equivale a automação ativada, homologação E2E ou encerramento dos 18 pedidos.
+
+
+> Checkpoint técnico P12.4: incluído caminho público de descadastro com confirmação e token de convite para impedir novas inclusões na fila retida. Item 12 continua aberto, e testes com identidades reais de dois tenants e aceite continuam pendentes.
