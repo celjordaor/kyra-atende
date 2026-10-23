@@ -6,6 +6,7 @@ const policies = {
   publicBooking: { limit: 8, seconds: 600 },
   portalClaim: { limit: 12, seconds: 600 },
   portalBooking: { limit: 8, seconds: 600 },
+  aiChat: { limit: 30, seconds: 600 },
   businessSignupCheck: { limit: 8, seconds: 600 },
 } as const
 
