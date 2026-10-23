@@ -294,11 +294,19 @@ async function sendViaEvolution(msg: OutboundMessage, monthlyLimit: number): Pro
     throw new Error('Mensagem aceita; conciliação de quota pendente. Não reenviar automaticamente.')
   }
 
-  // Alerta a 80% do limite
-  const limit = (await getLimit(msg.tenantId, 'whatsapp_monthly_limit')) as number
-  const used  = await getUsage(msg.tenantId, 'whatsapp_messages_sent')
-  if (limit > 0 && used / limit >= 0.8 && used / limit < 0.81) {
-    void dispatchPush(msg.tenantId, 'usage.warning_80', { feature: 'whatsapp', percent: '80' })
+  // Avisos de consumo são operações auxiliares: nunca transformar um
+  // envio já aceito e liquidado em erro que incentive reenvio duplicado.
+  try {
+    const limit = await getLimit(msg.tenantId, 'whatsapp_monthly_limit')
+    const used = await getUsage(msg.tenantId, 'whatsapp_messages_sent')
+    if (typeof limit === 'number' && limit > 0 && used / limit >= 0.8 && used / limit < 0.81) {
+      await dispatchPush(msg.tenantId, 'usage.warning_80', { feature: 'whatsapp', percent: '80' })
+    }
+  } catch (error) {
+    console.warn('[whatsapp] aviso de consumo não concluído', {
+      tenantId: msg.tenantId,
+      errorType: error instanceof Error ? error.name : 'unknown',
+    })
   }
 }
 
