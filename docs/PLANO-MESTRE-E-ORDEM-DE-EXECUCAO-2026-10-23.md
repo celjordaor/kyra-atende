@@ -138,3 +138,9 @@ Após o ciclo de melhorias do Portal, a continuidade passou a gerar pequenos PRs
 ## 16. E1 — biblioteca transversal de diálogos e formulários (23/10/2026)
 - Disponibilizados padrões `ConfirmDialog` e `FormSection`, mantendo o `Modal` homologado intacto e reduzindo divergência de ações de confirmação e seções de formulário.
 - Não significa migração nem aceite visual das telas de produto. Rollout por tela com preview e homologação; E2 operacional e demais 18 pedidos permanecem rastreados.
+
+
+## 17. E1 — implantação visual aprovada dos agendamentos (23/10/2026)
+- Após aprovação da prévia com cards de cabeçalho lilás claro, evolução para `SidePanel` reutilizável de 680 px nas ações Novo, Editar e Detalhes da tela de agendamentos. Novas seções `BookingSection` reaproveitam campos/busca/API e validações existentes.
+- Painel mantém cabeçalho/rodapé fixos, conteúdo rolável, responsividade e fechamento por teclado. Visão de detalhes mostra informações de atendimento e acompanhamento; alteração de estilo não muda regras de negócio.
+- Esta implementação requer CI do PR, deploy READY do SHA do merge e validação visual/funcional real de criação, edição, detalhes e mobile. E2 operacional e E3 P12.5 continuam pendentes; não confundir merge com homologação.

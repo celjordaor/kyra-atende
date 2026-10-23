@@ -36,7 +36,7 @@ export function SidePanel({open,onClose,title,children,footer,width=680,persiste
    @media(max-width:640px){.kyra-side-panel{width:100vw!important;max-width:100vw!important}.kyra-side-panel-body{padding:16px!important}.kyra-side-panel-head,.kyra-side-panel-foot{padding:16px!important}}
    @media(prefers-reduced-motion:reduce){.kyra-side-panel{animation:none!important}}
   `}</style>
-  <div aria-hidden="true" onClick={close} style={{position:'fixed',inset:0,zIndex:1100,background:'rgba(17,24,39,.55)'}}/>
+  <div aria-hidden="true" onClick={close} style={{position:'fixed',inset:0,zIndex:1100,background:'rgba(54,44,75,.36)'}}/>
   <aside ref={ref} role="dialog" aria-modal="true" aria-labelledby={id} tabIndex={-1}
    className="kyra-side-panel" style={{position:'fixed',right:0,top:0,bottom:0,zIndex:1101,
     width:'100%',maxWidth:Math.min(Math.max(width,320),960),background:'var(--surface-2)',
