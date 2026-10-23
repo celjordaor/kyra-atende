@@ -19,7 +19,34 @@ export async function POST(request: NextRequest) {
 
   // Entrada não confiável: limitar custo, tamanho do histórico e formato
   // antes de enviar qualquer conteúdo ao provedor de IA.
-  const rawBody: unknown = await request.json().catch(() => null)
+  // Rejeitar corpos grandes antes de construir o histórico em memória.
+  const maxBytes = 64 * 1024
+  const declaredLength = request.headers.get('content-length')
+  if (declaredLength !== null && Number(declaredLength) > maxBytes) {
+    return NextResponse.json({ error: 'Solicitação muito grande.' }, { status: 413 })
+  }
+  let rawBody: unknown = null
+  try {
+    const reader = request.body?.getReader()
+    if (!reader) return NextResponse.json({ error: 'Histórico inválido.' }, { status: 400 })
+    const chunks: Uint8Array[] = []
+    let total = 0
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+      total += value.byteLength
+      if (total > maxBytes) {
+        await reader.cancel().catch(() => undefined)
+        return NextResponse.json({ error: 'Solicitação muito grande.' }, { status: 413 })
+      }
+      chunks.push(value)
+    }
+    rawBody = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(
+      Buffer.concat(chunks.map(chunk => Buffer.from(chunk))),
+    ))
+  } catch {
+    return NextResponse.json({ error: 'Histórico inválido.' }, { status: 400 })
+  }
   const rawMessages = rawBody && typeof rawBody === 'object' && 'messages' in rawBody
     ? rawBody.messages
     : null
