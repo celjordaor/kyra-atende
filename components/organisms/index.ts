@@ -27,3 +27,7 @@ export { BookingFormModal } from './BookingFormModal'
 export type { BookingFormModalProps, BookingToEdit, SavedBooking } from './BookingFormModal'
 
 export { SidePanel } from './SidePanel'
+
+export { ConfirmDialog } from './ConfirmDialog'
+export type { ConfirmDialogProps } from './ConfirmDialog'
+export { FormSection } from './FormSection'
