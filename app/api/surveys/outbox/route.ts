@@ -28,39 +28,20 @@ export async function POST(request:NextRequest){
  const body=await request.json().catch(()=>null)
  if(!body||typeof body.invitationId!=='string'||!uuid.test(body.invitationId))
   return NextResponse.json({error:'Convite inválido.'},{status:400})
- const db=createAdminClient()
- const {data:invitation,error:inviteError}=await db.from('survey_invitations')
-  .select('id,booking_id,template_id,status,expires_at')
-  .eq('id',body.invitationId).eq('tenant_id',auth.tenantId!).maybeSingle()
- if(inviteError)return NextResponse.json({error:'Falha ao verificar convite.'},{status:503})
- if(!invitation)return NextResponse.json({error:'Convite não encontrado.'},{status:404})
- if(invitation.status!=='pending'||new Date(invitation.expires_at).getTime()<=Date.now())
-  return NextResponse.json({error:'Convite indisponível ou expirado.'},{status:409})
- const [{data:booking,error:bookingError},{data:template,error:templateError}]=await Promise.all([
-  db.from('bookings').select('id,client_id,status').eq('id',invitation.booking_id).eq('tenant_id',auth.tenantId!).maybeSingle(),
-  db.from('survey_templates').select('id,kind,status').eq('id',invitation.template_id).eq('tenant_id',auth.tenantId!).maybeSingle(),
- ])
- if(bookingError||templateError)return NextResponse.json({error:'Falha ao verificar elegibilidade.'},{status:503})
- if(!booking||!booking.client_id||!template||template.status!=='published')
-  return NextResponse.json({error:'Convite não elegível.'},{status:409})
- if(template.kind==='service_satisfaction'&&booking.status!=='completed'||
-    template.kind==='booking_experience'&&!['confirmed','completed'].includes(booking.status))
-  return NextResponse.json({error:'Atendimento fora do estado elegível.'},{status:409})
- const {data:optOut,error:optError}=await db.from('survey_contact_opt_outs').select('id')
-  .eq('tenant_id',auth.tenantId!).eq('client_id',booking.client_id).eq('purpose',template.kind).maybeSingle()
- if(optError)return NextResponse.json({error:'Falha ao verificar preferências.'},{status:503})
- if(optOut)return NextResponse.json({error:'Cliente não aceita pesquisas desta finalidade.'},{status:409})
- const {data:existing,error:lookupError}=await db.from('survey_outbox').select('id,state')
-  .eq('tenant_id',auth.tenantId!).eq('invitation_id',invitation.id).maybeSingle()
- if(lookupError)return NextResponse.json({error:'Falha ao verificar fila.'},{status:503})
- if(existing)return NextResponse.json({id:existing.id,state:existing.state,created:false,automaticSendingAvailable:false},{headers:noStore})
- const {data,error}=await db.from('survey_outbox').insert({
-  tenant_id:auth.tenantId!,invitation_id:invitation.id,state:'held'
- }).select('id,state').single()
+ const {data,error}=await createAdminClient().rpc('enqueue_held_survey_invitation',{
+  p_tenant:auth.tenantId!,p_invitation:body.invitationId,
+ })
  if(error){
-  if(error.code==='23505')return NextResponse.json({error:'Este convite já está na fila. Atualize a consulta.'},{status:409})
-  return NextResponse.json({error:'Falha ao preparar convite.'},{status:503})
+  console.error('[surveys/outbox] enqueue failed',{code:error.code})
+  return NextResponse.json({error:'Não foi possível preparar o convite.'},{status:503})
  }
- return NextResponse.json({id:data.id,state:data.state,created:true,automaticSendingAvailable:false},
-  {status:201,headers:noStore})
+ const result=data as {id?:string;state?:string;error?:string;automaticSendingAvailable?:boolean}
+ if(result.error){
+  return NextResponse.json({error:result.error==='not_found'?'Convite não encontrado.':
+   result.error==='opt_out'?'Cliente não aceita pesquisas desta finalidade.':
+   'Convite indisponível ou atendimento não elegível.'},
+   {status:result.error==='not_found'?404:409,headers:noStore})
+ }
+ return NextResponse.json({id:result.id,state:result.state,automaticSendingAvailable:false},
+  {headers:noStore})
 }
