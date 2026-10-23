@@ -111,6 +111,9 @@ export default async function EmailTemplatesPage() {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles').select('role').eq('id', user.id).single()
+  if (profileError || profile?.role !== 'superadmin') redirect('/app')
 
   // Dados: createAdminClient() para bypassar RLS na tabela email_templates
   const admin = createAdminClient()
