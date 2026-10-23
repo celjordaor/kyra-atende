@@ -78,3 +78,11 @@ Após o ciclo de melhorias do Portal, a continuidade passou a gerar pequenos PRs
 4. **E4/E5:** manter recorrência, integrações, remetentes, agendamento redesenhado e landing no backlog, respeitando dependências e prioridade explicitamente acordada.
 
 **Regra de proteção:** não considerar a auditoria de WhatsApp, Portal, E1 ou E2 encerrada funcionalmente sem evidências de homologação real; isso também não deve bloquear indefinidamente o avanço das novas funcionalidades aprovadas.
+
+## 7. Ponto de retomada atualizado — 23/10/2026, PR #101
+- **Último commit `main` observado:** `88b130f051308818071da509f440b82cbae696f6` (merge PR #101 — ciclo de vida dos modelos de pesquisas). **Deploy `READY`**, verificado em 23/10/2026. Revalidar o estado na próxima sessão antes de escrever.
+- **Implementado no código:** migration `20261023044642_e3_survey_template_foundation.sql` com modelos/perguntas versionados; `app/api/surveys/templates/route.ts` GET/POST/PATCH com checagem de autorização; `app/(dashboard)/pesquisas/SurveyTemplatesClient.tsx` e rota de página; criar rascunho, publicar/pausar e copiar perguntas para nova versão. A existência da migration não substitui conferência do estado remoto.
+- **Próxima execução de produto:** continuar o **item 12** com **P12.2 — pesquisa rápida após agendar**, incluindo convites/token seguro, resposta pública, persistência e visualização básica, de forma incremental com RLS/isolamento, sem bloquear a reserva.
+- **P12.3–P12.5 pendentes:** pesquisa pós-atendimento, envio manual, automação diária (desligada até aceite), relatórios e homologação E2E real; não declarar E3 completa.
+- **E1 e E2 seguem abertas** para retomada conforme seção 6. Não substituir o desenvolvimento do item 12 por auditorias repetitivas de Portal e WhatsApp. Essas frentes têm checklist E2E externo pendente.
+- **Disciplina:** a fonte prioritária da próxima sessão é `docs/HANDOFF-NOVO-CHAT-2026-10-23.md`, seguida deste plano e da especificação E3. Confirmar estado `main`/Vercel/Supabase antes de alterações, executar os dois workflows de CI e só então fazer merge. Não inventar resultados de testes com usuários reais.
