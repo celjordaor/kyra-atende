@@ -39,6 +39,21 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Payload inválido' }, { status: 400 })
   }
 
+  // Para mensagens recebidas, validar estrutura essencial antes de acessar
+  // a fila de permissões, o histórico e a IA. Outros eventos são ignorados.
+  const event = body.event.toLowerCase().replace(/_/g, '.')
+  if (event === 'messages.upsert') {
+    const key = body.data?.key
+    if (!key || typeof key !== 'object' ||
+        typeof key.id !== 'string' || key.id.length < 1 || key.id.length > 256 ||
+        typeof key.remoteJid !== 'string' || key.remoteJid.length > 128 ||
+        typeof key.fromMe !== 'boolean' ||
+        (body.data.message !== undefined &&
+         (typeof body.data.message !== 'object' || body.data.message === null))) {
+      return NextResponse.json({ error: 'Payload inválido' }, { status: 400 })
+    }
+  }
+
   try {
     // Esperar a gravação/processamento para evitar perda após resposta.
     await handleWebhook({ event: body.event, instance, data: body.data })
