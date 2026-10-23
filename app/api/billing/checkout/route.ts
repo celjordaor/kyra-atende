@@ -5,7 +5,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireSession } from '@/lib/route-helpers'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { PLAN_PRICES } from '@/lib/billing-prices'
+import { getPlanPrice } from '@/lib/billing-prices'
 import { randomUUID } from 'node:crypto'
 
 export async function POST(request: NextRequest) {
@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Plano e período são obrigatórios.' }, { status: 400 })
   }
 
-  const amount = PLAN_PRICES[plan]?.[period]
+  const amount = getPlanPrice(plan, period)
   if (!amount) {
     return NextResponse.json({ error: 'Combinação de plano/período inválida.' }, { status: 400 })
   }
