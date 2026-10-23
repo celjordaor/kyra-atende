@@ -50,7 +50,7 @@ export async function POST(request:NextRequest){
   console.error('[surveys/invitations]',{code:error.code})
   return NextResponse.json({error:'Não foi possível gerar convite.'},{status:503})
  }
- const baseUrl=(process.env.NEXT_PUBLIC_APP_URL||'https://www.kyraatende.com.br').replace(/\\/$/,'')
+ const baseUrl=(process.env.NEXT_PUBLIC_APP_URL||'https://www.kyraatende.com.br').replace(/\/$/,'')
  const url=baseUrl+'/pesquisa/'+token
  if(delivery==='link')return NextResponse.json({id:data.id,url,sent:false},{status:201,headers:{'Cache-Control':'no-store'}})
  // A new invitation is unique per booking/template. Dispatch log is also unique.
