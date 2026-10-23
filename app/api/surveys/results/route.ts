@@ -16,7 +16,7 @@ export async function GET(){
   .order('created_at',{ascending:false}).limit(500)
  if(inviteError)return NextResponse.json({error:'Não foi possível consultar os convites.'},{status:503})
  const ids=(invitations??[]).map(i=>i.id)
- const templateIds=[...new Set((invitations??[]).map(i=>i.template_id))]
+ const templateIds=Array.from(new Set((invitations??[]).map(i=>i.template_id)))
  const [responsesResult,templatesResult,questionsResult]=await Promise.all([
   ids.length?db.from('survey_responses').select('invitation_id,answers,created_at')
    .eq('tenant_id',session.tenantId).in('invitation_id',ids).limit(500):
