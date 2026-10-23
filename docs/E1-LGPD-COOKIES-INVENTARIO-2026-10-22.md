@@ -53,3 +53,9 @@ O responsável confirmou «Tudo certo» após a entrega do PR #59 (ícones para 
 O controle visível foi alinhado ao que realmente faz: **«Ver detalhes»** abre informações sobre os cookies necessários; não existe escolha granular de categorias opcionais habilitada no painel. Não chamar esta ação de «Personalizar» até que haja opções de consentimento reais e efetivas. A mudança não altera o visual já homologado, a preferência essencial armazenada ou as rotas públicas.
 
 **Ainda não homologado:** inventário dinâmico das requisições e do armazenamento por navegador/ambiente, eventual bloqueio prévio de cookies não necessários e documentos jurídicos definitivos aprovados. O inventário nominal do repositório não é prova da ausência de serviços de terceiros.
+
+## Transparência contextual nas jornadas públicas — 22/10/2026
+
+Inspeção do código de agendamento público: o formulário coleta nome, WhatsApp/telefone, e-mail opcional e observações. Foi adicionado aviso contextual próximo à confirmação explicando a finalidade imediata (solicitar/gerenciar agendamento junto à empresa atendente), orientando a não inserir dados sensíveis nas observações e vinculando à página de informações de privacidade, explicitamente **em revisão**.
+
+O portal público solicita e-mail para autenticação via código; também recebeu aviso de finalidade contextual com link para informações de privacidade em revisão. Não foi introduzido checkbox de aceite, pois a política definitiva e a avaliação de bases legais ainda exigem aprovação jurídica. Os avisos não comprovam consentimento, tratamento adequado de categorias sensíveis ou conformidade LGPD geral.
