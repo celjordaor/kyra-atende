@@ -1,4 +1,6 @@
 # Kyra Atende — Handoff oficial para novo chat
+> **ATUALIZAÇÃO VERIFICADA — 23/10/2026, PR #102:** `main` em `25f15a543365efc7a1b2a587beb9c1d23feb1ac9`, deploy Vercel `READY`. O estado até PR #101 abaixo é histórico. P12.2 ganhou a migration `20261023132446_e3_survey_invitations_responses_foundation.sql`, API autenticada `app/api/surveys/invitations/route.ts`, API pública `app/api/surveys/respond/[token]/route.ts` e formulário `app/pesquisa/[token]/SurveyRespondClient.tsx`. **Ainda não foi comprovada execução da migration no Supabase remoto nem E2E autenticado.** A criação de convites hoje exige ação explícita de owner/admin, devolve URL e `sent:false`: não há disparo automático nem CTA após confirmação integrado. Próximo trabalho: verificar schema remoto com a skill Supabase, testar isolamento e resposta concorrente, conectar experiência pós-agendamento à confirmação sem bloquear reserva, criar consulta administrativa de respostas/métricas e depois evoluir P12.3. Não repetir P12.1 nem a fundação P12.2, e não disparar e-mail/WhatsApp reais. Os documentos abaixo preservam decisões prévias e podem citar PR #101 como marco histórico.
+
 **Data de verificação:** 23/10/2026
 **Objetivo:** preservar estado real e decisões; NÃO iniciar auditorias repetitivas quando o próximo épico de produto já está priorizado.
 
