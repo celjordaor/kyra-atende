@@ -100,3 +100,9 @@ Após o ciclo de melhorias do Portal, a continuidade passou a gerar pequenos PRs
 - Branch `feat/e3-p122-survey-results` contém CTA opcional de feedback após criação bem-sucedida de reserva pública **confirmada**, sem envio automático, consulta administrativa de respostas/indicadores e proteção de tenant/papel.
 - O estado é **implementação em revisão**, até que CI, PR, merge, Vercel e testes exigidos tenham evidências. Não confundir código da branch com funcionalidade homologada.
 - Após estabilizar P12.2, seguir P12.3 (CSAT de serviço concluído), P12.4 (fila/automação e indicadores) e P12.5 (QA/E2E); E1/E2 permanecem abertas.
+
+
+## 10. P12.3 — ação manual após atendimento (23/10/2026)
+- Acrescentada ação para agendamentos com status `completed`, incluindo interface mobile e desktop. Modal reaproveita `POST /api/surveys/invitations` com verificação backend tenant, role e conclusão; permite modelo publicado `service_satisfaction` e gera link para compartilhamento manual.
+- **Não é envio:** nenhum e-mail ou WhatsApp é disparado; cópia explícita pelo operador. Link efêmero não recuperável; segunda geração para mesma reserva/modelo é barrada pela unicidade existente.
+- Etapa sujeita a checks, deploy e homologação E2E. P12.4/P12.5 ainda pendentes.
