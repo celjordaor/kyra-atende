@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
   if (length !== null && Number(length) > maxBytes) {
     return NextResponse.json({ error: 'Evento muito grande' }, { status: 413 })
   }
-  let body: unknown = null
+  let body: { id?: string; event?: string; payment?: { id?: string } } | null = null
   try {
     const reader = request.body?.getReader()
     if (!reader) return NextResponse.json({ error: 'Evento inválido' }, { status: 400 })
