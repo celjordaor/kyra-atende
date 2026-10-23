@@ -106,3 +106,9 @@ Após o ciclo de melhorias do Portal, a continuidade passou a gerar pequenos PRs
 - Acrescentada ação para agendamentos com status `completed`, incluindo interface mobile e desktop. Modal reaproveita `POST /api/surveys/invitations` com verificação backend tenant, role e conclusão; permite modelo publicado `service_satisfaction` e gera link para compartilhamento manual.
 - **Não é envio:** nenhum e-mail ou WhatsApp é disparado; cópia explícita pelo operador. Link efêmero não recuperável; segunda geração para mesma reserva/modelo é barrada pela unicidade existente.
 - Etapa sujeita a checks, deploy e homologação E2E. P12.4/P12.5 ainda pendentes.
+
+
+## 11. P12.4 — início controlado (23/10/2026)
+- PR #107 (P12.3) incorporado em `13871ec2c371f355dc5534a5c4f3f055d58d4dcb`, Vercel READY confirmado. CI dos dois workflows aprovado no SHA do PR.
+- Nova branch P12.4: migration de configuração/opt-out/outbox, API e UI por tenant. Todo envio bloqueado por constraint SQL e API: não há cron, provider ou disparo. P12.4 é parcial até completar opt-out, filas funcionais e QA.
+- P12.5 E2E permanece aberta; E1/E2/E4/E5 mantidas.
