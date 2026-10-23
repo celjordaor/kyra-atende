@@ -41,3 +41,10 @@
 - Respeitar identidade visual aprovada e componentes reaproveitáveis; preferir laranja/lilás/cinza, não azul/verde como marca principal.
 - Distinguir **código implementado / teste automatizado aprovado / migration remota verificada / deploy READY / E2E executado / homologação do proprietário**. Nada disso é sinônimo.
 - Não confundir esta reconciliação documental com execução de build, teste, CI, deploy ou validação SQL: apenas HEAD e arquivos GitHub foram conferidos neste trabalho.
+
+## Verificação adicional para a nova conversa (23/10/2026)
+- O PR #102 (SHA `25f15a543365efc7a1b2a587beb9c1d23feb1ac9`) foi confirmado como deploy `READY` na Vercel. A branch `main` teve commits documentais depois disso; na nova sessão verificar HEAD atual e deploy do SHA exato.
+- A fundação P12.2 já contempla migration `20261023132446_e3_survey_invitations_responses_foundation.sql`, API de convites `app/api/surveys/invitations/route.ts`, consulta/resposta pública `app/api/surveys/respond/[token]/route.ts` e formulário `app/pesquisa/[token]`.
+- Os convites são gerados manualmente por owner/admin e a resposta informa `sent:false`; **não há evidência de disparos automáticos**. Confirmar execução da migration no banco remoto antes de avançar.
+- Próximo incremento de produto: conexão não bloqueante da pesquisa com o sucesso do agendamento, consulta administrativa de respostas e métricas, segurança de token/tenant/concorrência. Depois P12.3 pós-atendimento. Portal e WhatsApp conservam homologação E2E pendente, sem refazer auditorias genéricas.
+- Prompt de retomada pronto para copiar: `docs/PROMPT-NOVO-CHAT-KYRA-ATENDE-2026-10-23.md`.
