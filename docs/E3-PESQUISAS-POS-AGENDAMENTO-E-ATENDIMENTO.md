@@ -122,3 +122,9 @@ A implementação do módulo seguirá o plano mestre, sem disparos externos até
 - API administrativa `GET/POST /api/surveys/opt-out` lê/atualiza preferências por finalidade (`booking_experience`, `service_satisfaction`), com checagem de tenant e owner/admin; operações idempotentes pelo índice único.
 - API `GET/POST /api/surveys/outbox` lista até 100 entradas e inclui sob ação explícita convite existente somente se não expirado, pending, template publicado, reserva elegível, cliente identificado e sem opt-out. Unicidade por convite protege inclusão repetida/concorrente. Estado da fila continua `held`, sem despachante.
 - Opt-out é respeitado **no momento de inclusão**; antes de permitir qualquer envio real será obrigatória nova revalidação transacional no momento do claim para neutralizar corridas e alterações posteriores. Falta self-service de descadastro e provas E2E; nenhuma mensagem foi disparada.
+
+
+## 14. P12.4 — descadastro público por token (23/10/2026)
+- `POST /api/surveys/unsubscribe/[token]` (com rate limit, token de 64 hex, hash no servidor e expiração) determina tenant, cliente e finalidade exclusivamente do convite validado, e grava opt-out idempotente.
+- Interface pública oferece confirmação do descadastro. A API tenta revogar convite pendente e cancelar sua entrada na fila `held`; se houver falha intermediária retorna erro sem falsamente dizer que concluiu. O opt-out já registrado impede novas entradas pela API administrativa.
+- Fila não é processada, não há worker ou envios reais. Antes de eventual ativação, requer transação única de revalidação/claim, política de consentimento, regras LGPD e QA concorrente/multitenant.
