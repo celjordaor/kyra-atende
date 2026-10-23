@@ -9,6 +9,9 @@ export default function SurveyRespondClient({token}:{token:string}){
  const [saving,setSaving]=useState(false)
  const [finished,setFinished]=useState(false)
  const [error,setError]=useState('')
+ const [confirmOptOut,setConfirmOptOut]=useState(false)
+ const [unsubscribing,setUnsubscribing]=useState(false)
+ const [unsubscribed,setUnsubscribed]=useState(false)
  useEffect(()=>{
   const controller=new AbortController()
   fetch('/api/surveys/respond/'+token,{cache:'no-store',signal:controller.signal})
@@ -18,6 +21,17 @@ export default function SurveyRespondClient({token}:{token:string}){
    .finally(()=>{if(!controller.signal.aborted)setLoading(false)})
   return()=>controller.abort()
  },[token])
+ async function unsubscribe(){
+  if(unsubscribing)return
+  setUnsubscribing(true);setError('')
+  try{
+   const r=await fetch('/api/surveys/unsubscribe/'+token,{method:'POST',signal:AbortSignal.timeout(15000)})
+   const data=await r.json().catch(()=>({}))
+   if(!r.ok)throw Error(data.error||'Não foi possível registrar sua preferência.')
+   setUnsubscribed(true);setSurvey(null)
+  }catch(e){setError(e instanceof Error?e.message:'Falha ao cancelar pesquisas.')}
+  finally{setUnsubscribing(false)}
+ }
  async function submit(e:React.FormEvent){
   e.preventDefault();if(saving)return
   setSaving(true);setError('')
@@ -34,7 +48,7 @@ export default function SurveyRespondClient({token}:{token:string}){
  }
  return <main style={{maxWidth:640,margin:'40px auto',padding:24,color:'var(--ink)'}}>
   <h1>Pesquisa de satisfação</h1>
-  {loading?<p role="status">Carregando pesquisa…</p>:finished?<p role="status">Obrigado! Sua resposta foi registrada.</p>:survey?<form onSubmit={submit} style={{display:'grid',gap:20}}>
+  {loading?<p role="status">Carregando pesquisa…</p>:unsubscribed?<p role="status">Sua preferência foi registrada. Você não receberá novos convites desta categoria de pesquisa.</p>:finished?<p role="status">Obrigado! Sua resposta foi registrada.</p>:survey?<form onSubmit={submit} style={{display:'grid',gap:20}}>
    <h2>{survey.title}</h2>
    <p style={{color:'var(--muted)'}}>Sua resposta será utilizada para avaliar {survey.kind==='booking_experience'?'a experiência de agendamento':'o atendimento realizado'}. Não inclua dados pessoais ou sensíveis nas respostas abertas.</p>
    {survey.questions.slice().sort((a,b)=>a.position-b.position).map(q=><fieldset key={q.id} style={{border:'1px solid var(--border)',borderRadius:10,padding:16}}>
@@ -47,6 +61,14 @@ export default function SurveyRespondClient({token}:{token:string}){
    </fieldset>)}
    <button type="submit" disabled={saving}>{saving?'Enviando…':'Enviar respostas'}</button>
   </form>:null}
+  {!loading&&!unsubscribed&&survey&&<section style={{marginTop:24,paddingTop:16,borderTop:'1px solid var(--border)'}}>
+   <p>Não deseja receber novos convites desta categoria de pesquisa?</p>
+   {!confirmOptOut?<button type="button" onClick={()=>setConfirmOptOut(true)}>Não receber mais esta pesquisa</button>:<div style={{display:'flex',flexWrap:'wrap',gap:10,alignItems:'center'}}>
+    <p>Confirma o descadastro? O convite atual será cancelado caso ainda esteja pendente.</p>
+    <button type="button" disabled={unsubscribing} onClick={unsubscribe}>{unsubscribing?'Registrando…':'Confirmar descadastro'}</button>
+    <button type="button" disabled={unsubscribing} onClick={()=>setConfirmOptOut(false)}>Voltar</button>
+   </div>}
+  </section>}
   {error&&<p role="alert">{error}</p>}
  </main>
 }
