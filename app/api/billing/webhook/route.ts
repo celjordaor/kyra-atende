@@ -72,7 +72,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Evento inválido' }, { status: 400 })
   }
 
-  if (!body || typeof body.id !== 'string' || typeof body.event !== 'string') {
+  // Validar campos essenciais antes de consultar o provedor ou escrever
+  // eventos; não aceitar objetos aninhados ou identificadores sem limite.
+  if (!body || Array.isArray(body) ||
+      typeof body.id !== 'string' || body.id.length < 3 || body.id.length > 120 ||
+      typeof body.event !== 'string' || body.event.length < 3 || body.event.length > 100 ||
+      (body.payment !== undefined &&
+       (!body.payment || typeof body.payment !== 'object' || Array.isArray(body.payment)))) {
     return NextResponse.json({ error: 'Evento inválido' }, { status: 400 })
   }
 
@@ -132,7 +138,7 @@ export async function POST(request: NextRequest) {
   }
 
   const paymentId = body.payment?.id
-  if (typeof paymentId !== 'string' || !/^pay_[a-zA-Z0-9_-]+$/.test(paymentId)) {
+  if (typeof paymentId !== 'string' || !/^pay_[a-zA-Z0-9_-]{1,100}$/.test(paymentId)) {
     return NextResponse.json({ error: 'Identificador de cobrança inválido' }, { status: 400 })
   }
 
