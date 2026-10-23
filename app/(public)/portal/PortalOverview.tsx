@@ -40,7 +40,7 @@ export default function PortalOverview(){
  const rows=bookings.filter(b=>b.tenant_id===company)
  return <section style={{display:'flex',flexDirection:'column',gap:14,marginTop:20}}>
   {companies.length>1
-   ? <label>Empresa <select value={company} onChange={e=>{setCompany(e.target.value);setNewBooking(false)}}>{companies.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></label>
+   ? <label>Empresa <select value={company} onChange={e=>{setCompany(e.target.value);setNewBooking(false);setUncertainBooking(false)}}>{companies.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></label>
    : <p style={{margin:0}}><strong>Empresa:</strong> {companies[0].name}</p>}
   <h2>Meus agendamentos</h2>
   {refreshing&&<p role="status">Atualizando agendamentos…</p>}
