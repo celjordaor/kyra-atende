@@ -91,3 +91,8 @@
 ## Fechamento técnico E3 e retomada E1 — 23/10/2026
 - PR #111 integrado em `af82b3a8f60eaae7f71d4fa69ec41d79d7700f4e`, deploy Vercel `READY` confirmado. P12.1–P12.4 com implementação parcial/publicada; **P12.5 não homologada** por ausência de HTTP real com duas identidades/tenants e aceite. A automação segue SQL/API-bloqueada, sem envios.
 - Próxima frente E1: componente transversal `SidePanel` responsivo, foco capturado/devolvido, Escape/backdrop, cabeçalho/rodapé e largura configurável (padrão 680px). Não converter telas em lote sem prévia e aceite visual.
+
+
+## E1 — padrões de confirmação e formulários (23/10/2026)
+- Após SidePanel #112, próximo incremento adiciona `ConfirmDialog` acessível reaproveitando `Modal` e `Button`, além de `FormSection` para agrupar campos, com tokens existentes.
+- Sem substituição em massa de telas. Homologação visual e E3 P12.5 com identidades reais continuam pendentes. Conferir CI/merge/deploy do incremento.
