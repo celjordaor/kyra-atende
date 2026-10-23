@@ -366,23 +366,6 @@ function buildColumns(
 
 // ─── Section header ───────────────────────────────────────────────────────────
 
-function SectionHeader({ icon, title, optional }: { icon: string; title: string; optional?: boolean }) {
-  return (
-    <div style={{
-      display: 'flex', alignItems: 'center', gap: '8px',
-      paddingBottom: '10px',
-      borderBottom: '1px solid var(--border)',
-      marginTop: '4px',
-    }}>
-      <span style={{ fontSize: '16px' }}>{icon}</span>
-      <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--ink)' }}>{title}</span>
-      {optional && (
-        <span style={{ fontSize: '12px', color: 'var(--muted)', fontWeight: 400 }}>(Opcional)</span>
-      )}
-    </div>
-  )
-}
-
 // ─── Gender picker ────────────────────────────────────────────────────────────
 
 function GenderPicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
