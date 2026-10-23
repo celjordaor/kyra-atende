@@ -1,5 +1,6 @@
 # E3 — Revisão consolidada e condições de encerramento
 
+> **Correção da ordem de execução (23/10/2026):** a E3 permanece **incompleta** enquanto o item 12 não estiver construído. Próxima etapa funcional: [pesquisas pós-agendamento e pós-atendimento](E3-PESQUISAS-POS-AGENDAMENTO-E-ATENDIMENTO.md), conforme [Plano Mestre](PLANO-MESTRE-E-ORDEM-DE-EXECUCAO-2026-10-23.md). A transição técnica parcial para E4 registrada abaixo não constitui autorização para pular a pesquisa.\n\n
 **Data:** 23/10/2026  
 **Fonte de escopo:** `docs/PROJETO-EVOLUCAO-POS-HOMOLOGACAO.md`, Etapa E3 (itens 05, 12 e 18).
 

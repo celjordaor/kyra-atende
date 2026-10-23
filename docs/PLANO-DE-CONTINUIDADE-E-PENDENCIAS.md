@@ -1,5 +1,6 @@
 # Kyra Atende — Estado do projeto e plano de continuidade
 
+> **Reorientação de produto (23/10/2026):** este documento trata de riscos técnicos e homologações, **não substitui o roadmap de funcionalidades**. Ler primeiro [Plano Mestre](PLANO-MESTRE-E-ORDEM-DE-EXECUCAO-2026-10-23.md). Próxima construção autorizada: [E3 / item 12 — Pesquisas pós-agendamento e pós-atendimento](E3-PESQUISAS-POS-AGENDAMENTO-E-ATENDIMENTO.md). Não usar pendências genéricas de WhatsApp/Portal para adiar sistematicamente a construção de novos módulos.\n\n
 **Atualizado em:** 20/10/2026  
 **Referências verificadas:** repositório `celjordaor/kyra-atende`; [evidências AUD-01](auditoria/AUD-01-evidencias-rls-componentes.md); [histórico remoto de migrations](auditoria/sql-remoto-aplicado/README.md).  
 **Regra:** não confundir código desenvolvido, testes SQL, deploy `READY` e homologação funcional E2E.
