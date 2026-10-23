@@ -163,13 +163,14 @@ interface SuccessCardProps {
   clientEmail:  string
   notes:        string
   bookingId:    string | null
+  surveyUrl:    string | null
   onReset:      () => void
 }
 
 function SuccessCard({
   service, professional, selectedSlot,
   clientName, clientPhone, clientEmail, notes,
-  bookingId, onReset,
+  bookingId, surveyUrl, onReset,
 }: SuccessCardProps) {
   return (
     <div style={{ padding: '4px 0 24px' }}>
@@ -304,6 +305,10 @@ function SuccessCard({
         </p>
       )}
 
+      {surveyUrl && <div style={{padding:16,border:"1px solid var(--border)",borderRadius:12,marginBottom:16,background:"var(--surface-2)"}}>
+        <p style={{margin:"0 0 10px",fontSize:14}}>Como foi sua experiência ao agendar? Sua opinião é opcional e ajuda a melhorar o processo.</p>
+        <a href={surveyUrl} referrerPolicy="no-referrer" style={{color:"var(--brand)",fontWeight:600}}>Avaliar meu agendamento</a>
+      </div>}
       <Button variant="secondary" fullWidth onClick={onReset}>
         Fazer outro agendamento
       </Button>
@@ -345,6 +350,7 @@ export default function BookingFlow({ tenantId, services, professionals, prefill
   const [loading,       setLoading]       = useState(false)
   const [error,         setError]         = useState<string | null>(null)
   const [bookingId,     setBookingId]     = useState<string | null>(null)
+  const [surveyUrl,     setSurveyUrl]     = useState<string | null>(null)
   const [takenSlots,    setTakenSlots]    = useState<TakenSlot[]>([])
   const [loadingSlots,  setLoadingSlots]  = useState(false)
   const [engineSlots, setEngineSlots] = useState<{professional_id:string;starts_at:string;ends_at:string}[] | null>(null)
@@ -453,6 +459,7 @@ export default function BookingFlow({ tenantId, services, professionals, prefill
     setClientEmail('')
     setNotes('')
     setBookingId(null)
+    setSurveyUrl(null)
     setTakenSlots([])
     setError(null)
   }
@@ -773,6 +780,7 @@ export default function BookingFlow({ tenantId, services, professionals, prefill
       clientEmail={clientEmail}
       notes={notes}
       bookingId={bookingId}
+      surveyUrl={surveyUrl}
       onReset={reset}
     />
   )
