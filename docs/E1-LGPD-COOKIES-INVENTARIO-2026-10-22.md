@@ -47,3 +47,9 @@ O PR #57, commit de merge `efcdc2f24efd4a86ecdeea8ddaf88642001af4a3`, foi confir
 O responsável confirmou «Tudo certo» após a entrega do PR #59 (ícones para favicon e PWA). O deploy de produção do commit `2dbd4415c8e875ab32a93c7abfee47a4ef5f89e5` foi consultado na Vercel e estava `READY`. **Aceite visual registrado para a identidade dos ícones**, sem afirmar testes automatizados em todos os sistemas operacionais ou compatibilidade de todos os navegadores. Manter a homologação e não reabrir esta frente sem regressão documentada.
 
 **Fronteiras de escopo:** aceite dos ícones não encerra validação jurídica de Termos, Política de Privacidade, inventário dinâmico LGPD ou controles opcionais de cookies.
+
+## Revisão da transparência do painel — E1
+
+O controle visível foi alinhado ao que realmente faz: **«Ver detalhes»** abre informações sobre os cookies necessários; não existe escolha granular de categorias opcionais habilitada no painel. Não chamar esta ação de «Personalizar» até que haja opções de consentimento reais e efetivas. A mudança não altera o visual já homologado, a preferência essencial armazenada ou as rotas públicas.
+
+**Ainda não homologado:** inventário dinâmico das requisições e do armazenamento por navegador/ambiente, eventual bloqueio prévio de cookies não necessários e documentos jurídicos definitivos aprovados. O inventário nominal do repositório não é prova da ausência de serviços de terceiros.
