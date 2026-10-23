@@ -57,7 +57,7 @@ export default function CookiePreferences() {
         </div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center' }}>
           <button type="button" onClick={() => setDetails(v => !v)} aria-expanded={details}
-            style={{ minHeight: 44, padding: '10px 18px', borderRadius: 9, color: '#fff', border: '1px solid rgba(255,255,255,.35)', background: 'transparent', cursor: 'pointer' }}>{details ? 'Ocultar detalhes' : 'Personalizar'}</button>
+            style={{ minHeight: 44, padding: '10px 18px', borderRadius: 9, color: '#fff', border: '1px solid rgba(255,255,255,.35)', background: 'transparent', cursor: 'pointer' }}>{details ? 'Ocultar detalhes' : 'Ver detalhes'}</button>
           <button type="button" onClick={saveEssential}
             style={{ minHeight: 44, padding: '10px 18px', borderRadius: 9, color: '#fff', border: '1px solid rgba(255,255,255,.35)', background: '#6941A5', cursor: 'pointer' }}>Usar apenas essenciais</button>
         </div>
