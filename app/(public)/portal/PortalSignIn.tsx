@@ -22,6 +22,7 @@ export default function PortalSignIn(){
   {phase==='code'&&<label>Código de confirmação <input inputMode="numeric" autoComplete="one-time-code" required value={code} onChange={e=>setCode(e.target.value)} disabled={busy}/></label>}
   <button disabled={busy} type="submit">{busy?'Aguarde...':phase==='email'?'Receber código':'Confirmar acesso'}</button>
   {message&&<p role="status">{message}</p>}
+  <p style={{fontSize:12,lineHeight:1.6,color:'var(--ink-soft)'}}>O e-mail informado será usado para solicitar a autenticação no portal. Consulte as <a href="/politica-de-privacidade" style={{color:'var(--brand)',textDecoration:'underline'}}>informações de privacidade</a> (documento em revisão).</p>
   {phase==='code'&&<button type="button" onClick={()=>{setPhase('email');setCode('');setMessage('')}}>Usar outro e-mail</button>}
  </form>
 }
