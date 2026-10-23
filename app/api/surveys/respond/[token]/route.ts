@@ -29,7 +29,10 @@ export async function GET(_request:NextRequest,context:Context){
  const item=await lookup(token)
  if(!item)return NextResponse.json({error:'Pesquisa indisponível ou expirada.'},{status:404,headers:noStore})
  const {title,kind,survey_questions}=item.template
- return NextResponse.json({title,kind,questions:survey_questions},{headers:noStore})
+ const {data:tenant}=await item.db.from('tenants').select('name,logo_url').eq('id',item.invitation.tenant_id).maybeSingle()
+ const logo=tenant?.logo_url
+ const logoUrl=typeof logo==='string'&&/^https:\/\//i.test(logo)?logo:null
+ return NextResponse.json({title,kind,questions:survey_questions,companyName:tenant?.name||'Seu estabelecimento',logoUrl},{headers:noStore})
 }
 export async function POST(request:NextRequest,context:Context){
  const limited=await enforceApiRateLimit(request,'portalClaim','all')
