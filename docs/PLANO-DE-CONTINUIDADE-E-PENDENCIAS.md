@@ -711,3 +711,7 @@ O handoff vigente está em `docs/HANDOFF-NOVO-CHAT-2026-10-23.md`. A fila de fun
 
 ## E3 — descadastro público (23/10/2026)
 - Incremento P12.4 adiciona API de opt-out para quem possui token válido de pesquisa, revogando convite e cancelando fila retida; sem envio. Exige validações CI/deploy e testes externos, não equivale a item 12 homologado.
+
+
+## E3/P12.4–P12.5 — consolidação da fila (23/10/2026)
+- Incremento de RPC para transação da fila retida e contadores operacionais; não habilita processamento ou envios. P12.5 ainda requer E2E de duas empresas, opt-out, status e expiração, concorrência, responsividade e validação externa.
