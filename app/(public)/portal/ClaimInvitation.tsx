@@ -8,13 +8,14 @@ export default function ClaimInvitation(){
   e.preventDefault();setBusy(true);setMessage('')
   try{
    const url=new URL(link)
+   if(url.origin!==window.location.origin)throw Error('Use um convite do próprio Kyra Atende.')
    const slug=url.pathname.match(/^\/agendar\/([-a-z0-9]+)\/?$/)?.[1]
    const token=url.searchParams.get('convite')
    if(!slug||!token)throw Error('Informe o endereço do convite individual recebido por e-mail.')
-   const res=await fetch('/api/portal/claim',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({slug,token})})
-   if(!res.ok)throw Error((await res.json()).error||'Não foi possível vincular a empresa.')
+   const res=await fetch('/api/portal/claim',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({slug,token}),signal:AbortSignal.timeout(15000)})
+   if(!res.ok){const result=await res.json().catch(()=>({}));throw Error(result.error||'Não foi possível vincular a empresa.')}
    window.location.assign('/portal')
-  }catch(error){setMessage(error instanceof Error?error.message:'Convite inválido.')}finally{setBusy(false)}
+  }catch(error){setMessage(error instanceof Error && (error.name==='TimeoutError'||error.name==='AbortError'||error instanceof TypeError)?'Não foi possível conectar para validar o convite. Tente novamente.':error instanceof Error?error.message:'Convite inválido.')}finally{setBusy(false)}
  }
  return <form onSubmit={claim} style={{display:'flex',flexDirection:'column',gap:10,marginTop:20}}>
   <h2>Vincular uma empresa</h2>
