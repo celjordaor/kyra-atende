@@ -161,7 +161,12 @@ export async function POST(request: NextRequest) {
         input_tokens: inputTokens, output_tokens: outputTokens,
         input_usd_per_million: 1, output_usd_per_million: 5, usd_to_brl: fx,
       })
-      if (error) console.error('[ai/chat] falha no registro financeiro', { code: error.code })
+      if (error) {
+        console.error('[ai/chat] registro financeiro pendente de conciliação', { code: error.code, quotaId })
+        // A resposta já foi gerada: preservar a reserva de interação em vez de
+        // contabilizá-la como concluída sem histórico financeiro.
+        return NextResponse.json({ error: 'Resposta gerada, mas o registro financeiro exige conciliação.' }, { status: 503 })
+      }
     }
     if (!await finishQuota(true)) return NextResponse.json({ error: 'Resposta gerada, mas o consumo de interações exige conciliação.' }, { status: 503 })
     return NextResponse.json({ reply })
