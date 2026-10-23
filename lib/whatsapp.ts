@@ -136,8 +136,26 @@ export async function handleWebhook(payload: EvolutionWebhookPayload): Promise<v
     if(error)console.error('[whatsapp] falha ao finalizar rastreamento inbound',{tenantId,code:error.code})
   }
 
-  // Verifica entitlement de IA de agendamento
-  const hasAiScheduling = await canUse(tenantId, 'has_ai_scheduling')
+  // A mensagem já foi persistida e reivindicada. Uma falha na consulta de
+  // entitlement não deve deixar o processamento indefinidamente em aberto.
+  let hasAiScheduling: boolean
+  try {
+    hasAiScheduling = await canUse(tenantId, 'has_ai_scheduling')
+  } catch (error) {
+    await markProcessing('needs_review', 'entitlement_check_error')
+    console.error('[whatsapp] falha ao verificar permissão de IA', {
+      tenantId, messageId,
+      errorType: error instanceof Error ? error.name : 'unknown',
+    })
+    await dispatchPush(tenantId, 'whatsapp.unhandled', {
+      title: 'WhatsApp precisa de atendimento',
+      body: 'Não foi possível verificar a configuração de IA. Revise a conversa.',
+      url: '/whatsapp',
+    }).catch(() => {
+      console.warn('[whatsapp] aviso de falha de permissão não entregue', { tenantId })
+    })
+    return
+  }
 
   if (permission.status === 'ai' && hasAiScheduling) {
     try {
