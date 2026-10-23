@@ -112,3 +112,9 @@ Após o ciclo de melhorias do Portal, a continuidade passou a gerar pequenos PRs
 - PR #107 (P12.3) incorporado em `13871ec2c371f355dc5534a5c4f3f055d58d4dcb`, Vercel READY confirmado. CI dos dois workflows aprovado no SHA do PR.
 - Nova branch P12.4: migration de configuração/opt-out/outbox, API e UI por tenant. Todo envio bloqueado por constraint SQL e API: não há cron, provider ou disparo. P12.4 é parcial até completar opt-out, filas funcionais e QA.
 - P12.5 E2E permanece aberta; E1/E2/E4/E5 mantidas.
+
+
+## 12. P12.4 — elegibilidade e opt-out (23/10/2026)
+- Após PR #108, nova entrega incremental: registro administrativo de opt-out por tenant/cliente/finalidade e inclusão explícita de convite na outbox retida após verificar status da reserva, publicação, expiração e preferências.
+- A fila e API permanecem sem provedor, worker ou cron. Não há disparo automático. Pré-requisito de ativação real: consentimento, descadastro acessível, idempotência transacional, limites efetivos, homologação multitenant e autorização expressa.
+- E1/E2/E4/E5 e P12.5 mantidas; status da P12.4: **parcial, em evolução**.
