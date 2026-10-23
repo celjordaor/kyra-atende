@@ -26,9 +26,15 @@ export async function GET() {
     .order('created_at', { ascending: false })
     .limit(50)
 
-  const connection = hasWhatsapp
-    ? await getConnectionStatus(tenantId)
-    : { connected: false, status: 'not_available' }
+  let connection: Awaited<ReturnType<typeof getConnectionStatus>> | { connected: false; status: string } = { connected: false, status: 'not_available' }
+  if (hasWhatsapp) {
+    try {
+      connection = await getConnectionStatus(tenantId)
+    } catch (error) {
+      console.error('[whatsapp/status] provedor indisponível', { errorType: error instanceof Error ? error.name : 'unknown' })
+      connection = { connected: false, status: 'provider_unavailable' }
+    }
+  }
 
   return NextResponse.json({
     hasWhatsapp,
@@ -36,5 +42,5 @@ export async function GET() {
     monthlyUsed:  used,
     connection,
     messages: ((messages ?? []) as unknown[]).reverse(),
-  })
+  }, { headers: { 'Cache-Control': 'private, no-store' } })
 }

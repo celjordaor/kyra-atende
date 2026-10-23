@@ -240,6 +240,7 @@ async function sendViaEvolution(msg: OutboundMessage, monthlyLimit: number): Pro
       method: 'POST',
       headers: { 'Content-Type': 'application/json', apikey: key },
       body: JSON.stringify({ number: msg.to.replace(/\D/g, ''), text: msg.body }),
+      signal: AbortSignal.timeout(15000),
     })
   } catch {
     await supabase.from('whatsapp_outbox')
