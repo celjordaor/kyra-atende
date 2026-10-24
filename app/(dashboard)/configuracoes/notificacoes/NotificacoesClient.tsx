@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/atoms/Button';
 import { usePushNotification, type PushSubscriptionInfo } from '@/lib/hooks/usePushNotification';
-import Link from 'next/link';
 
 const NOTIFICATION_TYPES = [
   { key: 'booking_created',   icon: '🗓️', label: 'Novo agendamento',    desc: 'Quando um cliente fizer um agendamento' },
@@ -275,48 +274,7 @@ export default function NotificacoesClient({ subscriptions: initialSubs }: Props
   return (
     <>
 
-      {/* Navegação de abas de configurações */}
-      <nav className="kyra-settings-tabs" aria-label="Seções de configurações" style={{ display: 'flex', gap: 4, borderBottom: '1px solid var(--border)', paddingBottom: 0, marginBottom: 8 }}>
-        {[
-          { href: '/configuracoes',              label: 'Geral' },
-          { href: '/configuracoes/assinatura',   label: 'Assinatura' },
-          { href: '/configuracoes/horarios',     label: 'Horários' },
-          { href: '/configuracoes/notificacoes', label: 'Notificações' },
-        ].map(tab => (
-          <Link key={tab.href} href={tab.href} style={{
-            padding: '8px 16px',
-            fontSize: 14,
-            fontWeight: tab.href === '/configuracoes/notificacoes' ? 600 : 400,
-            color: tab.href === '/configuracoes/notificacoes' ? 'var(--ink)' : 'var(--ink-soft)',
-            borderBottom: tab.href === '/configuracoes/notificacoes' ? '2px solid var(--brand)' : '2px solid transparent',
-            marginBottom: -1,
-            textDecoration: 'none',
-            display: 'inline-block' as const,
-          }}>
-            {tab.label}
-          </Link>
-        ))}
-      </nav>
-
       <div className="kyra-settings-notifications" style={{ maxWidth: 920 }}>
-        {/* Header */}
-        <div style={{ marginBottom: 32 }}>
-          <h1
-            style={{
-              fontSize: 24,
-              fontWeight: 600,
-              color: 'var(--ink)',
-              marginBottom: 8,
-              textWrap: 'balance',
-            }}
-          >
-            Notificações
-          </h1>
-          <p style={{ color: 'var(--ink-soft)', fontSize: 14 }}>
-            Configure como e quando você recebe alertas sobre sua agenda.
-          </p>
-        </div>
-
         {/* Status banner */}
         <div className="kyra-settings-card" id="push-status-card" style={{ marginBottom: 24 }}>
           <StatusBanner
