@@ -225,3 +225,9 @@ Após o ciclo de melhorias do Portal, a continuidade passou a gerar pequenos PRs
 - Abas comuns roxo-lilás, com Geral/Assinatura/Horários/Notificações acessíveis na navegação de Configurações. Formulário Geral e link público em cards, card do plano e uso mensal na Assinatura; estado do dispositivo e lista de dispositivos em Notificações. Aplicada identidade `#4A3F66`, `#72658E`, `#8E82AA`, cabeçalhos suaves e layout responsivo.
 - **Escopo visual:** funções de salvar empresa, gestão de cobrança/assinatura, permissões push, notificações, dispositivos e limites continuam inalterados. Não realizar pagamentos nem enviar notificações reais como teste.
 - Homologar desktop e mobile, navegação nas quatro abas, foco e edição de campos, copiar link, plano/consumo, status de push e comportamento dos switches, após CI, merge único e deploy `READY` do SHA final.
+
+
+## 31. E1 — Cabeçalho único de Configurações (24/10/2026)
+- Corrigida divergência entre abas Geral, Assinatura, Horários e Notificações: título `Configurações`, descrição e navegação de quatro abas agora são renderizados exclusivamente pelo `configuracoes/layout.tsx` com `ConfiguracoesHeader` reutilizável e indicação acessível da aba ativa (`aria-current`).
+- Removidos títulos, barras de abas e links de retorno redundantes nas páginas filhas. Conteúdo interno alinhado em largura comum, responsivo; seções específicas, dados e botões continuam preservados.
+- Validar transição entre as quatro abas sem salto visual, seleção ativa, desktop/mobile, acesso teclado, formulários e controles de cobrança/notificação. CI, deploy READY e QA separados.
