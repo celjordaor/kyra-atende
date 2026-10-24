@@ -19,20 +19,11 @@ interface Props {
 }
 
 /* ─── Section wrapper ─────────────────────────────────────── */
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <section style={{
-      background: 'var(--surface-2)',
-      borderRadius: 'var(--r-lg)',
-      border: '1px solid var(--border)',
-      padding: '24px',
-    }}>
-      <h2 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--ink)', margin: '0 0 20px' }}>
-        {title}
-      </h2>
-      {children}
-    </section>
-  )
+function Section({title,children}:{title:string;children:React.ReactNode}){
+ return <section style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:16,padding:'clamp(18px, 3vw, 28px)',boxShadow:'0 6px 24px rgba(48,32,74,.04)'}}>
+   <h2 style={{fontSize:16,fontWeight:700,color:'var(--ink)',margin:'0 0 22px',background:'var(--brand-faint)',border:'1px solid var(--brand-dim)',borderRadius:12,padding:'15px 20px'}}>{title}</h2>
+   <div style={{maxWidth:700}}>{children}</div>
+ </section>
 }
 
 /* ─── Row inside a section ────────────────────────────────── */
@@ -72,6 +63,7 @@ const ROLE_LABELS: Record<string, string> = {
 /* ═══════════════════════════════════════════════════════════ */
 export default function PerfilClient({ email, name: initialName, role, tenantName }: Props) {
   const router = useRouter()
+  const [tab,setTab] = useState<'dados'|'seguranca'|'sessoes'>('dados')
 
   // ── Dados pessoais ──────────────────────────────────────────
   const [name,        setName]        = useState(initialName)
@@ -129,21 +121,28 @@ export default function PerfilClient({ email, name: initialName, role, tenantNam
 
   // ── Render ──────────────────────────────────────────────────
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '28px', maxWidth: '640px' }}>
-
-      {/* ── Cabeçalho do perfil ── */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '18px' }}>
-        <Avatar name={name || email} size="lg" />
-        <div>
-          <h1 style={{ fontSize: '20px', fontWeight: 700, color: 'var(--ink)', margin: '0 0 4px' }}>
-            {name || 'Meu perfil'}
-          </h1>
-          <p style={{ fontSize: '13px', color: 'var(--muted)', margin: 0 }}>{email}</p>
+    <div style={{display:'flex',flexDirection:'column',gap:24,width:'100%',maxWidth:1120}}>
+      <header>
+        <h1 style={{fontSize:32,fontWeight:750,color:'var(--ink)',margin:'0 0 8px'}}>Meu perfil</h1>
+        <p style={{fontSize:14,color:'var(--muted)',margin:0}}>Gerencie seus dados pessoais, segurança e sessões de acesso.</p>
+      </header>
+      <nav aria-label="Seções do perfil" style={{display:'flex',flexWrap:'wrap',alignItems:'center',gap:6,padding:10,background:'var(--brand-faint)',border:'1px solid var(--brand-dim)',borderRadius:14}}>
+        {([['dados','Dados pessoais'],['seguranca','Segurança'],['sessoes','Sessões']] as const).map(([id,label])=>
+          <button key={id} type="button" aria-current={tab===id?'page':undefined} onClick={()=>setTab(id)}
+            style={{padding:'12px 18px',borderRadius:10,fontSize:14,fontWeight:600,cursor:'pointer',fontFamily:'inherit',border:tab===id?'1px solid var(--brand-dim)':'1px solid transparent',background:tab===id?'var(--surface-2)':'transparent',color:'var(--ink-body)',boxShadow:tab===id?'0 2px 8px rgba(48,32,74,.08)':'none'}}>
+            {label}
+          </button>)}
+      </nav>
+      <div style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:18,padding:'clamp(12px, 2vw, 24px)'}}>
+        <div style={{display:'flex',alignItems:'center',gap:14,marginBottom:20}}>
+          <Avatar name={name||email} size="lg"/>
+          <div style={{minWidth:0}}>
+            <strong style={{fontSize:17,color:'var(--ink)'}}>{name||'Meu perfil'}</strong>
+            <p style={{fontSize:13,color:'var(--muted)',margin:'3px 0 0',overflowWrap:'anywhere'}}>{email}</p>
+          </div>
         </div>
-      </div>
-
       {/* ── 1. Dados pessoais ── */}
-      <Section title="Dados pessoais">
+      {tab==='dados'&&<Section title="Dados pessoais">
         <InfoRow
           label="E-mail"
           value={<span style={{ color: 'var(--muted)', fontWeight: 400, fontSize: '13px' }}>{email}</span>}
@@ -173,10 +172,10 @@ export default function PerfilClient({ email, name: initialName, role, tenantNam
           </div>
           <FeedbackMsg fb={nameFb} />
         </div>
-      </Section>
+      </Section>}
 
       {/* ── 2. Segurança ── */}
-      <Section title="Segurança">
+      {tab==='seguranca'&&<Section title="Segurança">
         <p style={{ fontSize: '13px', color: 'var(--muted)', margin: '0 0 16px', lineHeight: 1.5 }}>
           Defina uma nova senha para a sua conta. Use pelo menos 6 caracteres.
         </p>
@@ -209,10 +208,10 @@ export default function PerfilClient({ email, name: initialName, role, tenantNam
           </Button>
           <FeedbackMsg fb={pwdFb} />
         </div>
-      </Section>
+      </Section>}
 
       {/* ── 4. Sessão ── */}
-      <Section title="Sessão">
+      {tab==='sessoes'&&<Section title="Sessões">
         <p style={{ fontSize: '13px', color: 'var(--muted)', margin: '0 0 16px', lineHeight: 1.5 }}>
           Encerra todas as sessões ativas em outros dispositivos ou navegadores. Você precisará fazer login novamente.
         </p>
@@ -224,8 +223,8 @@ export default function PerfilClient({ email, name: initialName, role, tenantNam
         >
           {signOutLoading ? 'Saindo…' : 'Sair de todos os dispositivos'}
         </Button>
-      </Section>
-
+      </Section>}
+      </div>
     </div>
   )
 }
