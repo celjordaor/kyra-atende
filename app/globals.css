@@ -252,3 +252,28 @@ p {
  .kyra-e1-settings .kyra-settings-tabs > a,
  .kyra-e1-settings .kyra-settings-tabs > span {padding:8px 10px!important;font-size:12px!important;}
 }
+
+
+/* Single shared header and tab navigation for all four Settings screens. */
+.kyra-settings-unified {width:100%;max-width:1100px;margin:0 auto;}
+.kyra-settings-unified-header {display:grid;gap:9px;margin:0 0 22px;}
+.kyra-settings-unified-header h1 {font-size:clamp(23px,2.5vw,28px);line-height:1.2;font-weight:750;letter-spacing:-.4px;color:var(--ink);margin:0;}
+.kyra-settings-unified-header p {margin:0 0 10px;font-size:14px;color:var(--muted);}
+.kyra-settings-unified-header .kyra-settings-tabs {margin:0;width:100%;box-sizing:border-box;}
+.kyra-settings-unified-header .kyra-settings-tabs > a[aria-current="page"] {
+ background:#fff!important;border-color:#d4c8e5!important;
+ box-shadow:0 2px 6px rgba(74,63,102,.08);color:#4A3F66!important;
+}
+.kyra-settings-content {width:100%;min-width:0;}
+.kyra-settings-content > * {max-width:100%!important;width:100%;box-sizing:border-box;}
+.kyra-settings-content #config-empresa {margin:0;}
+.kyra-settings-content #config-plano {margin-top:0;}
+.kyra-settings-content #config-empresa,.kyra-settings-content #config-plano {
+ border:1px solid #e5dff0!important;border-radius:14px!important;
+ box-shadow:0 4px 17px rgba(74,63,102,.06);padding:20px 22px!important;
+}
+@media(max-width:640px){
+ .kyra-settings-unified-header {gap:6px;margin-bottom:14px;}
+ .kyra-settings-unified-header p {font-size:13px;}
+ .kyra-settings-content #config-empresa,.kyra-settings-content #config-plano {padding:14px!important;}
+}
