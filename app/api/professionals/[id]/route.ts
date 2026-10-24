@@ -30,6 +30,9 @@ export async function PATCH(
     .select()
     .single()
 
+  if (error?.code === 'P0001' && error.message.includes('resource_has_future_bookings')) {
+    return NextResponse.json({error:'Não é possível desativar enquanto houver agendamentos futuros pendentes ou confirmados.'},{status:409})
+  }
   if (error || !data) {
     return NextResponse.json({ error: 'Profissional não encontrado.' }, { status: 404 })
   }
@@ -54,6 +57,9 @@ export async function DELETE(
     .eq('id', params.id)
     .eq('tenant_id', tenantId)
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error?.code === 'P0001' && error.message.includes('resource_has_future_bookings')) {
+    return NextResponse.json({error:'Não é possível excluir enquanto houver agendamentos futuros pendentes ou confirmados.'},{status:409})
+  }
+  if (error) return NextResponse.json({ error: 'Não foi possível excluir o registro.' }, { status: 500 })
   return new NextResponse(null, { status: 204 })
 }
