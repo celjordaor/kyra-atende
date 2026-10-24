@@ -177,3 +177,8 @@ Após o ciclo de melhorias do Portal, a continuidade passou a gerar pequenos PRs
 - Página de Pesquisas envolve formulários de modelos, resultados, preferências e fila em ambiente visual consistente, com cards de cabeçalho lilás suave e espaçamento responsivo. APIs, regras de negócio e automação desligada preservadas.
 - IA Kyra recebe ambiente visual diferenciado, com ícone original `/kyra-ai.png`, hero lilás, painel de chat e composer próprios; mantidos fluxo de mensagens, limitações de plano e sugestões.
 - Não converter elementos do preview em novos campos, dados inventados ou permissões. Homologação responsiva, acessibilidade e E2E de todas as abas e funcionalidades seguem obrigatórias após CI e deploy.
+
+
+## 23. E1 — compatibilidade entre painel lateral e modal aninhado (24/10/2026)
+- Após unificar Novo/Editar da Agenda no painel lateral, a opção interna **Novo cliente** ainda usa um Modal empilhado. Ele deve permanecer visualmente acima do painel, com Escape e Tab controlados apenas pela janela superior. Corrigidos z-index de Modal e a detecção do diálogo superior nos handlers de teclado de Modal/SidePanel.
+- Conservar interação de criação de cliente dentro do agendamento, retornar ao formulário sem fechar o painel pai. Conferir regressão de dialogs simultâneos e dispositivos móveis antes de homologar.
