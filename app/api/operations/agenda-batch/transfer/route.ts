@@ -62,3 +62,18 @@ export async function POST(request:NextRequest){
  return NextResponse.json({operationId:changed[0].operation_id,transferred:changed.length,notifications},
   {headers:{'Cache-Control':'no-store'}})
 }
+
+export async function GET(){
+ const session=await requireSession()
+ if(!session.ok)return session.response
+ const db=createAdminClient()
+ const [profile,professionals,services]=await Promise.all([
+  session.supabase.from('profiles').select('role').eq('id',session.userId).eq('tenant_id',session.tenantId).maybeSingle(),
+  db.from('professionals').select('id,name').eq('tenant_id',session.tenantId).eq('is_active',true).order('name').limit(100),
+  db.from('services').select('id,name,duration_minutes').eq('tenant_id',session.tenantId).eq('is_active',true).order('name').limit(100)
+ ])
+ if(profile.error||!profile.data||!['owner','admin'].includes(profile.data.role))
+  return NextResponse.json({error:'Sem permissão.'},{status:403})
+ if(professionals.error||services.error)return NextResponse.json({error:'Falha ao consultar destinos.'},{status:503})
+ return NextResponse.json({professionals:professionals.data??[],services:services.data??[]},{headers:{'Cache-Control':'private, no-store'}})
+}
