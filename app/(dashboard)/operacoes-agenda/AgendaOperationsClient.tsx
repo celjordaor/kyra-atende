@@ -4,6 +4,7 @@ import {Button} from '@/components/atoms/Button'
 import {BookingSection} from '@/components/organisms/BookingSection'
 import {ConfirmDialog} from '@/components/organisms/ConfirmDialog'
 import {AgendaAdvancedActions} from './AgendaAdvancedActions'
+import {AgendaOperationsHistory} from './AgendaOperationsHistory'
 
 type Preview={total:number;listed:number;truncated:boolean;previewOnly:boolean;bookings:{id:string;startAt:string;endAt:string;status:string}[]}
 export function AgendaOperationsClient(){
@@ -19,6 +20,7 @@ export function AgendaOperationsClient(){
  const [confirmCancel,setConfirmCancel]=useState(false)
  const [executing,setExecuting]=useState(false)
  const [outcome,setOutcome]=useState('')
+ const [historyVersion,setHistoryVersion]=useState(0)
  async function verifySelection(){
   setChecking(true);setError('');setPreflight(null)
   try{
@@ -38,7 +40,7 @@ export function AgendaOperationsClient(){
    if(!response.ok)throw Error(data.error||'Operação não concluída.')
    const statuses=data.notifications||[]
    setOutcome(`${data.cancelled??0} agendamentos cancelados. E-mails aceitos pelo provedor: ${statuses.filter(x=>x.emailStatus==='accepted').length}; falharam ou sem confirmação: ${statuses.filter(x=>x.emailStatus!=='accepted').length}. Aceitação não comprova entrega.`)
-   setSelected([]);setPreflight(null);setResult(null)
+   setSelected([]);setPreflight(null);setResult(null);setHistoryVersion(v=>v+1)
   }catch(e){setError(e instanceof Error?e.message:'Falha no cancelamento.');setPreflight(null)}
   finally{setExecuting(false)}
  }
@@ -88,6 +90,7 @@ export function AgendaOperationsClient(){
     {result.truncated&&<p style={{fontSize:12,color:'var(--muted)'}}>Exibindo os primeiros 100 de {result.total}. Nenhuma ação em lote está habilitada nesta versão.</p>}
    </div>}
   </BookingSection>
-  <AgendaAdvancedActions selected={selected} onSuccess={message=>{setOutcome(message);setSelected([]);setResult(null);setPreflight(null)}}/>
+  <AgendaOperationsHistory refreshKey={historyVersion}/>
+  <AgendaAdvancedActions selected={selected} onSuccess={message=>{setOutcome(message);setSelected([]);setResult(null);setPreflight(null);setHistoryVersion(v=>v+1)}}/>
  </div><ConfirmDialog open={confirmCancel} title="Cancelar reservas selecionadas?" description={`Esta ação cancelará ${selected.length} reservas futuras de forma definitiva. O sistema tentará notificar cada cliente por e-mail e push. Verifique os detalhes antes de confirmar.`} confirmLabel="Confirmar cancelamento" danger loading={executing} onClose={()=>setConfirmCancel(false)} onConfirm={()=>void cancelSelected()}/></>
 }
