@@ -3,6 +3,7 @@ import {useState} from 'react'
 import {Button} from '@/components/atoms/Button'
 import {BookingSection} from '@/components/organisms/BookingSection'
 import {ConfirmDialog} from '@/components/organisms/ConfirmDialog'
+import {AgendaAdvancedActions} from './AgendaAdvancedActions'
 
 type Preview={total:number;listed:number;truncated:boolean;previewOnly:boolean;bookings:{id:string;startAt:string;endAt:string;status:string}[]}
 export function AgendaOperationsClient(){
@@ -87,5 +88,6 @@ export function AgendaOperationsClient(){
     {result.truncated&&<p style={{fontSize:12,color:'var(--muted)'}}>Exibindo os primeiros 100 de {result.total}. Nenhuma ação em lote está habilitada nesta versão.</p>}
    </div>}
   </BookingSection>
+  <AgendaAdvancedActions selected={selected} onSuccess={message=>{setOutcome(message);setSelected([]);setResult(null);setPreflight(null)}}/>
  </div><ConfirmDialog open={confirmCancel} title="Cancelar reservas selecionadas?" description={`Esta ação cancelará ${selected.length} reservas futuras de forma definitiva. O sistema tentará notificar cada cliente por e-mail e push. Verifique os detalhes antes de confirmar.`} confirmLabel="Confirmar cancelamento" danger loading={executing} onClose={()=>setConfirmCancel(false)} onConfirm={()=>void cancelSelected()}/></>
 }
