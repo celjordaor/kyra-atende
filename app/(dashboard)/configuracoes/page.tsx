@@ -33,11 +33,7 @@ export default async function ConfiguracoesPage() {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '32px', maxWidth: '640px' }}>
-
-      <h1 style={{ fontSize: '22px', fontWeight: 600, color: 'var(--ink)', margin: 0 }}>
-        Configurações
-      </h1>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', width: '100%' }}>
 
       {/* Empresa */}
       <section
@@ -47,9 +43,6 @@ export default async function ConfiguracoesPage() {
           border: '1px solid var(--border)', padding: '24px',
         }}
       >
-        <h2 style={{ fontSize: '16px', fontWeight: 600, color: 'var(--ink)', margin: '0 0 20px' }}>
-          Empresa
-        </h2>
         <ConfiguracoesClient
           initialName={tenant.name}
           initialSlug={tenant.slug}
