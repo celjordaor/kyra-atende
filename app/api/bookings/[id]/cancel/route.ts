@@ -5,12 +5,9 @@
 import { NextResponse } from 'next/server'
 import { requireSession } from '@/lib/route-helpers'
 import { dispatchPush } from '@/lib/push'
+import { cancellationEmail } from '@/lib/email/booking-cancellation'
 
 export const runtime = 'nodejs'
-
-function escapeHtml(value: string): string {
-  return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;')
-}
 
 export async function POST(
   _request: Request,
@@ -68,10 +65,7 @@ export async function POST(
       .select('name').eq('id', tenantId).maybeSingle()
     if (!tenantError) {
       const company = tenant?.name || 'Estabelecimento'
-      const when = new Date(data.start_at).toLocaleString('pt-BR', {
-        dateStyle: 'short', timeStyle: 'short', timeZone: 'America/Sao_Paulo',
-      })
-      const html = `<!doctype html><html lang="pt-BR"><body style="margin:0;background:#f5f4f8;font-family:Arial,sans-serif;color:#242038;padding:28px"><div style="max-width:560px;margin:auto;background:#fff;border-radius:14px;overflow:hidden"><div style="background:#4A3F66;color:#fff;padding:25px;font-size:22px;font-weight:bold">${escapeHtml(company)}</div><div style="padding:28px"><h2>Agendamento cancelado</h2><p>Olá, ${escapeHtml(data.client_name || 'cliente')}.</p><p>Informamos que seu agendamento de <strong>${escapeHtml(when)}</strong> foi cancelado pelo estabelecimento.</p><p>Para reagendar ou obter informações, entre em contato com o estabelecimento.</p><p style="font-size:12px;color:#686079">Esta mensagem é uma comunicação sobre uma reserva existente.</p></div></div></body></html>`
+      const message = cancellationEmail({company,clientName:data.client_name||'cliente',startAt:data.start_at})
       try {
         const response = await fetch('https://api.resend.com/emails', {
           method: 'POST',
@@ -83,8 +77,9 @@ export async function POST(
           body: JSON.stringify({
             from: process.env.MAIL_FROM,
             to: [recipient],
-            subject: 'Cancelamento de agendamento — ' + company,
-            html,
+            subject: message.subject,
+            html: message.html,
+            text: message.text,
           }),
           signal: AbortSignal.timeout(12000),
         })
