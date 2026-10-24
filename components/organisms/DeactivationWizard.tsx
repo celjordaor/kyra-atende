@@ -98,7 +98,15 @@ export function DeactivationWizard({kind,target,onClose,onDeactivate}:Props){
     const body=await response.json().catch(()=>({})) as {error?:string}
     throw Error(body.error||'Não foi possível cancelar este agendamento.')
    }
-   setNotice('Agendamento cancelado. O impacto foi atualizado.')
+   const result=await response.json() as {notification?:{emailStatus?:string}}
+   const emailStatus=result.notification?.emailStatus
+   const emailMessage=emailStatus==='accepted'
+    ?' O e-mail foi aceito pelo provedor (entrega ainda não confirmada).'
+    :emailStatus==='no_email'?' O cliente não possui e-mail válido cadastrado.'
+    :emailStatus==='not_configured'?' O envio de e-mail não está configurado.'
+    :emailStatus==='failed'?' O provedor recusou o e-mail; verifique antes de tentar novamente.'
+    :' Não foi possível confirmar o envio do e-mail; concilie antes de reenviar.'
+   setNotice('Agendamento cancelado.'+emailMessage)
    // Re-read the server state, including any new concurrent reservations.
    const reload=await fetch('/api/operations/deactivation-impact?'+new URLSearchParams({type:kind,id:target.id}),{cache:'no-store'})
    if(!reload.ok)throw Error('Cancelamento confirmado, mas não foi possível atualizar a lista. Feche e reabra o assistente.')
@@ -177,7 +185,7 @@ export function DeactivationWizard({kind,target,onClose,onDeactivate}:Props){
  </SidePanel>
  <ConfirmDialog open={!!target&&!!pendingConfirmation} title={pendingConfirmation?.kind==='cancel'?'Cancelar agendamento':'Confirmar transferência'}
   description={pendingConfirmation?.kind==='cancel'
-   ?`Cancelar o agendamento de ${pendingConfirmation?date(pendingConfirmation.booking.startAt):''}? Esta ação muda o status da reserva e pode gerar uma notificação de cancelamento. Não é possível desfazer por este assistente.`
+   ?`Cancelar o agendamento de ${pendingConfirmation?date(pendingConfirmation.booking.startAt):''}? Esta ação muda o status da reserva e tentará enviar um e-mail ao cliente cadastrado. O resultado do envio será informado separadamente. Não é possível desfazer por este assistente.`
    :`Transferir a reserva de ${pendingConfirmation?date(pendingConfirmation.booking.startAt):''} para ${pendingConfirmation?.name??''}? ${kind==='service'?'A duração poderá mudar conforme o novo serviço. ':''}A disponibilidade será verificada antes de salvar.`}
   confirmLabel={pendingConfirmation?.kind==='cancel'?'Cancelar agendamento':'Confirmar transferência'} danger={pendingConfirmation?.kind==='cancel'}
   loading={!!cancelingId||processing} onClose={()=>setPendingConfirmation(null)} onConfirm={confirmPending}/>

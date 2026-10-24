@@ -6,6 +6,12 @@ import { NextResponse } from 'next/server'
 import { requireSession } from '@/lib/route-helpers'
 import { dispatchPush } from '@/lib/push'
 
+export const runtime = 'nodejs'
+
+function escapeHtml(value: string): string {
+  return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;')
+}
+
 export async function POST(
   _request: Request,
   { params }: { params: { id: string } },
@@ -23,7 +29,7 @@ export async function POST(
     .eq('tenant_id', tenantId)
     .in('status', ['pending', 'confirmed'])
     .select(`
-      id, start_at,
+      id, start_at, client_email, client_name,
       clients!bookings_client_id_fkey(name),
       professionals!bookings_professional_id_fkey(name)
     `)
@@ -39,13 +45,63 @@ export async function POST(
     return NextResponse.json({ error: 'O status atual não permite cancelamento.' }, { status: 409 })
   }
 
-  // Notifica cancelamento em background
+  // Push is an operator notification, not proof of client email delivery.
   void dispatchPush(tenantId, 'booking_cancelled', {
-    bookingId:    data.id,
-    scheduledAt:  data.start_at,
-    clientName:   (data.clients as unknown as { name: string } | null)?.name ?? '',
+    bookingId: data.id,
+    scheduledAt: data.start_at,
+    clientName: (data.clients as unknown as { name: string } | null)?.name ?? '',
     professional: (data.professionals as unknown as { name: string } | null)?.name ?? '',
   })
 
-  return NextResponse.json(data)
+  // A cancellation must remain effective even when email delivery fails.
+  // Resend's stable idempotency key prevents duplicate submissions for this booking
+  // during its provider retention window. Ambiguous failures require reconciliation.
+  type EmailResult = 'accepted' | 'failed' | 'unknown' | 'no_email' | 'not_configured'
+  let emailStatus: EmailResult = 'unknown'
+  const recipient = typeof data.client_email === 'string' ? data.client_email.trim() : ''
+  if (!recipient || !/^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$/.test(recipient)) {
+    emailStatus = 'no_email'
+  } else if (!process.env.RESEND_API_KEY || !process.env.MAIL_FROM) {
+    emailStatus = 'not_configured'
+  } else {
+    const { data: tenant, error: tenantError } = await supabase.from('tenants')
+      .select('name').eq('id', tenantId).maybeSingle()
+    if (!tenantError) {
+      const company = tenant?.name || 'Estabelecimento'
+      const when = new Date(data.start_at).toLocaleString('pt-BR', {
+        dateStyle: 'short', timeStyle: 'short', timeZone: 'America/Sao_Paulo',
+      })
+      const html = `<!doctype html><html lang="pt-BR"><body style="margin:0;background:#f5f4f8;font-family:Arial,sans-serif;color:#242038;padding:28px"><div style="max-width:560px;margin:auto;background:#fff;border-radius:14px;overflow:hidden"><div style="background:#4A3F66;color:#fff;padding:25px;font-size:22px;font-weight:bold">${escapeHtml(company)}</div><div style="padding:28px"><h2>Agendamento cancelado</h2><p>Olá, ${escapeHtml(data.client_name || 'cliente')}.</p><p>Informamos que seu agendamento de <strong>${escapeHtml(when)}</strong> foi cancelado pelo estabelecimento.</p><p>Para reagendar ou obter informações, entre em contato com o estabelecimento.</p><p style="font-size:12px;color:#686079">Esta mensagem é uma comunicação sobre uma reserva existente.</p></div></div></body></html>`
+      try {
+        const response = await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            Authorization: 'Bearer ' + process.env.RESEND_API_KEY,
+            'Content-Type': 'application/json',
+            'Idempotency-Key': 'booking-cancel-' + data.id,
+          },
+          body: JSON.stringify({
+            from: process.env.MAIL_FROM,
+            to: [recipient],
+            subject: 'Cancelamento de agendamento — ' + company,
+            html,
+          }),
+          signal: AbortSignal.timeout(12000),
+        })
+        const responseBody = await response.json().catch(() => ({})) as { id?: string }
+        emailStatus = response.ok && !!responseBody.id ? 'accepted' : 'failed'
+        if (emailStatus === 'failed') console.error('[bookings/cancel/email]', { bookingId: data.id, status: response.status })
+      } catch {
+        emailStatus = 'unknown'
+        console.error('[bookings/cancel/email]', { bookingId: data.id, status: 'unknown' })
+      }
+    } else {
+      console.error('[bookings/cancel/email]', { bookingId: data.id, status: 'tenant_lookup_failed' })
+    }
+  }
+
+  return NextResponse.json({
+    ...data,
+    notification: { emailStatus },
+  }, { headers: { 'Cache-Control': 'no-store' } })
 }
