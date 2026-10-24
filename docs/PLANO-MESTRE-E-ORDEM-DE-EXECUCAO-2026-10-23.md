@@ -190,3 +190,9 @@ Após o ciclo de melhorias do Portal, a continuidade passou a gerar pequenos PRs
 - **CEP:** input não é desativado durante busca assíncrona do endereço; máscara e consulta automática permanecem ativas.
 - **Vercel:** `ignoreCommand` passa a ignorar builds de preview (`VERCEL_ENV=preview`) e permitir produção. O GitHub continua gerando commits/CI, mas não precisa produzir preview para cada alteração. Fazer somente merge de PR aprovado à main, formando um único build de produção do SHA final. Vercel pode registrar builds ignorados como `CANCELED`; esta é a regra esperada.
 - Regressão obrigatória antes de dar como homologado: digitar nome, e-mail, telefone, CEP completo (8 dígitos), valores e observações em Novo/Editar Cliente, Profissional e Serviço; pesquisar/selecionar listas de Cliente/Serviço/Profissional em Agendamentos e Agenda; criar cliente aninhado; conferir foco, ESC, navegação teclado e mobile. CI e deploy não substituem esse E2E.
+
+
+## 25. E1 — Adicionar cliente dentro do Novo agendamento (24/10/2026)
+- Corrigido o componente aninhado `ClientCreateModal` em `BookingFormModal`: a ação **Adicionar cliente** na Agenda utiliza o mesmo `SidePanel` de 680 px e os cards `BookingSection` (Informações do cliente, Dados pessoais e Endereço) já adotados no cadastro principal. Removido o modal central legado e o antigo cabeçalho próprio.
+- Mantidos campos, máscaras, consulta CEP, validações, `POST /clients`, callback `onCreated` e seleção imediata do cliente criado no agendamento original. Preservar estado do agendamento pai ao fechar o novo painel.
+- Regressão necessária: Agenda > Novo agendamento > Adicionar cliente > preencher/validar/salvar > retornar ao agendamento; cancelar sem perder dados; campos e busca, select e CEP mobile/desktop. Produção apenas após CI/merge no PR consolidado, sem deploys manuais intermediários.
