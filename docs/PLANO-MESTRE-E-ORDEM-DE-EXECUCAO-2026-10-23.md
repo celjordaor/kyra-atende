@@ -264,3 +264,9 @@ Após o ciclo de melhorias do Portal, a continuidade passou a gerar pequenos PRs
 - Fluxos de desativação das listas/cards/tabelas abrem o assistente; sem agendamentos futuros, a confirmação explícita libera o PATCH e somente após retorno positivo atualiza o estado. Com agendamentos ou falha de consulta, o assistente bloqueia a desativação. Backend mantém verificações transacionais.
 - **Não concluídos:** políticas de manter reservas existentes, transferência para profissional/serviço, cancelamento controlado, comunicação e auditoria. Não apresentar assistente como módulo 09/10 totalmente pronto; são telas e primeira etapa operacional real, não apenas validação.
 - QA: cards e tabela, reativação, listas longas e mobile, foco/ESC, resposta 409 após criação concorrente, isolamento entre empresas, sem alterar dados de produção para teste.
+
+
+## 37. E2 — cancelamento individual pelo assistente de desativação (24/10/2026)
+- Assistentes dos itens 09/10 passam a oferecer **Cancelar agendamento** por reserva futura exibida. Cada ação exige confirmação específica, informa que pode disparar push de cancelamento e utiliza `POST /api/bookings/[id]/cancel`, rota já existente com isolamento tenant e transição somente de pending/confirmed para cancelled. O assistente desativa botões enquanto a requisição está pendente e recarrega a prévia via endpoint de impacto após sucesso.
+- Persistência de histórico via cancelamento lógico; não existe cancelamento em lote. Transferência ou remarcação continuam na tela Agendamentos, pelo fluxo existente. A desativação segue bloqueada pelo banco enquanto houver reservas futuras.
+- Homologação requerida: recusa na confirmação, sucesso/409/erro de rede, lista atualizada, agendamento concorrente e push em sandbox; não executar cancelamentos em dados reais apenas como teste. Auditoria operacional e comunicação de cliente ainda requerem evolução.
