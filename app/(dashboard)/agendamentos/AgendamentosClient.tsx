@@ -9,6 +9,7 @@ import { api, ApiError } from '@/lib/api'
 import { BookingDetailModal } from '@/components/organisms/BookingDetailModal'
 import { SidePanel, BookingSection } from '@/components/organisms/BookingSection'
 import SatisfactionInviteModal from './SatisfactionInviteModal'
+import {IconActionButton} from '@/components/atoms/IconActionButton'
 import type { Column } from '@/components/organisms'
 
 const ESTADOS = [
@@ -1012,9 +1013,8 @@ export default function AgendamentosClient({ initialBookings, professionals, ser
       label: '',
       render: (_v: unknown, row: BookingRow) => (
         <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end', alignItems: 'center' }}>
-          {row.status === 'completed' && <button type="button" title="Visualizar ficha de finalização" aria-label="Visualizar ficha de finalização" onClick={() => setDetailRow(row)}
-            style={{width:32,height:32,borderRadius:'50%',border:'none',background:'var(--surface-3)',color:'var(--ink-soft)',cursor:'pointer'}}>◉</button>}
-          {row.status === 'completed' && <button type="button" title="Enviar pesquisa de satisfação" aria-label={`Enviar pesquisa de satisfação para ${row.client_name}`} onClick={()=>setSurveyBookingId(row.id)} style={{width:36,height:36,borderRadius:10,border:'1px solid var(--brand-dim)',background:'var(--brand-faint)',color:'var(--brand)',display:'inline-flex',justifyContent:'center',alignItems:'center',cursor:'pointer',flexShrink:0}}><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3h8l3 3v15H5V3h3z"/><path d="M14 3v4h5"/><path d="m8 12 1.5 1.5L12 11"/><path d="M14 13h3M8 17h9"/></svg></button>}
+          {row.status === 'completed' && <IconActionButton icon="eye" label="Visualizar ficha de finalização" onClick={() => setDetailRow(row)} />}
+          {row.status === 'completed' && <IconActionButton icon="survey" label={`Enviar pesquisa de satisfação para ${row.client_name}`} onClick={() => setSurveyBookingId(row.id)} />}
           {/* Editar */}
           {(row.status === 'pending' || row.status === 'confirmed') && (
             <button
@@ -1228,7 +1228,8 @@ export default function AgendamentosClient({ initialBookings, professionals, ser
               {row.status === 'pending' && <Button variant="secondary" size="sm" onClick={() => void handleStatusChange(row, 'confirmed')}>Confirmar</Button>}
               {row.status === 'confirmed' && <Button variant="secondary" size="sm" onClick={() => setCompleteRow(row)}>Concluir</Button>}
               {(row.status === 'pending' || row.status === 'confirmed') && <Button variant="danger" size="sm" onClick={() => void handleStatusChange(row, 'cancelled')}>Cancelar</Button>}
-              {row.status === 'completed' && <button type="button" title="Enviar pesquisa de satisfação" aria-label={`Enviar pesquisa de satisfação para ${row.client_name}`} onClick={()=>setSurveyBookingId(row.id)} style={{width:36,height:36,borderRadius:10,border:'1px solid var(--brand-dim)',background:'var(--brand-faint)',color:'var(--brand)',display:'inline-flex',justifyContent:'center',alignItems:'center',cursor:'pointer',flexShrink:0}}><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3h8l3 3v15H5V3h3z"/><path d="M14 3v4h5"/><path d="m8 12 1.5 1.5L12 11"/><path d="M14 13h3M8 17h9"/></svg></button>}
+              {row.status === 'completed' && <IconActionButton icon="eye" label="Visualizar ficha de finalização" onClick={() => setDetailRow(row)} />}
+              {row.status === 'completed' && <IconActionButton icon="survey" label={`Enviar pesquisa de satisfação para ${row.client_name}`} onClick={() => setSurveyBookingId(row.id)} />}
               <Button variant="ghost" size="sm" onClick={() => setDetailRow(row)}>Detalhes</Button>
             </div>
           </article>
