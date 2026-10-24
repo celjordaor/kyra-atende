@@ -1,5 +1,5 @@
 'use client'
-import React,{useCallback,useEffect,useId,useRef} from 'react'
+import React,{useEffect,useId,useRef} from 'react'
 import {createPortal} from 'react-dom'
 
 type SidePanelProps={
@@ -12,7 +12,9 @@ export function SidePanel({open,onClose,title,children,footer,width=680,persiste
  const id=useId()
  const ref=useRef<HTMLDivElement>(null)
  const previous=useRef<HTMLElement|null>(null)
- const close=useCallback(()=>{if(!persistent)onClose()},[onClose,persistent])
+ const onCloseRef=useRef(onClose)
+ onCloseRef.current=onClose
+ const close=()=>{if(!persistent)onCloseRef.current()}
  useEffect(()=>{
   if(!open)return
   previous.current=document.activeElement as HTMLElement
@@ -31,7 +33,7 @@ export function SidePanel({open,onClose,title,children,footer,width=680,persiste
   }
   document.addEventListener('keydown',key)
   return()=>{cancelAnimationFrame(frame);document.removeEventListener('keydown',key);document.body.style.overflow=overflow;if(previous.current?.isConnected)previous.current.focus()}
- },[open,close,persistent])
+ },[open,persistent])
  if(!open||typeof document==='undefined')return null
  return createPortal(<>
   <style>{`

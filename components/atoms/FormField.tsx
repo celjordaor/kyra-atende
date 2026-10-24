@@ -453,7 +453,7 @@ export function FormField({
           value={value}
           onChange={handleChange}
           onBlur={handleBlur}
-          disabled={disabled || cepLoading}
+          disabled={disabled}
           required={required}
           placeholder={placeholder ?? getDefaultPlaceholder(type)}
           autoComplete={autoComplete}

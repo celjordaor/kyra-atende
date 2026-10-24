@@ -182,3 +182,11 @@ Após o ciclo de melhorias do Portal, a continuidade passou a gerar pequenos PRs
 ## 23. E1 — compatibilidade entre painel lateral e modal aninhado (24/10/2026)
 - Após unificar Novo/Editar da Agenda no painel lateral, a opção interna **Novo cliente** ainda usa um Modal empilhado. Ele deve permanecer visualmente acima do painel, com Escape e Tab controlados apenas pela janela superior. Corrigidos z-index de Modal e a detecção do diálogo superior nos handlers de teclado de Modal/SidePanel.
 - Conservar interação de criação de cliente dentro do agendamento, retornar ao formulário sem fechar o painel pai. Conferir regressão de dialogs simultâneos e dispositivos móveis antes de homologar.
+
+
+## 24. Correção crítica — interatividade dos formulários E1 e controle de deploy (24/10/2026)
+- **Causa dos campos travados:** `SidePanel` reinstalava o efeito de foco a cada renderização porque `onClose` recebia callbacks inline instáveis; a limpeza/restauração de foco interrompia a digitação em inputs controlados. Corrigido por referência atualizada de callback e dependências estáveis do efeito.
+- **Causa dos selects ocultos:** `BookingSection` aplicava `overflow: hidden`, recortando listas suspensas de cliente, serviço e profissional. Substituído por overflow visível, com elevação da seção focada sobre cards adjacentes.
+- **CEP:** input não é desativado durante busca assíncrona do endereço; máscara e consulta automática permanecem ativas.
+- **Vercel:** `ignoreCommand` passa a ignorar builds de preview (`VERCEL_ENV=preview`) e permitir produção. O GitHub continua gerando commits/CI, mas não precisa produzir preview para cada alteração. Fazer somente merge de PR aprovado à main, formando um único build de produção do SHA final. Vercel pode registrar builds ignorados como `CANCELED`; esta é a regra esperada.
+- Regressão obrigatória antes de dar como homologado: digitar nome, e-mail, telefone, CEP completo (8 dígitos), valores e observações em Novo/Editar Cliente, Profissional e Serviço; pesquisar/selecionar listas de Cliente/Serviço/Profissional em Agendamentos e Agenda; criar cliente aninhado; conferir foco, ESC, navegação teclado e mobile. CI e deploy não substituem esse E2E.
