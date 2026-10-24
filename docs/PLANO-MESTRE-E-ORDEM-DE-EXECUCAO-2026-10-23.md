@@ -170,3 +170,10 @@ Após o ciclo de melhorias do Portal, a continuidade passou a gerar pequenos PRs
 - O modal de Detalhes próprio da Agenda também foi migrado para `SidePanel` com cabeçalho lilás. A ação Editar completo continua abrindo o formulário existente, agora no painel padronizado.
 - Ações e estados financeiros não foram alterados. Testar especificamente Agenda → Novo, Agenda → Detalhes → Editar completo, exclusão, criar cliente dentro do agendamento, mobile e Agendamentos (regressão).
 - Próxima etapa visual mantém Pesquisas, Configurações e IA Kyra diferenciada no escopo. Deploy READY e E2E separados do CI.
+
+
+## 22. E1 — Pesquisas, Configurações e identidade própria IA Kyra (24/10/2026)
+- Layout comum de Configurações na árvore `app/(dashboard)/configuracoes/layout.tsx`, incluindo Geral, Assinatura, Horários e Notificações (além de Plano), com estilos locais suavizados, bordas e campos harmonizados.
+- Página de Pesquisas envolve formulários de modelos, resultados, preferências e fila em ambiente visual consistente, com cards de cabeçalho lilás suave e espaçamento responsivo. APIs, regras de negócio e automação desligada preservadas.
+- IA Kyra recebe ambiente visual diferenciado, com ícone original `/kyra-ai.png`, hero lilás, painel de chat e composer próprios; mantidos fluxo de mensagens, limitações de plano e sugestões.
+- Não converter elementos do preview em novos campos, dados inventados ou permissões. Homologação responsiva, acessibilidade e E2E de todas as abas e funcionalidades seguem obrigatórias após CI e deploy.
