@@ -163,3 +163,10 @@ Após o ciclo de melhorias do Portal, a continuidade passou a gerar pequenos PRs
 - Aplicar `SidePanel` 680 px e cabeçalhos suaves `BookingSection` ao Histórico de agendamentos do cliente, à finalização do serviço na tela Agendamentos e na instância compartilhada `CompleteModal`, e ao convite manual de pesquisa pós-atendimento.
 - Permanecem as validações, filtros por tenant, paginação do histórico, abertura dos detalhes, valores/pagamento e ações explícitas Copiar link/Enviar e-mail. Nenhuma automação nova ou envio de teste nesta etapa.
 - Ainda pendentes no pacote E1: Pesquisas, Configurações (Geral, Assinatura, Horários, Notificações), revisão completa dos demais modais e experiência diferenciada IA Kyra com ícone real. CI e deploy do SHA exato obrigatórios; validação funcional E2E separada.
+
+
+## 21. E1 — correção da Agenda e Editar completo (23/10/2026)
+- A Agenda usava `BookingFormModal` compartilhado com layout antigo tanto em +Novo Agendamento quanto em Editar completo. Reaproveitada a mesma estrutura visual `SidePanel` 680px e `BookingSection` da tela Agendamentos, preservando sua lógica de criação, edição, exclusão, máscaras e carregamento.
+- O modal de Detalhes próprio da Agenda também foi migrado para `SidePanel` com cabeçalho lilás. A ação Editar completo continua abrindo o formulário existente, agora no painel padronizado.
+- Ações e estados financeiros não foram alterados. Testar especificamente Agenda → Novo, Agenda → Detalhes → Editar completo, exclusão, criar cliente dentro do agendamento, mobile e Agendamentos (regressão).
+- Próxima etapa visual mantém Pesquisas, Configurações e IA Kyra diferenciada no escopo. Deploy READY e E2E separados do CI.
