@@ -13,6 +13,7 @@ import type { Booking }     from '@/components/organisms'
 import { CompleteModal }    from '@/components/organisms'
 import type { CompleteModalBooking } from '@/components/organisms'
 import GuidedTour from '@/components/molecules/GuidedTour'
+import { IconActionButton } from '@/components/atoms/IconActionButton'
 
 export interface NewClient {
   id:         string
@@ -59,32 +60,11 @@ function IconDone() {
 function IconX() {
   return <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
 }
-function IcoSpin() {
-  return (
-    <>
-      <style>{`@keyframes dbs-spin{to{transform:rotate(360deg)}}`}</style>
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ animation: 'dbs-spin 0.8s linear infinite', display: 'block' }}>
-        <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
-      </svg>
-    </>
-  )
-}
-
 // ── Botão de ação circular ────────────────────────────────────
-function IconBtn({ title, bg, color, onClick, loading, children }: {
-  title: string; bg: string; color: string; onClick: () => void; loading?: boolean; children: React.ReactNode
-}) {
-  return (
-    <button type="button" title={title} onClick={onClick} disabled={loading} style={{
-      width: '26px', height: '26px', borderRadius: '50%', border: 'none',
-      cursor: loading ? 'default' : 'pointer',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      background: bg, color, opacity: loading ? 0.6 : 1, flexShrink: 0,
-      transition: 'opacity 150ms',
-    }}>
-      {loading ? <IcoSpin /> : children}
-    </button>
-  )
+function IconBtn({title,onClick,loading}:{title:string;bg:string;color:string;onClick:()=>void;loading?:boolean;children:React.ReactNode}){
+ const icon=title==='Confirmar'?'check':title==='Cancelar'?'x':'complete'
+ const tone=title==='Cancelar'?'danger':title==='Confirmar'?'success':'default'
+ return <IconActionButton icon={icon} tone={tone} label={title} size="sm" disabled={!!loading} onClick={onClick}/>
 }
 
 // ── Status helpers ────────────────────────────────────────────
