@@ -44,7 +44,7 @@ export function DeactivationWizard({kind,target,onClose,onDeactivate}:Props){
   if(!alternative)return
   const startMs=new Date(booking.startAt).getTime()
   const originalDuration=new Date(booking.endAt).getTime()-startMs
-  const minutes=kind==='service'?alternative.duration_minutes:originalDuration/60000
+  const minutes=kind==='service'?(alternative.duration_minutes??NaN):originalDuration/60000
   if(!Number.isFinite(startMs)||!Number.isFinite(minutes)||minutes<1||minutes>480){setError('Duração de atendimento inválida.');return}
   const endAt=new Date(startMs+minutes*60000).toISOString()
   if(!window.confirm(`Transferir a reserva de ${date(booking.startAt)} para ${alternative.name}? ${kind==='service'?'A duração poderá mudar conforme o novo serviço.':''} O sistema verificará a disponibilidade antes de gravar.`))return
