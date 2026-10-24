@@ -13,7 +13,7 @@ export function IconActionButton({icon,label,onClick,disabled=false,placement='t
  }
  return <Tooltip label={label} placement={placement}>
   <button type="button" disabled={disabled} aria-label={label} onClick={onClick}
-   style={{width:36,height:36,borderRadius:10,border:'1px solid var(--brand-dim)',background:'var(--brand-faint)',color:'var(--brand)',display:'inline-flex',justifyContent:'center',alignItems:'center',cursor:disabled?'not-allowed':'pointer',flexShrink:0,opacity:disabled?.5:1,transition:'background .15s ease, transform .15s ease'}}
+   style={{width:36,height:36,borderRadius:10,border:'1px solid var(--brand-dim)',background:'var(--brand-faint)',color:'var(--brand)',display:'inline-flex',justifyContent:'center',alignItems:'center',cursor:disabled?'not-allowed':'pointer',flexShrink:0,opacity:disabled ? 0.5 : 1,transition:'background .15s ease, transform .15s ease'}}
    onMouseEnter={e=>{if(!disabled)e.currentTarget.style.background='var(--brand-dim)'}}
    onMouseLeave={e=>{e.currentTarget.style.background='var(--brand-faint)'}}
    onFocus={e=>{e.currentTarget.style.outline='2px solid var(--brand)';e.currentTarget.style.outlineOffset='2px'}}
