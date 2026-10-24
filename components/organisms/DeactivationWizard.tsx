@@ -4,6 +4,7 @@ import Link from 'next/link'
 import {SidePanel} from '@/components/organisms/SidePanel'
 import {BookingSection} from '@/components/organisms/BookingSection'
 import {Button} from '@/components/atoms/Button'
+import {ConfirmDialog} from '@/components/organisms/ConfirmDialog'
 
 type Kind='professional'|'service'
 type Booking={id:string;startAt:string;endAt:string;status:string}
@@ -21,11 +22,14 @@ export function DeactivationWizard({kind,target,onClose,onDeactivate}:Props){
  const [cancelingId,setCancelingId]=useState<string|null>(null)
  const [notice,setNotice]=useState('')
  const [alternatives,setAlternatives]=useState<Alternative[]>([])
+ const [displayLimit,setDisplayLimit]=useState(20)
+ const [expanding,setExpanding]=useState(false)
  const [selected,setSelected]=useState<Record<string,string>>({})
+ const [pendingConfirmation,setPendingConfirmation]=useState<{kind:'transfer'|'cancel';booking:Booking;alternativeId?:string;name?:string}|null>(null)
  useEffect(()=>{
   if(!target){setImpact(null);setError('');setConfirmed(false);return}
   const ctl=new AbortController()
-  setLoading(true);setImpact(null);setError('');setNotice('');setConfirmed(false);setSelected({});setAlternatives([])
+  setLoading(true);setImpact(null);setError('');setNotice('');setConfirmed(false);setSelected({});setAlternatives([]);setDisplayLimit(20);setPendingConfirmation(null)
   fetch('/api/operations/transfer-options?'+new URLSearchParams({type:kind,excludeId:target.id}),{signal:ctl.signal,cache:'no-store'})
    .then(async r=>{if(!r.ok)throw Error('Não foi possível consultar opções de transferência.');return r.json() as Promise<{options:Alternative[]}>})
    .then(d=>{if(Array.isArray(d.options))setAlternatives(d.options);else throw Error('Opções inválidas.')})
@@ -37,9 +41,33 @@ export function DeactivationWizard({kind,target,onClose,onDeactivate}:Props){
   .finally(()=>{if(!ctl.signal.aborted)setLoading(false)})
   return()=>ctl.abort()
  },[kind,target])
- async function transferBooking(booking:Booking){
+ async function expandBookings(){
+  if(!target||!impact||!impact.truncated||expanding||processing||cancelingId)return
+  const nextLimit=Math.min(200,displayLimit+20)
+  if(nextLimit===displayLimit)return
+  setExpanding(true);setError('')
+  try{
+   const params=new URLSearchParams({type:kind,id:target.id,limit:String(nextLimit)})
+   const response=await fetch('/api/operations/deactivation-impact?'+params,{cache:'no-store'})
+   if(!response.ok)throw Error('Não foi possível carregar mais agendamentos.')
+   const data=await response.json() as Impact
+   if(!Number.isInteger(data.futureBookings)||!Array.isArray(data.affectedBookings))throw Error('Resposta inválida ao ampliar a lista.')
+   setImpact(data);setDisplayLimit(nextLimit);setConfirmed(false)
+  }catch(e){setError(e instanceof Error?e.message:'Erro ao carregar agendamentos.')}
+  finally{setExpanding(false)}
+ }
+ function requestTransfer(booking:Booking){
+  const alternative=alternatives.find(a=>a.id===selected[booking.id])
+  if(!alternative||processing||cancelingId)return
+  setPendingConfirmation({kind:'transfer',booking,alternativeId:alternative.id,name:alternative.name})
+ }
+ function requestCancel(booking:Booking){
+  if(processing||cancelingId)return
+  setPendingConfirmation({kind:'cancel',booking})
+ }
+ async function transferBooking(booking:Booking,choiceId:string){
   if(!target||processing||cancelingId)return
-  const id=selected[booking.id]
+  const id=choiceId
   const alternative=alternatives.find(a=>a.id===id)
   if(!alternative)return
   const startMs=new Date(booking.startAt).getTime()
@@ -47,7 +75,6 @@ export function DeactivationWizard({kind,target,onClose,onDeactivate}:Props){
   const minutes=kind==='service'?(alternative.duration_minutes??NaN):originalDuration/60000
   if(!Number.isFinite(startMs)||!Number.isFinite(minutes)||minutes<1||minutes>480){setError('Duração de atendimento inválida.');return}
   const endAt=new Date(startMs+minutes*60000).toISOString()
-  if(!window.confirm(`Transferir a reserva de ${date(booking.startAt)} para ${alternative.name}? ${kind==='service'?'A duração poderá mudar conforme o novo serviço.':''} O sistema verificará a disponibilidade antes de gravar.`))return
   setCancelingId(booking.id);setError('');setNotice('')
   try{
    const payload=kind==='professional'?{professional_id:id}:{service_id:id,start_at:booking.startAt,end_at:endAt}
@@ -58,14 +85,12 @@ export function DeactivationWizard({kind,target,onClose,onDeactivate}:Props){
    if(!updated.ok)throw Error('Transferência efetuada, mas a lista não pôde ser atualizada. Reabra o painel.')
    const result=await updated.json() as Impact
    if(!Number.isInteger(result.futureBookings)||!Array.isArray(result.affectedBookings))throw Error('Não foi possível validar a nova lista.')
-   setImpact(result);setConfirmed(false)
+   setImpact(result);setDisplayLimit(20);setConfirmed(false)
   }catch(e){setError(e instanceof Error?e.message:'Não foi possível transferir.')}
   finally{setCancelingId(null)}
  }
  async function cancelBooking(booking:Booking){
   if(!target||processing||cancelingId)return
-  const label=date(booking.startAt)
-  if(!window.confirm(`Cancelar definitivamente o agendamento de ${label}? Esta operação altera o status e pode disparar uma notificação de cancelamento. Não será possível desfazer por este assistente.`))return
   setCancelingId(booking.id);setError('');setNotice('')
   try{
    const response=await fetch('/api/bookings/'+encodeURIComponent(booking.id)+'/cancel',{method:'POST',headers:{'Accept':'application/json'}})
@@ -73,15 +98,30 @@ export function DeactivationWizard({kind,target,onClose,onDeactivate}:Props){
     const body=await response.json().catch(()=>({})) as {error?:string}
     throw Error(body.error||'Não foi possível cancelar este agendamento.')
    }
-   setNotice('Agendamento cancelado. O impacto foi atualizado.')
+   const result=await response.json() as {notification?:{emailStatus?:string}}
+   const emailStatus=result.notification?.emailStatus
+   const emailMessage=emailStatus==='accepted'
+    ?' O e-mail foi aceito pelo provedor (entrega ainda não confirmada).'
+    :emailStatus==='no_email'?' O cliente não possui e-mail válido cadastrado.'
+    :emailStatus==='not_configured'?' O envio de e-mail não está configurado.'
+    :emailStatus==='failed'?' O provedor recusou o e-mail; verifique antes de tentar novamente.'
+    :' Não foi possível confirmar o envio do e-mail; concilie antes de reenviar.'
+   setNotice('Agendamento cancelado.'+emailMessage)
    // Re-read the server state, including any new concurrent reservations.
    const reload=await fetch('/api/operations/deactivation-impact?'+new URLSearchParams({type:kind,id:target.id}),{cache:'no-store'})
    if(!reload.ok)throw Error('Cancelamento confirmado, mas não foi possível atualizar a lista. Feche e reabra o assistente.')
    const data=await reload.json() as Impact
    if(!Number.isInteger(data.futureBookings)||!Array.isArray(data.affectedBookings))throw Error('Não foi possível validar a nova lista de agendamentos.')
-   setImpact(data);setConfirmed(false)
+   setImpact(data);setDisplayLimit(20);setConfirmed(false)
   }catch(e){setError(e instanceof Error?e.message:'Não foi possível completar a operação.')}
   finally{setCancelingId(null)}
+ }
+ function confirmPending(){
+  const action=pendingConfirmation
+  if(!action||processing||cancelingId)return
+  setPendingConfirmation(null)
+  if(action.kind==='cancel')void cancelBooking(action.booking)
+  else if(action.alternativeId)void transferBooking(action.booking,action.alternativeId)
  }
  async function execute(){
   if(!target||!impact||impact.futureBookings!==0||!confirmed||processing)return
@@ -94,7 +134,7 @@ export function DeactivationWizard({kind,target,onClose,onDeactivate}:Props){
   }finally{setProcessing(false)}
  }
  const subject=kind==='professional'?'profissional':'serviço'
- return <SidePanel open={!!target} onClose={onClose} persistent={processing||!!cancelingId} width={680} title={'Desativar '+subject}
+ return <><SidePanel open={!!target} onClose={onClose} persistent={processing||!!cancelingId} width={680} title={'Desativar '+subject}
  footer={<><Button type="button" variant="secondary" disabled={processing||!!cancelingId} onClick={onClose}>Fechar</Button>
   <Button type="button" variant="danger" disabled={!impact||impact.futureBookings!==0||!confirmed||processing||!!cancelingId} loading={processing} onClick={execute}>Confirmar desativação</Button></>}>
   <div style={{display:'grid',gap:12}}>
@@ -121,11 +161,11 @@ export function DeactivationWizard({kind,target,onClose,onDeactivate}:Props){
           {alternatives.map(a=><option key={a.id} value={a.id}>{a.name}{kind==='service'&&a.duration_minutes?' · '+a.duration_minutes+' min':''}</option>)}
          </select>
         </label>
-        <Button type="button" variant="secondary" size="sm" disabled={!selected[b.id]||!!cancelingId||processing} loading={cancelingId===b.id} onClick={()=>void transferBooking(b)}>Transferir</Button>
+        <Button type="button" variant="secondary" size="sm" disabled={!selected[b.id]||!!cancelingId||processing} loading={cancelingId===b.id} onClick={()=>requestTransfer(b)}>Transferir</Button>
        </div>}
-       <div style={{display:'flex',justifyContent:'flex-end',marginTop:7}}><Button type="button" variant="danger" size="sm" loading={cancelingId===b.id} disabled={processing||!!cancelingId} onClick={()=>void cancelBooking(b)}>Cancelar agendamento</Button></div>
+       <div style={{display:'flex',justifyContent:'flex-end',marginTop:7}}><Button type="button" variant="danger" size="sm" loading={cancelingId===b.id} disabled={processing||!!cancelingId} onClick={()=>requestCancel(b)}>Cancelar agendamento</Button></div>
       </article>)}
-      {impact.truncated&&<p style={{fontSize:12,color:'var(--muted)'}}>Exibindo os primeiros 20 registros. Existem outros agendamentos afetados.</p>}
+      {impact.truncated&&<div style={{display:'grid',gap:6,justifyItems:'start'}}><p style={{fontSize:12,color:'var(--muted)'}}>Exibindo {impact.affectedBookings.length} de {impact.futureBookings} agendamentos afetados.{displayLimit>=200?' Limite de 200 por consulta; trate os restantes pela tela de Agendamentos.':''}</p>{displayLimit<200&&<Button type="button" variant="secondary" size="sm" disabled={!!cancelingId||processing||expanding} loading={expanding} onClick={()=>void expandBookings()}>Carregar mais 20</Button>}</div>}
      </div>}
      {impact.futureBookings>0?<div style={{background:'#fff8ec',border:'1px solid #f5d9a7',borderRadius:9,padding:12,fontSize:13,marginTop:12}}>
       A desativação está bloqueada enquanto houver reservas futuras. Nenhum agendamento será modificado por esta tela.
@@ -143,4 +183,11 @@ export function DeactivationWizard({kind,target,onClose,onDeactivate}:Props){
    </BookingSection>
   </div>
  </SidePanel>
+ <ConfirmDialog open={!!target&&!!pendingConfirmation} title={pendingConfirmation?.kind==='cancel'?'Cancelar agendamento':'Confirmar transferência'}
+  description={pendingConfirmation?.kind==='cancel'
+   ?`Cancelar o agendamento de ${pendingConfirmation?date(pendingConfirmation.booking.startAt):''}? Esta ação muda o status da reserva e tentará enviar um e-mail ao cliente cadastrado. O resultado do envio será informado separadamente. Não é possível desfazer por este assistente.`
+   :`Transferir a reserva de ${pendingConfirmation?date(pendingConfirmation.booking.startAt):''} para ${pendingConfirmation?.name??''}? ${kind==='service'?'A duração poderá mudar conforme o novo serviço. ':''}A disponibilidade será verificada antes de salvar.`}
+  confirmLabel={pendingConfirmation?.kind==='cancel'?'Cancelar agendamento':'Confirmar transferência'} danger={pendingConfirmation?.kind==='cancel'}
+  loading={!!cancelingId||processing} onClose={()=>setPendingConfirmation(null)} onConfirm={confirmPending}/>
+ </>
 }

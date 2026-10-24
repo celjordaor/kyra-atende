@@ -11,6 +11,9 @@ export async function GET(request:NextRequest){
  if((type!=='professional'&&type!=='service')||!id||!/^[0-9a-f]{8}-[0-9a-f-]{27,}$/i.test(id)){
   return NextResponse.json({error:'Informe um recurso válido.'},{status:400})
  }
+ const requestedLimit=Number(searchParams.get('limit')??20)
+ if(!Number.isInteger(requestedLimit)||requestedLimit<20||requestedLimit>200)
+  return NextResponse.json({error:'Limite inválido (20 a 200).'}, {status:400})
  const table=type==='professional'?'professionals':'services'
  const field=type==='professional'?'professional_id':'service_id'
  const {data:resource,error:resourceError}=await session.supabase.from(table)
@@ -25,10 +28,10 @@ export async function GET(request:NextRequest){
  const {data:bookings,error:detailError}=await session.supabase.from('bookings')
   .select('id,start_at,end_at,status').eq('tenant_id',session.tenantId).eq(field,id)
   .in('status',['pending','confirmed']).gte('start_at',new Date().toISOString())
-  .order('start_at',{ascending:true}).limit(20)
+  .order('start_at',{ascending:true}).order('id',{ascending:true}).limit(requestedLimit)
  if(detailError)return NextResponse.json({error:'Não foi possível consultar os agendamentos afetados.'},{status:503})
  return NextResponse.json({futureBookings:count??0,resourceActive:resource.is_active,
   affectedBookings:(bookings??[]).map(b=>({id:b.id,startAt:b.start_at,endAt:b.end_at,status:b.status})),
-  truncated:(count??0)>20},
+  truncated:(count??0)>(bookings??[]).length,limit:requestedLimit},
   {headers:{'Cache-Control':'private, no-store'}})
 }
