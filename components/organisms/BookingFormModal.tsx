@@ -424,15 +424,6 @@ function GenderPicker({ value, onChange }: { value: string; onChange: (v: string
   )
 }
 
-function SectionHeader({ title, optional }: { title: string; optional?: boolean }) {
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingBottom: '10px', borderBottom: '1px solid var(--border)', marginBottom: '4px' }}>
-      <span style={{ fontWeight: 600, fontSize: '14px', color: 'var(--ink)' }}>{title}</span>
-      {optional && <span style={{ fontSize: '11px', color: 'var(--muted)', background: 'var(--surface-3)', border: '1px solid var(--border)', borderRadius: 'var(--r)', padding: '1px 6px' }}>Opcional</span>}
-    </div>
-  )
-}
-
 function ClientCreateModal({ open, onClose, onCreated }: {
   open: boolean
   onClose: () => void
