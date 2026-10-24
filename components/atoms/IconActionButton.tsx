@@ -21,7 +21,7 @@ export function IconActionButton({icon,label,onClick,disabled=false,placement='t
  return <Tooltip label={label} placement={placement}>
   <button type="button" disabled={disabled} aria-label={label} onClick={onClick}
    style={{width:size==='sm'?28:36,height:size==='sm'?28:36,borderRadius:size==='sm'?8:10,border:'1px solid '+border,background,color,display:'inline-flex',justifyContent:'center',alignItems:'center',cursor:disabled?'not-allowed':'pointer',flexShrink:0,opacity:disabled ? 0.5 : 1,transition:'background .15s ease, transform .15s ease'}}
-   onMouseEnter={e=>{if(!disabled)e.currentTarget.style.background=border}}
+   onMouseEnter={e=>{if(!disabled){e.currentTarget.style.background=tone==='danger'?'var(--red-faint)':tone==='success'?'var(--green-faint)':'var(--brand-dim)';e.currentTarget.style.color=color}}}
    onMouseLeave={e=>{e.currentTarget.style.background=background}}
    onFocus={e=>{e.currentTarget.style.outline='2px solid '+color;e.currentTarget.style.outlineOffset='2px'}}
    onBlur={e=>{e.currentTarget.style.outline='none'}}>
