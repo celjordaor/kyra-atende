@@ -5,6 +5,7 @@ import { BookingSection } from '@/components/organisms/BookingSection'
 import React, { useState, useMemo, useCallback } from 'react'
 import { DataTable, Modal } from '@/components/organisms'
 import { Button, Avatar, FormField } from '@/components/atoms'
+import { IconActionButton } from '@/components/atoms/IconActionButton'
 import { SearchBar } from '@/components/molecules'
 import { api, ApiError } from '@/lib/api'
 import { BookingDetailModal, type BookingDetail } from '@/components/organisms/BookingDetailModal'
@@ -238,41 +239,9 @@ function SendEmailBadge({ clientId, hasEmail }: { clientId: string; hasEmail: bo
 
   const disabled = !hasEmail || state === 'loading' || state === 'sent'
 
-  let color  = 'var(--muted)'
-  let border = 'var(--border)'
-  let bg     = 'var(--surface-2)'
+  const label = !hasEmail ? 'Cliente sem e-mail cadastrado' : state === 'sent' ? 'Link de agendamento enviado!' : state === 'error' ? errorMsg || 'Falha ao enviar o link' : state === 'loading' ? 'Enviando link de agendamento' : 'Enviar link de agendamento por e-mail'
+  return <IconActionButton icon={state === 'sent' ? 'check' : state === 'loading' ? 'loader' : 'mail'} tone={state === 'error' ? 'danger' : state === 'sent' ? 'success' : 'default'} label={label} disabled={disabled} onClick={() => void handleClick()}/>
 
-  if (!hasEmail)        { color = 'var(--subtle)' }
-  else if (state === 'sent')    { color = 'var(--green)';  border = 'var(--green-dim)';  bg = 'var(--green-faint)' }
-  else if (state === 'error')   { color = 'var(--red)';    border = 'var(--red)' }
-  else if (state === 'loading') { color = 'var(--brand)';  border = 'var(--brand)' }
-
-  const title = !hasEmail
-    ? 'Cliente sem e-mail cadastrado'
-    : state === 'sent'    ? 'Link de agendamento enviado!'
-    : state === 'error'   ? (errorMsg || 'Erro ao enviar — clique para tentar novamente')
-    : 'Enviar link de agendamento por e-mail'
-
-  return (
-    <button
-      type="button"
-      onClick={handleClick}
-      disabled={disabled}
-      title={title}
-      style={{
-        ...BADGE_BASE,
-        color,
-        borderColor: border,
-        background: bg,
-        cursor: disabled ? 'not-allowed' : 'pointer',
-        opacity: !hasEmail ? 0.45 : 1,
-      }}
-    >
-      {state === 'sent'    ? <CheckIcon />   :
-       state === 'loading' ? <SpinnerIcon /> :
-       <MailIcon />}
-    </button>
-  )
 }
 
 // ─── Colunas ──────────────────────────────────────────────────────────────────
@@ -335,29 +304,10 @@ function buildColumns(
       label: '',
       render: (_v, row) => (
         <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end', alignItems: 'center' }}>
-          <button type="button" title="Histórico de agendamentos" aria-label="Histórico de agendamentos" onClick={() => onHistory(row)} style={{ ...BADGE_BASE, color: 'var(--ink-soft)' }}>◉</button>
-          {/* Editar */}
-          <button
-            type="button"
-            title="Editar cliente"
-            onClick={() => onEdit(row)}
-            style={{ ...BADGE_BASE, color: 'var(--ink-soft)' }}
-          >
-            <PencilIcon />
-          </button>
-
-          {/* Enviar link de agendamento */}
-          <SendEmailBadge clientId={row.id} hasEmail={!!row.email} />
-
-          {/* Excluir */}
-          <button
-            type="button"
-            title="Excluir cliente"
-            onClick={() => onDelete(row)}
-            style={{ ...BADGE_BASE, color: 'var(--red)' }}
-          >
-            <TrashIcon />
-          </button>
+          <IconActionButton icon="eye" label="Histórico de agendamentos" onClick={() => onHistory(row)}/>
+          <IconActionButton icon="edit" label="Editar cliente" onClick={() => onEdit(row)}/>
+          <SendEmailBadge clientId={row.id} hasEmail={!!row.email}/>
+          <IconActionButton icon="trash" tone="danger" label="Excluir cliente" onClick={() => onDelete(row)}/>
         </div>
       ),
     },
