@@ -1014,7 +1014,7 @@ export default function AgendamentosClient({ initialBookings, professionals, ser
         <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end', alignItems: 'center' }}>
           {row.status === 'completed' && <button type="button" title="Visualizar ficha de finalização" aria-label="Visualizar ficha de finalização" onClick={() => setDetailRow(row)}
             style={{width:32,height:32,borderRadius:'50%',border:'none',background:'var(--surface-3)',color:'var(--ink-soft)',cursor:'pointer'}}>◉</button>}
-          {row.status === 'completed' && <Button variant="secondary" size="sm" onClick={()=>setSurveyBookingId(row.id)}>Pesquisa</Button>}
+          {row.status === 'completed' && <button type="button" title="Enviar pesquisa de satisfação" aria-label={`Enviar pesquisa de satisfação para ${row.client_name}`} onClick={()=>setSurveyBookingId(row.id)} style={{width:36,height:36,borderRadius:10,border:'1px solid var(--brand-dim)',background:'var(--brand-faint)',color:'var(--brand)',display:'inline-flex',justifyContent:'center',alignItems:'center',cursor:'pointer',flexShrink:0}}><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3h8l3 3v15H5V3h3z"/><path d="M14 3v4h5"/><path d="m8 12 1.5 1.5L12 11"/><path d="M14 13h3M8 17h9"/></svg></button>}
           {/* Editar */}
           {(row.status === 'pending' || row.status === 'confirmed') && (
             <button
@@ -1138,24 +1138,39 @@ export default function AgendamentosClient({ initialBookings, professionals, ser
 
       <style>{`@media (max-width: 640px) { .kyra-agendamentos-modal-fields { grid-template-columns: minmax(0, 1fr) !important; } }`}</style>
 
-      <section aria-label="Resumo dos agendamentos" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 10, marginBottom: 20 }}>
-        {([
-          ['total', 'Exibidos'],
-          ['pending', 'Pendentes'],
-          ['confirmed', 'Confirmados'],
-          ['completed', 'Concluídos'],
-          ['cancelled', 'Cancelados'],
-        ] as const).map(([key, label]) => (
-          <div key={key} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '16px 18px', minWidth: 0 }}>
-            <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 7 }}>{label}</div>
-            <strong style={{ fontSize: 26, lineHeight: 1.1, color: 'var(--ink)', fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>{summaryCounts[key]}</strong>
+      <section aria-label="Painel de agendamentos" style={{border:'1px solid var(--border)',borderRadius:16,overflow:'hidden',marginBottom:20,background:'var(--surface)'}}>
+        <div style={{padding:'20px 22px',background:'linear-gradient(115deg, #4A3F66 0%, #685582 100%)',color:'#fff',display:'flex',alignItems:'center',justifyContent:'space-between',gap:16,flexWrap:'wrap'}}>
+          <div>
+            <div style={{fontSize:11,textTransform:'uppercase',fontWeight:700,letterSpacing:'0.12em',opacity:0.75,marginBottom:7}}>Visão operacional</div>
+            <h2 style={{fontSize:22,lineHeight:1.2,margin:0,color:'#fff'}}>Seus agendamentos</h2>
+            <p style={{fontSize:13,margin:'7px 0 0',color:'#f0eaf7'}}>Acompanhe os atendimentos e organize as próximas ações.</p>
           </div>
-        ))}
+          <div style={{padding:'10px 16px',border:'1px solid rgba(255,255,255,0.3)',background:'rgba(255,255,255,0.12)',borderRadius:12,textAlign:'center',minWidth:110}}>
+            <div style={{fontSize:11,opacity:0.85}}>Exibidos</div>
+            <div style={{fontSize:28,fontWeight:700,fontVariantNumeric:'tabular-nums'}}>{summaryCounts.total}</div>
+          </div>
+        </div>
+        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit, minmax(135px, 1fr))',gap:0}}>
+          {([
+            ['pending','Pendentes','#B9782A'],
+            ['confirmed','Confirmados','#5D7191'],
+            ['completed','Concluídos','#75608F'],
+            ['cancelled','Cancelados','#9C6672'],
+          ] as const).map(([key,label,accent])=>(
+            <div key={key} style={{padding:'17px 20px',borderRight:'1px solid var(--border)',borderBottom:'1px solid var(--border)',display:'grid',gap:6}}>
+              <span style={{fontSize:12,color:'var(--muted)'}}>{label}</span>
+              <div style={{display:'flex',alignItems:'center',gap:10}}>
+                <span style={{width:6,height:25,borderRadius:5,background:accent,flexShrink:0}}/>
+                <strong style={{fontSize:25,color:'var(--ink)',fontVariantNumeric:'tabular-nums'}}>{summaryCounts[key]}</strong>
+              </div>
+            </div>
+          ))}
+        </div>
       </section>
-      <p style={{ fontSize: 12, color: 'var(--muted)', margin: '-10px 0 18px' }}>Resumo dos registros visíveis, atualizado conforme os filtros. Para alterar o período ou status, use os filtros abaixo.</p>
+      <div style={{fontSize:12,color:'var(--muted)',marginBottom:12}}>Os números consideram os filtros aplicados à lista. Para enviar uma pesquisa, use o ícone de formulário nos agendamentos concluídos.</div>
 
       {/* ── Barra de filtros ─────────────────────────────────────────────── */}
-      <div style={{ marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      <div style={{ marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '12px', padding:'18px',background:'var(--surface)',border:'1px solid var(--border)',borderRadius:14 }}>
 
         {/* Linha 1: pills de status + botão novo */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
@@ -1213,7 +1228,7 @@ export default function AgendamentosClient({ initialBookings, professionals, ser
               {row.status === 'pending' && <Button variant="secondary" size="sm" onClick={() => void handleStatusChange(row, 'confirmed')}>Confirmar</Button>}
               {row.status === 'confirmed' && <Button variant="secondary" size="sm" onClick={() => setCompleteRow(row)}>Concluir</Button>}
               {(row.status === 'pending' || row.status === 'confirmed') && <Button variant="danger" size="sm" onClick={() => void handleStatusChange(row, 'cancelled')}>Cancelar</Button>}
-              {row.status === 'completed' && <Button variant="secondary" size="sm" onClick={()=>setSurveyBookingId(row.id)}>Pesquisa</Button>}
+              {row.status === 'completed' && <button type="button" title="Enviar pesquisa de satisfação" aria-label={`Enviar pesquisa de satisfação para ${row.client_name}`} onClick={()=>setSurveyBookingId(row.id)} style={{width:36,height:36,borderRadius:10,border:'1px solid var(--brand-dim)',background:'var(--brand-faint)',color:'var(--brand)',display:'inline-flex',justifyContent:'center',alignItems:'center',cursor:'pointer',flexShrink:0}}><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3h8l3 3v15H5V3h3z"/><path d="M14 3v4h5"/><path d="m8 12 1.5 1.5L12 11"/><path d="M14 13h3M8 17h9"/></svg></button>}
               <Button variant="ghost" size="sm" onClick={() => setDetailRow(row)}>Detalhes</Button>
             </div>
           </article>
