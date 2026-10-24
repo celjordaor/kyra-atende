@@ -9,7 +9,6 @@ import { SidePanel, BookingSection } from './BookingSection'
  */
 
 import React, { useState, useEffect, useCallback, useRef } from 'react'
-import { Modal }     from './Modal'
 import { Button }    from '../atoms/Button'
 import { FormField } from '../atoms/FormField'
 import { Avatar }    from '../atoms/Avatar'
@@ -462,7 +461,7 @@ function ClientCreateModal({ open, onClose, onCreated }: {
   }
 
   return (
-    <Modal open={open} onClose={handleClose} size="lg" title="Novo cliente"
+    <SidePanel open={open} onClose={handleClose} width={680} title="Novo cliente"
       footer={
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
           <Button variant="ghost" onClick={handleClose} disabled={saving}>Cancelar</Button>
@@ -472,16 +471,17 @@ function ClientCreateModal({ open, onClose, onCreated }: {
       <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
         {error && <ErrorBox msg={error} />}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-          <SectionHeader title="Informações" />
+          <BookingSection title="Informações do cliente" icon="♙">
           <FormField label="Nome" required value={form.name} onChange={v => set('name', v)} placeholder="Nome completo" />
           <div className="kyra-booking-form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
             <FormField label="Telefone" type="telefone" value={form.phone} onChange={v => set('phone', v)} placeholder="(00) 00000-0000" />
             <FormField label="E-mail" type="email" value={form.email} onChange={v => set('email', v)} placeholder="cliente@email.com" />
           </div>
           <FormField label="Observações" type="textarea" value={form.notes} onChange={v => set('notes', v)} placeholder="Anotações sobre o cliente…" />
+          </BookingSection>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-          <SectionHeader title="Dados pessoais" optional />
+          <BookingSection title="Dados pessoais (opcional)" icon="▤">
           <div className="kyra-booking-form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
             <FormField label="CPF / Documento" type="cpf" value={form.cpf} onChange={v => set('cpf', v)} placeholder="000.000.000-00" />
             <FormField label="Data de nascimento" type="date" value={form.birth_date} onChange={v => set('birth_date', v)} />
@@ -494,9 +494,10 @@ function ClientCreateModal({ open, onClose, onCreated }: {
             <FormField label="Nacionalidade" value={form.nationality} onChange={v => set('nationality', v)} placeholder="Ex: Brasileira" />
             <FormField label="Profissão" value={form.profession} onChange={v => set('profession', v)} placeholder="Ex: Médica" />
           </div>
+          </BookingSection>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-          <SectionHeader title="Endereço" optional />
+          <BookingSection title="Endereço (opcional)" icon="⌖">
           <div className="kyra-booking-form-grid" style={{ display: 'grid', gridTemplateColumns: '160px 1fr', gap: '12px' }}>
             <FormField label="CEP" type="cep" value={form.cep} onChange={v => set('cep', v)}
               onCepFilled={d => setForm(f => ({ ...f, logradouro: d.logradouro ?? f.logradouro, bairro: d.bairro ?? f.bairro, cidade: d.localidade ?? f.cidade, estado: d.uf ?? f.estado }))}
@@ -512,9 +513,10 @@ function ClientCreateModal({ open, onClose, onCreated }: {
             <FormField label="Estado" type="select" value={form.estado} onChange={v => set('estado', v)} options={ESTADOS} />
             <FormField label="Cidade" value={form.cidade} onChange={v => set('cidade', v)} placeholder="Cidade" />
           </div>
+          </BookingSection>
         </div>
       </div>
-    </Modal>
+    </SidePanel>
   )
 }
 
