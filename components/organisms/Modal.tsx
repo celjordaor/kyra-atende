@@ -95,7 +95,10 @@ export function Modal({
 
   // Fecha com Escape + trap focus com Tab
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
-    if (e.key === 'Escape' && !persistent) { onClose(); return }
+    // Only the foremost active dialog handles keyboard interaction.
+    const dialogs = document.querySelectorAll<HTMLElement>('[role="dialog"][aria-modal="true"]')
+    if (dialogs.length && dialogs[dialogs.length - 1] !== dialogRef.current) return
+    if (e.key === 'Escape' && !persistent) { e.preventDefault(); e.stopImmediatePropagation(); onClose(); return }
     if (e.key === 'Tab' && dialogRef.current) trapFocus(dialogRef.current, e)
   }, [onClose, persistent])
 
@@ -148,7 +151,7 @@ export function Modal({
           inset:           0,
           backgroundColor: 'rgba(17, 24, 39, 0.55)',
           backdropFilter:  'blur(2px)',
-          zIndex:          1000,
+          zIndex:          1200,
           animation:       'kyra-backdrop-in 200ms ease',
         }}
       />
@@ -164,7 +167,7 @@ export function Modal({
         style={{
           position:        'fixed',
           inset:           0,
-          zIndex:          1001,
+          zIndex:          1201,
           display:         'flex',
           alignItems:      'center',
           justifyContent:  'center',
