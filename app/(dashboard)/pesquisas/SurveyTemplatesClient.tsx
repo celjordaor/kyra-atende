@@ -1,6 +1,7 @@
 'use client'
 import {useEffect,useState} from 'react'
 import {BookingSection} from '@/components/organisms/BookingSection'
+import {Button} from '@/components/atoms/Button'
 type Question={label:string;answer_type:'rating_1_5'|'yes_no'|'short_text';required:boolean}
 type Template={id:string;kind:string;title:string;version:number;status:string;survey_questions?:{id:string;position:number;label:string;answer_type:string;required:boolean}[]}
 const blank=():Question=>({label:'',answer_type:'rating_1_5',required:true})
@@ -89,11 +90,11 @@ export default function SurveyTemplatesClient(){
       </select>
      </label>
      <label><input type="checkbox" checked={q.required} disabled={saving} onChange={e=>update(i,{required:e.target.checked})}/> Resposta obrigatória</label>
-     {questions.length>1&&<button type="button" disabled={saving} onClick={()=>setQuestions(items=>items.filter((_,j)=>j!==i))}>Remover pergunta</button>}
+     {questions.length>1&&<Button type="button" variant="danger" size="sm" disabled={saving} onClick={()=>setQuestions(items=>items.filter((_,j)=>j!==i))}>Remover pergunta</Button>}
     </div>)}
     <div style={{display:'flex',gap:12,flexWrap:'wrap',justifyContent:'flex-end',paddingTop:8}}>
-     <button type="button" disabled={saving||questions.length>=20} onClick={()=>setQuestions(items=>[...items,blank()])}>Adicionar pergunta</button>
-     <button type="submit" disabled={saving}>{saving?'Salvando…':'Salvar rascunho'}</button>
+     <Button type="button" variant="secondary" disabled={saving||questions.length>=20} onClick={()=>setQuestions(items=>[...items,blank()])}>Adicionar pergunta</Button>
+     <Button type="submit" variant="primary" loading={saving} disabled={saving}>{saving?'Salvando…':'Salvar rascunho'}</Button>
     </div>
    </form>
    </BookingSection>
@@ -107,12 +108,12 @@ export default function SurveyTemplatesClient(){
     <p style={{margin:'8px 0',color:'var(--muted)'}}>{t.kind==='booking_experience'?'Experiência de agendamento':'Satisfação com atendimento'}</p>
     <ol>{(t.survey_questions??[]).slice().sort((a,b)=>a.position-b.position).map(q=><li key={q.id}>{q.label}</li>)}</ol>
     <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
-     <button type="button" disabled={saving||!!changingId} onClick={()=>createRevision(t)}>Criar nova versão</button>
-     {t.status==='draft'&&<button type="button" disabled={!!changingId} onClick={()=>changeStatus(t,'published')}>Publicar modelo</button>}
-     {t.status==='published'&&<button type="button" disabled={!!changingId} onClick={()=>changeStatus(t,'paused')}>Pausar modelo</button>}
+     <Button type="button" variant="secondary" size="sm" disabled={saving||!!changingId} onClick={()=>createRevision(t)}>Criar nova versão</Button>
+     {t.status==='draft'&&<Button type="button" variant="primary" size="sm" loading={changingId===t.id} disabled={!!changingId} onClick={()=>changeStatus(t,'published')}>Publicar modelo</Button>}
+     {t.status==='published'&&<Button type="button" variant="secondary" size="sm" loading={changingId===t.id} disabled={!!changingId} onClick={()=>changeStatus(t,'paused')}>Pausar modelo</Button>}
     </div>
    </article>)}
-   <button type="button" disabled={loading} onClick={()=>setReload(n=>n+1)}>Atualizar lista</button>
+   <Button type="button" variant="secondary" size="sm" disabled={loading} onClick={()=>setReload(n=>n+1)}>Atualizar lista</Button>
   </section>
  </main>
 }
