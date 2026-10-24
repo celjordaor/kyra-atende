@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import {redirect} from 'next/navigation'
 import {createClient} from '@/lib/supabase/server'
+import {createAdminClient} from '@/lib/supabase/admin'
 import {BookingSection} from '@/components/organisms/BookingSection'
 
 export const metadata={title:'Primeiros passos — Kyra Atende'}
@@ -16,15 +17,22 @@ export default async function PrimeirosPassosPage(){
  if(!tenantId)return <p role="alert">Não foi possível identificar sua empresa. Entre novamente.</p>
  const {data:profile,error:profileError}=await supabase.from('profiles').select('tenant_id,role').eq('id',user.id).maybeSingle()
  if(profileError||profile?.tenant_id!==tenantId)return <p role="alert">O vínculo com a empresa não pôde ser validado.</p>
+ // Read-only readiness queries use the trusted server client after membership verification.
+ // RLS for individual resources is not uniform and must not hide the entire checklist.
+ const db=createAdminClient()
  const [tenantResult,servicesResult,professionalsResult,clientsResult,bookingsResult,hoursResult]=await Promise.all([
-  supabase.from('tenants').select('id,name,slug').eq('id',tenantId).maybeSingle(),
-  supabase.from('services').select('id',{head:true,count:'exact'}).eq('tenant_id',tenantId).eq('is_active',true),
-  supabase.from('professionals').select('id',{head:true,count:'exact'}).eq('tenant_id',tenantId).eq('is_active',true),
-  supabase.from('clients').select('id',{head:true,count:'exact'}).eq('tenant_id',tenantId),
-  supabase.from('bookings').select('id',{head:true,count:'exact'}).eq('tenant_id',tenantId),
-  supabase.from('company_working_hours').select('weekday',{head:true,count:'exact'}).eq('tenant_id',tenantId),
+  db.from('tenants').select('id,name,slug').eq('id',tenantId).maybeSingle(),
+  db.from('services').select('id',{head:true,count:'exact'}).eq('tenant_id',tenantId).eq('is_active',true),
+  db.from('professionals').select('id',{head:true,count:'exact'}).eq('tenant_id',tenantId).eq('is_active',true),
+  db.from('clients').select('id',{head:true,count:'exact'}).eq('tenant_id',tenantId),
+  db.from('bookings').select('id',{head:true,count:'exact'}).eq('tenant_id',tenantId),
+  db.from('company_working_hours').select('weekday',{head:true,count:'exact'}).eq('tenant_id',tenantId),
  ])
- if([tenantResult,servicesResult,professionalsResult,clientsResult,bookingsResult,hoursResult].some(result=>result.error))return <p role="alert" style={{color:'var(--red)'}}>Não foi possível verificar as etapas. Atualize a página para tentar novamente.</p>
+ const failures=[tenantResult,servicesResult,professionalsResult,clientsResult,bookingsResult,hoursResult].filter(result=>result.error)
+ if(failures.length){
+  console.error('[onboarding/readiness] query failed',{codes:failures.map(result=>result.error?.code)})
+  return <p role="alert" style={{color:'var(--red)'}}>Não foi possível verificar as etapas. Atualize a página para tentar novamente.</p>
+ }
  const tenant=tenantResult.data
  const steps:Check[]=[
   {id:'empresa',title:'Configure a empresa',detail:'Confira o nome do estabelecimento e o link de agendamento.',href:'/configuracoes',done:!!tenant?.name?.trim()&&!!tenant?.slug?.trim(),action:'Abrir configurações'},
