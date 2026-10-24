@@ -1,7 +1,6 @@
 'use client'
 
 import React, { useState } from 'react'
-import Link from 'next/link'
 import { FormField, Button } from '@/components/atoms'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
@@ -14,19 +13,6 @@ interface Props {
   userId:       string
   bookingUrl:   string | null
 }
-
-const tabStyle = (active: boolean): React.CSSProperties => ({
-  padding:        '8px 16px',
-  fontSize:       '14px',
-  fontWeight:     active ? 600 : 400,
-  color:          active ? 'var(--ink)' : 'var(--ink-soft)',
-  textDecoration: 'none',
-  borderBottom:   active ? '2px solid var(--brand)' : '2px solid transparent',
-  marginBottom:   '-1px',
-  cursor:         active ? 'default' : 'pointer',
-  display:        'inline-block',
-  whiteSpace:     'nowrap' as const,
-})
 
 export default function ConfiguracoesClient({
   initialName, initialSlug, tenantId, profileName, userId, bookingUrl,
@@ -67,30 +53,6 @@ export default function ConfiguracoesClient({
 
   return (
     <div className="kyra-settings-general" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-
-      {/* ── Abas de configurações ─────────────────────────────── */}
-      <nav className="kyra-settings-tabs" aria-label="Seções de configurações" style={{
-        display:       'flex',
-        gap:           '4px',
-        borderBottom:  '1px solid var(--border)',
-        paddingBottom: '0',
-        overflowX:     'auto',
-      }}>
-        {/* Geral — aba activa (página atual) */}
-        <span style={tabStyle(true)}>
-          Geral
-        </span>
-
-        <Link href="/configuracoes/assinatura" style={tabStyle(false)}>
-          Assinatura
-        </Link>
-
-        <Link href="/configuracoes/horarios" style={tabStyle(false)}>Horários</Link>
-
-        <Link href="/configuracoes/notificacoes" style={tabStyle(false)}>
-          Notificações
-        </Link>
-      </nav>
 
       {/* ── Formulário ─────────────────────────────────────────── */}
       <form

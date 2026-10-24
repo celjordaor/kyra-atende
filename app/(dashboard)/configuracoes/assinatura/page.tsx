@@ -2,7 +2,6 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { UsageBar } from '@/components/molecules/UsageBar'
 import { StatusBadge } from '@/components/atoms/StatusBadge'
-import Link from 'next/link'
 import { AssinaturaUpgradeButton } from './AssinaturaUpgradeButton'
 import { BillingPendingNotice } from '@/components/organisms/BillingPendingNotice'
 import type { Plan } from '@/components/organisms/PlanModal'
@@ -83,28 +82,6 @@ export default async function AssinaturaPage() {
 
   return (
     <div className="kyra-settings-subscription" style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-      {/* Navegação de abas de configurações */}
-      <nav className="kyra-settings-tabs" aria-label="Seções de configurações" style={{ display: 'flex', gap: 4, borderBottom: '1px solid var(--border)', paddingBottom: 0 }}>
-        {[
-          { href: '/configuracoes',              label: 'Geral' },
-          { href: '/configuracoes/assinatura',   label: 'Assinatura' },
-          { href: '/configuracoes/horarios',     label: 'Horários' },
-          { href: '/configuracoes/notificacoes', label: 'Notificações' },
-        ].map(tab => (
-          <Link key={tab.href} href={tab.href} style={{
-            padding: '8px 16px',
-            fontSize: 14,
-            fontWeight: tab.href === '/configuracoes/assinatura' ? 600 : 400,
-            color: tab.href === '/configuracoes/assinatura' ? 'var(--brand)' : 'var(--ink-soft)',
-            borderBottom: tab.href === '/configuracoes/assinatura' ? '2px solid var(--brand)' : '2px solid transparent',
-            marginBottom: -1,
-            textDecoration: 'none',
-          }}>
-            {tab.label}
-          </Link>
-        ))}
-      </nav>
-
       <BillingPendingNotice />
       {/* Plano atual */}
       <div className="kyra-settings-card kyra-settings-plan-card" id="assinatura-header" style={{
