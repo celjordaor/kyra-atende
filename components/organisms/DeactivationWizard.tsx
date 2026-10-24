@@ -21,11 +21,13 @@ export function DeactivationWizard({kind,target,onClose,onDeactivate}:Props){
  const [cancelingId,setCancelingId]=useState<string|null>(null)
  const [notice,setNotice]=useState('')
  const [alternatives,setAlternatives]=useState<Alternative[]>([])
+ const [displayLimit,setDisplayLimit]=useState(20)
+ const [expanding,setExpanding]=useState(false)
  const [selected,setSelected]=useState<Record<string,string>>({})
  useEffect(()=>{
   if(!target){setImpact(null);setError('');setConfirmed(false);return}
   const ctl=new AbortController()
-  setLoading(true);setImpact(null);setError('');setNotice('');setConfirmed(false);setSelected({});setAlternatives([])
+  setLoading(true);setImpact(null);setError('');setNotice('');setConfirmed(false);setSelected({});setAlternatives([]);setDisplayLimit(20)
   fetch('/api/operations/transfer-options?'+new URLSearchParams({type:kind,excludeId:target.id}),{signal:ctl.signal,cache:'no-store'})
    .then(async r=>{if(!r.ok)throw Error('Não foi possível consultar opções de transferência.');return r.json() as Promise<{options:Alternative[]}>})
    .then(d=>{if(Array.isArray(d.options))setAlternatives(d.options);else throw Error('Opções inválidas.')})
@@ -37,6 +39,21 @@ export function DeactivationWizard({kind,target,onClose,onDeactivate}:Props){
   .finally(()=>{if(!ctl.signal.aborted)setLoading(false)})
   return()=>ctl.abort()
  },[kind,target])
+ async function expandBookings(){
+  if(!target||!impact||!impact.truncated||expanding||processing||cancelingId)return
+  const nextLimit=Math.min(200,displayLimit+20)
+  if(nextLimit===displayLimit)return
+  setExpanding(true);setError('')
+  try{
+   const params=new URLSearchParams({type:kind,id:target.id,limit:String(nextLimit)})
+   const response=await fetch('/api/operations/deactivation-impact?'+params,{cache:'no-store'})
+   if(!response.ok)throw Error('Não foi possível carregar mais agendamentos.')
+   const data=await response.json() as Impact
+   if(!Number.isInteger(data.futureBookings)||!Array.isArray(data.affectedBookings))throw Error('Resposta inválida ao ampliar a lista.')
+   setImpact(data);setDisplayLimit(nextLimit);setConfirmed(false)
+  }catch(e){setError(e instanceof Error?e.message:'Erro ao carregar agendamentos.')}
+  finally{setExpanding(false)}
+ }
  async function transferBooking(booking:Booking){
   if(!target||processing||cancelingId)return
   const id=selected[booking.id]
@@ -58,7 +75,7 @@ export function DeactivationWizard({kind,target,onClose,onDeactivate}:Props){
    if(!updated.ok)throw Error('Transferência efetuada, mas a lista não pôde ser atualizada. Reabra o painel.')
    const result=await updated.json() as Impact
    if(!Number.isInteger(result.futureBookings)||!Array.isArray(result.affectedBookings))throw Error('Não foi possível validar a nova lista.')
-   setImpact(result);setConfirmed(false)
+   setImpact(result);setDisplayLimit(20);setConfirmed(false)
   }catch(e){setError(e instanceof Error?e.message:'Não foi possível transferir.')}
   finally{setCancelingId(null)}
  }
@@ -79,7 +96,7 @@ export function DeactivationWizard({kind,target,onClose,onDeactivate}:Props){
    if(!reload.ok)throw Error('Cancelamento confirmado, mas não foi possível atualizar a lista. Feche e reabra o assistente.')
    const data=await reload.json() as Impact
    if(!Number.isInteger(data.futureBookings)||!Array.isArray(data.affectedBookings))throw Error('Não foi possível validar a nova lista de agendamentos.')
-   setImpact(data);setConfirmed(false)
+   setImpact(data);setDisplayLimit(20);setConfirmed(false)
   }catch(e){setError(e instanceof Error?e.message:'Não foi possível completar a operação.')}
   finally{setCancelingId(null)}
  }
@@ -125,7 +142,7 @@ export function DeactivationWizard({kind,target,onClose,onDeactivate}:Props){
        </div>}
        <div style={{display:'flex',justifyContent:'flex-end',marginTop:7}}><Button type="button" variant="danger" size="sm" loading={cancelingId===b.id} disabled={processing||!!cancelingId} onClick={()=>void cancelBooking(b)}>Cancelar agendamento</Button></div>
       </article>)}
-      {impact.truncated&&<p style={{fontSize:12,color:'var(--muted)'}}>Exibindo os primeiros 20 registros. Existem outros agendamentos afetados.</p>}
+      {impact.truncated&&<div style={{display:'grid',gap:6,justifyItems:'start'}}><p style={{fontSize:12,color:'var(--muted)'}}>Exibindo {impact.affectedBookings.length} de {impact.futureBookings} agendamentos afetados.{displayLimit>=200?' Limite de 200 por consulta; trate os restantes pela tela de Agendamentos.':''}</p>{displayLimit<200&&<Button type="button" variant="secondary" size="sm" disabled={!!cancelingId||processing||expanding} loading={expanding} onClick={()=>void expandBookings()}>Carregar mais 20</Button>}</div>}
      </div>}
      {impact.futureBookings>0?<div style={{background:'#fff8ec',border:'1px solid #f5d9a7',borderRadius:9,padding:12,fontSize:13,marginTop:12}}>
       A desativação está bloqueada enquanto houver reservas futuras. Nenhum agendamento será modificado por esta tela.
