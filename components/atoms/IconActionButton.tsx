@@ -2,7 +2,7 @@
 import React from 'react'
 import {Tooltip} from './Tooltip'
 type ActionIcon='eye'|'survey'|'edit'|'check'|'x'|'details'|'trash'|'mail'|'loader'|'complete'
-export function IconActionButton({icon,label,onClick,disabled=false,placement='top',tone='default'}:{icon:ActionIcon;label:string;onClick:()=>void;disabled?:boolean;placement?:'top'|'bottom';tone?:'default'|'danger'|'success'}){
+export function IconActionButton({icon,label,onClick,disabled=false,placement='top',tone='default',size='md'}:{icon:ActionIcon;label:string;onClick:()=>void;disabled?:boolean;placement?:'top'|'bottom';tone?:'default'|'danger'|'success';size?:'sm'|'md'}){
  const glyph:Record<ActionIcon,React.ReactNode>={
   eye:<><path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></>,
   survey:<><path d="M8 3h8l3 3v15H5V3h3z"/><path d="M14 3v4h5"/><path d="m8 12 1.5 1.5L12 11"/><path d="M14 13h3M8 17h9"/></>,
@@ -20,12 +20,12 @@ export function IconActionButton({icon,label,onClick,disabled=false,placement='t
  const border=tone==='danger'?'var(--red)':tone==='success'?'var(--green-dim)':'var(--brand-dim)'
  return <Tooltip label={label} placement={placement}>
   <button type="button" disabled={disabled} aria-label={label} onClick={onClick}
-   style={{width:36,height:36,borderRadius:10,border:'1px solid '+border,background,color,display:'inline-flex',justifyContent:'center',alignItems:'center',cursor:disabled?'not-allowed':'pointer',flexShrink:0,opacity:disabled ? 0.5 : 1,transition:'background .15s ease, transform .15s ease'}}
+   style={{width:size==='sm'?28:36,height:size==='sm'?28:36,borderRadius:size==='sm'?8:10,border:'1px solid '+border,background,color,display:'inline-flex',justifyContent:'center',alignItems:'center',cursor:disabled?'not-allowed':'pointer',flexShrink:0,opacity:disabled ? 0.5 : 1,transition:'background .15s ease, transform .15s ease'}}
    onMouseEnter={e=>{if(!disabled)e.currentTarget.style.background=border}}
    onMouseLeave={e=>{e.currentTarget.style.background=background}}
    onFocus={e=>{e.currentTarget.style.outline='2px solid '+color;e.currentTarget.style.outlineOffset='2px'}}
    onBlur={e=>{e.currentTarget.style.outline='none'}}>
-   <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">{glyph[icon]}</svg>
+   <svg aria-hidden="true" width={size==='sm'?15:18} height={size==='sm'?15:18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">{glyph[icon]}</svg>
   </button>
  </Tooltip>
 }
