@@ -201,3 +201,9 @@ Após o ciclo de melhorias do Portal, a continuidade passou a gerar pequenos PRs
 ## 26. E1 — continuação da padronização da gestão de pesquisas (24/10/2026)
 - Editor de modelos de pesquisa harmonizado com `BookingSection` existente, cabeçalho lilás, cards de perguntas e modelos cadastrados. Os controles e as APIs de criação, revisão e publicação permanecem inalterados.
 - Último incremento anterior PR #127 teve deploy `READY` confirmado. Este incremento requer CI/merge e publicação de um único commit na produção. Ainda pendem avaliação E2E de telas restantes e documentação consolidada de homologação.
+
+
+## 27. E1 — botões de ação em Pesquisas (24/10/2026)
+- Padronizados todos os botões de ação próprios das quatro seções de Pesquisas com o átomo `Button`: Novo modelo (Adicionar pergunta secundário, Remover pergunta danger, Salvar rascunho primário), Modelos cadastrados (Criar nova versão secundário, Publicar primário, Pausar secundário, Atualizar lista secundário), Automação (Salvar preferências primário), Fila (Atualizar fila secundário) e Resultados (Atualizar resultados secundário).
+- Reaproveitados `loading`, `disabled`, `type`, eventos e contratos existentes. A opção Salvar preferências continua sem ativar a automação. Nenhuma API, migração ou mensagem real alterada.
+- Validar visibilidade e navegação no desktop/mobile, loading e ações de publicação/pausa com contas autorizadas após CI e deploy do SHA final.

@@ -1,5 +1,6 @@
 'use client'
 import {useEffect,useState} from 'react'
+import {Button} from '@/components/atoms/Button'
 
 type Row={id:string;title:string;kind:string;status:string;createdAt:string;answeredAt:string|null;answers:{question:string;value:unknown}[]|null}
 type Result={summary:{total:number;answered:number;notAnswered:number;responseRate:number;limited:boolean};rows:Row[]}
@@ -50,6 +51,6 @@ export default function SurveyResultsClient(){
     </article>)}
    </div>}
   </>}
-  <button type="button" disabled={loading} onClick={()=>setReload(v=>v+1)} style={{marginTop:14}}>Atualizar resultados</button>
+  <Button type="button" variant="secondary" size="sm" disabled={loading} onClick={()=>setReload(v=>v+1)} style={{marginTop:14}}>Atualizar resultados</Button>
  </section>
 }

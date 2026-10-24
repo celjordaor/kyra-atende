@@ -1,5 +1,6 @@
 'use client'
 import {useEffect,useState} from 'react'
+import {Button} from '@/components/atoms/Button'
 type Entry={id:string;state:string;created_at:string;invitation_id:string}
 export default function SurveyOutboxPanel(){
  const [entries,setEntries]=useState<Entry[]>([])
@@ -34,6 +35,6 @@ export default function SurveyOutboxPanel(){
      </table>
     </div>}
   </>}
-  <button type="button" disabled={loading} onClick={()=>setReload(v=>v+1)} style={{marginTop:14}}>Atualizar fila</button>
+  <Button type="button" variant="secondary" size="sm" disabled={loading} onClick={()=>setReload(v=>v+1)} style={{marginTop:14}}>Atualizar fila</Button>
  </section>
 }

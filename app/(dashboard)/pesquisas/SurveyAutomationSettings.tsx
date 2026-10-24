@@ -1,5 +1,6 @@
 'use client'
 import {useEffect,useState} from 'react'
+import {Button} from '@/components/atoms/Button'
 type Settings={enabled:boolean;daily_limit:number;send_channel:string;wait_hours:number}
 export default function SurveyAutomationSettings(){
  const [value,setValue]=useState<Settings>({enabled:false,daily_limit:0,send_channel:'disabled',wait_hours:24})
@@ -45,7 +46,7 @@ export default function SurveyAutomationSettings(){
      style={{padding:10,background:'var(--surface)',color:'var(--ink)',border:'1px solid var(--border)',borderRadius:8}}/>
    </label>
    {notice&&<p role="status">{notice}</p>}{error&&<p role="alert">{error}</p>}
-   <button type="button" onClick={save} disabled={saving}>{saving?'Salvando…':'Salvar preferências (sem ativar)'}</button>
+   <Button type="button" variant="primary" loading={saving} disabled={saving} onClick={save}>Salvar preferências (sem ativar)</Button>
   </div>}
  </section>
 }
