@@ -213,3 +213,9 @@ Após o ciclo de melhorias do Portal, a continuidade passou a gerar pequenos PRs
 - Após validação visual da tela Pesquisas (#129), padronizados botões ainda legados da tela Horários e da seção Bloqueios: adicionar faixa (secundário), remover faixa/bloqueio (danger), salvar horários e adicionar bloqueio (primários), com loading e disabled preservados.
 - Utilizado átomo `Button` existente, sem alterar rotas, payloads, limites, disponibilidade de profissionais ou filtros de tenant. Geral e Notificações já têm ações pelo componente; toggles de notificações permanecem switches, não botões CTA.
 - Continuar auditoria funcional/responsiva de Geral, Assinatura, Horários e Notificações e E1/E3; confirmar CI, deploy READY exato e teste em navegador, sem considerar apenas o merge como homologação.
+
+
+## 29. E1 — cartões da Disponibilidade dos profissionais e Bloqueios (24/10/2026)
+- `ProfissionaisHorarios` e `BloqueiosClient` passam a reutilizar `BookingSection` com cabeçalhos lilás claros, campos com bordas e alinhamento consistente, controles agrupados e botões `Button` primário, secundário e danger. A agenda de cada profissional mostra as opções de expediente em cards selecionáveis, serviços em lista de opções bem espaçadas e horários específicos por dia em cartões responsivos.
+- Bloqueios gerais/individuais são apresentados em cartão de formulário com grid responsivo, datas/horas e motivo; registros aparecem em cartões com informação legível e ação Remover. Sem modificações nas APIs, nas regras de precedência ou na ativação do motor de disponibilidade.
+- Homologar seleção de profissional, herança/horários específicos, edição e gravação de faixas, vinculação de serviços, criação e remoção de bloqueios, mobile e teclado. Deploy único na `main` após CI; validação de navegador separada.
