@@ -1,3 +1,4 @@
+import {IconActionButton} from '@/components/atoms/IconActionButton'
 'use client'
 import {DeactivationWizard} from '@/components/organisms/DeactivationWizard'
 import { SidePanel } from '@/components/organisms/SidePanel'
@@ -225,8 +226,8 @@ export function ServicosClient({ rows: initialRows }: Props) {
             <div style={{ fontSize: 13, color: 'var(--ink-body)', marginTop: 8 }}>Duração: {row.duration_minutes} min</div>
             <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--ink)', marginTop: 4 }}>{formatCurrency(row.price)}</div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 14 }}>
-              <Button variant="secondary" size="sm" onClick={() => openEdit(row)}>Editar</Button>
-              <Button variant={row.is_active ? 'danger' : 'secondary'} size="sm" disabled={!!loading[row.id]} onClick={() => row.is_active ? setDeactivationTarget(row) : void handleToggleActive(row)}>{loading[row.id] ? 'Atualizando…' : row.is_active ? 'Desativar' : 'Reativar'}</Button>
+              <IconActionButton icon="edit" label="Editar" onClick={() => openEdit(row)}/>
+              <IconActionButton icon={row.is_active ? 'x' : 'check'} tone={row.is_active ? 'danger' : 'success'} label={loading[row.id] ? 'Atualizando…' : row.is_active ? 'Desativar' : 'Reativar'} disabled={!!loading[row.id]} onClick={() => row.is_active ? setDeactivationTarget(row) : void handleToggleActive(row)}/>
             </div>
           </article>
         ))}
@@ -251,8 +252,8 @@ export function ServicosClient({ rows: initialRows }: Props) {
             </div>
             <StatusBadge status={row.is_active?'active':'suspended'}/>
             <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
-              <Button variant="secondary" size="sm" onClick={()=>openEdit(row)}>Editar</Button>
-              <Button variant={row.is_active?'danger':'secondary'} size="sm" disabled={!!loading[row.id]} onClick={()=>row.is_active?setDeactivationTarget(row):void handleToggleActive(row)}>{loading[row.id]?'Atualizando…':row.is_active?'Desativar':'Reativar'}</Button>
+              <IconActionButton icon="edit" label="Editar" onClick={() => openEdit(row)}/>
+              <IconActionButton icon={row.is_active ? 'x' : 'check'} tone={row.is_active ? 'danger' : 'success'} label={loading[row.id] ? 'Atualizando…' : row.is_active ? 'Desativar' : 'Reativar'} disabled={!!loading[row.id]} onClick={() => row.is_active ? setDeactivationTarget(row) : void handleToggleActive(row)}/>
             </div>
           </article>)}
         </div>
