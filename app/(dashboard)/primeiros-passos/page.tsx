@@ -1,8 +1,7 @@
-import Link from 'next/link'
 import {redirect} from 'next/navigation'
 import {createClient} from '@/lib/supabase/server'
 import {createAdminClient} from '@/lib/supabase/admin'
-import {BookingSection} from '@/components/organisms/BookingSection'
+import {OnboardingSteps} from './OnboardingSteps'
 
 export const metadata={title:'Primeiros passos — Kyra Atende'}
 export const dynamic='force-dynamic'
@@ -44,25 +43,9 @@ export default async function PrimeirosPassosPage(){
   {id:'whatsapp',title:'Configure o WhatsApp',detail:'Verifique a conexão e as permissões de mensagens antes de usar com clientes.',href:'/whatsapp',done:false,action:'Abrir WhatsApp'},
   {id:'notificacoes',title:'Revise as notificações',detail:'Confira os dispositivos e as preferências de comunicação.',href:'/configuracoes/notificacoes',done:false,action:'Abrir notificações'},
  ]
- const done=steps.filter(s=>s.done).length
- return <div style={{display:'grid',gap:18,maxWidth:1000}}>
-  <header style={{background:'#f3eef9',border:'1px solid #e3d9ef',borderRadius:14,padding:'22px 24px'}}>
-   <h1 style={{fontSize:24,color:'#4A3F66',margin:'0 0 7px'}}>Primeiros passos</h1>
-   <p style={{margin:0,color:'#615971',lineHeight:1.6}}>Prepare sua empresa para receber agendamentos. As etapas de cadastro e os horários são verificados automaticamente; WhatsApp e notificações ainda exigem conferência manual.</p>
-   <div role="status" style={{marginTop:16,fontWeight:600,color:'#4A3F66'}}>{done} de {steps.length} etapas identificadas</div>
-   <div role="progressbar" aria-label="Etapas verificadas automaticamente" aria-valuemin={0} aria-valuemax={steps.length} aria-valuenow={done} style={{height:10,background:'#e1d8ec',borderRadius:20,overflow:'hidden',marginTop:8}}><div style={{width:(done/steps.length*100)+'%',height:'100%',background:'#72658E'}}/></div>
-  </header>
-  <BookingSection title="Preparação da empresa" icon="✦">
-   <div style={{display:'grid',gap:10}}>
-    {steps.map((step,index)=><div key={step.id} style={{display:'flex',flexWrap:'wrap',alignItems:'center',justifyContent:'space-between',gap:14,padding:'16px',border:'1px solid #e6def0',background:step.done?'#f8f5fc':'var(--surface-2)',borderRadius:10}}>
-     <div style={{display:'flex',alignItems:'flex-start',gap:12,flex:'1 1 280px'}}>
-      <div aria-hidden="true" style={{width:30,height:30,display:'grid',placeItems:'center',borderRadius:'50%',background:step.done?'#72658E':'#ece5f4',color:step.done?'white':'#4A3F66',fontWeight:700}}>{step.done?'✓':index+1}</div>
-      <div><strong style={{color:'#4A3F66'}}>{step.title}</strong><p style={{fontSize:13,color:'var(--muted)',margin:'5px 0'}}>{step.detail}</p><span style={{fontSize:12,color:'#72658E'}}>{step.done?'Cadastro identificado':'Aguardando configuração ou conferência'}</span></div>
-     </div>
-     <Link href={step.href} style={{display:'inline-flex',textDecoration:'none',border:'1px solid #72658E',borderRadius:8,padding:'9px 13px',color:'#4A3F66',fontWeight:600,fontSize:13}}>{step.action} →</Link>
-    </div>)}
-   </div>
-  </BookingSection>
-  <p style={{fontSize:12,color:'var(--muted)',margin:0}}>Esta versão não marca WhatsApp ou notificações como concluídos sem uma verificação confiável. A opção de pular etapas e o histórico persistente serão incluídos em incremento posterior.</p>
- </div>
+ const {data:saved,error:savedError}=await db.from('tenant_onboarding_steps').select('step_key,state').eq('tenant_id',tenantId)
+ if(savedError)return <p role="alert" style={{color:'var(--red)'}}>Não foi possível carregar o progresso do onboarding.</p>
+ const initial:Record<string,'pending'|'reviewed'|'skipped'>={}
+ for(const row of saved??[])if(row.state==='reviewed'||row.state==='skipped')initial[row.step_key]=row.state
+ return <div style={{maxWidth:1000}}><OnboardingSteps steps={steps} initial={initial} canEdit={['owner','admin'].includes(profile.role)}/></div>
 }
