@@ -37,3 +37,42 @@ export async function GET(request:NextRequest){
   previewOnly:true,
  },{headers:{'Cache-Control':'private, no-store'}})
 }
+
+/** Pré-validação conservadora das reservas selecionadas; não executa operações. */
+export async function POST(request:NextRequest){
+ const session=await requireSession()
+ if(!session.ok)return session.response
+ const {data:profile,error:roleError}=await session.supabase.from('profiles')
+  .select('role').eq('id',session.userId).eq('tenant_id',session.tenantId).maybeSingle()
+ if(roleError||!profile||!['owner','admin'].includes(profile.role))
+  return NextResponse.json({error:'Sem permissão para administrar a agenda.'},{status:403})
+ const payload=await request.json().catch(()=>null)
+ const ids=payload?.bookingIds
+ const operation=payload?.operation
+ const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+ if(!Array.isArray(ids)||ids.length<1||ids.length>100||ids.some((id:unknown)=>typeof id!=='string'||!uuid.test(id))||new Set(ids).size!==ids.length||
+  !['cancel','transfer','block'].includes(operation))
+  return NextResponse.json({error:'Seleção ou operação inválida. Selecione até 100 reservas únicas.'},{status:400})
+ const {data,error}=await createAdminClient().from('bookings')
+  .select('id,status,start_at,end_at,professional_id,service_id')
+  .eq('tenant_id',session.tenantId).in('id',ids)
+ if(error)return NextResponse.json({error:'Não foi possível verificar as reservas.'},{status:503})
+ const found=new Map((data??[]).map(item=>[item.id,item]))
+ const now=Date.now()
+ const results=ids.map((id:string)=>{
+  const booking=found.get(id)
+  if(!booking)return {id,eligible:false,reason:'not_found'}
+  if(!['pending','confirmed'].includes(booking.status))return {id,eligible:false,reason:'invalid_status'}
+  if(Date.parse(booking.start_at)<=now)return {id,eligible:false,reason:'past_booking'}
+  if(operation==='transfer')return {id,eligible:false,reason:'requires_target_and_availability_validation'}
+  if(operation==='block')return {id,eligible:false,reason:'requires_block_period_and_conflict_validation'}
+  return {id,eligible:true,reason:null}
+ })
+ return NextResponse.json({
+  previewOnly:true,operation,total:results.length,
+  eligible:results.filter(item=>item.eligible).length,
+  ineligible:results.filter(item=>!item.eligible).length,
+  results,
+  warning:'Pré-validação informativa, sujeita a alterações concorrentes. Nenhuma operação foi executada.',
+ },{headers:{'Cache-Control':'private, no-store'}})
+}
