@@ -417,6 +417,7 @@ function BookingDetailModal({ booking, loadId, onClose, onAction, onEdit }: {
             </div>
           ))}
         </div>
+      </BookingSection>
       </div>
     </SidePanel>
   )
