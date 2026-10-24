@@ -8,9 +8,11 @@ export async function confirmDeactivation(type:ResourceType,id:string,name:strin
   const data=await response.json() as {futureBookings:number}
   if(!Number.isInteger(data.futureBookings)||data.futureBookings<0)throw new Error('Resposta inválida')
   const subject=type==='professional'?'profissional':'serviço'
-  return window.confirm(data.futureBookings>0
-   ?`Atenção: ${name} possui ${data.futureBookings} agendamento(s) futuro(s) pendente(s) ou confirmado(s). Desativar o ${subject} não cancela nem transfere automaticamente esses agendamentos. Deseja continuar?`
-   :`Desativar ${name}? Nenhum agendamento futuro pendente ou confirmado foi encontrado neste momento.`)
+  if(data.futureBookings>0){
+   window.alert(`A desativação de ${name} está bloqueada: existem ${data.futureBookings} agendamento(s) futuro(s) pendente(s) ou confirmado(s). Resolva-os antes de desativar o ${subject}.`)
+   return false
+  }
+  return window.confirm(`Desativar ${name}? Nenhum agendamento futuro pendente ou confirmado foi encontrado neste momento.`)
  }catch{
   window.alert('Não foi possível consultar os agendamentos afetados. A desativação não foi realizada. Tente novamente.')
   return false
