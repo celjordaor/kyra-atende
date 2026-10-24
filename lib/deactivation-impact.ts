@@ -7,7 +7,6 @@ export async function confirmDeactivation(type:ResourceType,id:string,name:strin
   if(!response.ok)throw new Error('Falha na prévia')
   const data=await response.json() as {futureBookings:number;truncated?:boolean;affectedBookings?:Array<{id:string;startAt:string;endAt:string;status:string}>}
   if(!Number.isInteger(data.futureBookings)||data.futureBookings<0)throw new Error('Resposta inválida')
-  const subject=type==='professional'?'profissional':'serviço'
   if(data.futureBookings>0){
    const details=(data.affectedBookings??[]).map((b,i)=>{
     const start=new Date(b.startAt)
