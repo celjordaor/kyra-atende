@@ -1,22 +1,54 @@
 'use client'
-import React,{useId,useState} from 'react'
+import React,{useId,useLayoutEffect,useRef,useState} from 'react'
+import {createPortal} from 'react-dom'
 type Placement='top'|'bottom'
 export function Tooltip({label,children,placement='top'}:{label:string;children:React.ReactNode;placement?:Placement}){
  const [visible,setVisible]=useState(false)
+ const [position,setPosition]=useState<{top:number;left:number;arrowLeft:number}|null>(null)
+ const wrap=useRef<HTMLSpanElement>(null)
+ const tip=useRef<HTMLSpanElement>(null)
  const id=useId()
- return <span className="kyra-tooltip-wrap" onMouseEnter={()=>setVisible(true)} onMouseLeave={()=>setVisible(false)} onFocusCapture={()=>setVisible(true)} onBlurCapture={()=>setVisible(false)}>
-  <span aria-describedby={visible?id:undefined}>{children}</span>
-  <span id={id} role="tooltip" data-placement={placement} className={'kyra-tooltip '+(visible?'kyra-tooltip-visible':'')}>{label}</span>
-  <style jsx>{`
-   .kyra-tooltip-wrap{position:relative;display:inline-flex;align-items:center;vertical-align:middle}
-   .kyra-tooltip{position:absolute;z-index:60;left:50%;bottom:calc(100% + 11px);transform:translate(-50%,4px);pointer-events:none;max-width:240px;min-width:max-content;white-space:normal;text-align:center;overflow-wrap:break-word;background:#352a4b;color:#fff;padding:7px 11px;border:1px solid #67567c;border-radius:8px;font-size:12px;line-height:1.35;font-weight:500;box-shadow:0 6px 18px rgba(30,19,47,.22);opacity:0;visibility:hidden;transition:opacity .15s ease,transform .15s ease}
-   .kyra-tooltip::after{content:'';position:absolute;top:100%;left:50%;margin-left:-5px;border:5px solid transparent;border-top-color:#352a4b}
-   .kyra-tooltip-visible{opacity:1;visibility:visible;transform:translate(-50%,0)}
-   .kyra-tooltip[data-placement=bottom]{bottom:auto;top:calc(100% + 11px);transform:translate(-50%,-4px)}
-   .kyra-tooltip[data-placement=bottom].kyra-tooltip-visible{transform:translate(-50%,0)}
-   .kyra-tooltip[data-placement=bottom]::after{top:auto;bottom:100%;border-color:transparent transparent #352a4b}
-   @media(hover:none){.kyra-tooltip{display:none}}
-   @media(prefers-reduced-motion:reduce){.kyra-tooltip{transition:none}}
-  `}</style>
- </span>
+ useLayoutEffect(()=>{
+  if(!visible)return
+  const update=()=>{
+   const anchor=wrap.current?.getBoundingClientRect()
+   const element=tip.current
+   if(!anchor||!element)return
+   const width=element.offsetWidth
+   const height=element.offsetHeight
+   const margin=10
+   const center=anchor.left+anchor.width/2
+   const left=Math.max(margin,Math.min(center-width/2,window.innerWidth-width-margin))
+   const above=placement==='top'?anchor.top>=height+17:window.innerHeight-anchor.bottom<height+17&&anchor.top>=height+17
+   const top=above?anchor.top-height-10:anchor.bottom+10
+   setPosition({top:Math.max(margin,top),left,arrowLeft:Math.max(9,Math.min(width-9,center-left))})
+  }
+  update()
+  window.addEventListener('scroll',update,true)
+  window.addEventListener('resize',update)
+  return()=>{window.removeEventListener('scroll',update,true);window.removeEventListener('resize',update)}
+ },[visible,label,placement])
+ return <>
+  <span ref={wrap} style={{display:'inline-flex',alignItems:'center',verticalAlign:'middle'}}
+   onMouseEnter={()=>setVisible(true)} onMouseLeave={()=>{setVisible(false);setPosition(null)}}
+   onFocusCapture={()=>setVisible(true)} onBlurCapture={()=>{setVisible(false);setPosition(null)}}>
+   <span aria-describedby={visible?id:undefined}>{children}</span>
+  </span>
+  {visible&&typeof document!=='undefined'&&createPortal(
+   <span ref={tip} id={id} role="tooltip" style={{
+    position:'fixed',zIndex:99999,top:position?.top??-9999,left:position?.left??-9999,
+    maxWidth:'min(260px, calc(100vw - 20px))',width:'max-content',
+    whiteSpace:'normal',overflowWrap:'anywhere',textAlign:'center',pointerEvents:'none',
+    background:'#352a4b',color:'#fff',padding:'8px 12px',border:'1px solid #67567c',
+    borderRadius:8,fontSize:12,lineHeight:1.4,fontWeight:500,
+    boxShadow:'0 6px 18px rgba(30,19,47,.22)'
+   }}>
+    {label}
+    {position&&<span aria-hidden="true" style={{
+     position:'absolute',left:position.arrowLeft-5,
+     ...(position.top<(wrap.current?.getBoundingClientRect().top??0)?{top:'100%',borderTop:'5px solid #352a4b'}:{bottom:'100%',borderBottom:'5px solid #352a4b'}),
+     width:0,height:0,borderLeft:'5px solid transparent',borderRight:'5px solid transparent'
+    }}/>}
+   </span>,document.body)}
+ </>
 }
