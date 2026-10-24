@@ -21,6 +21,14 @@ export async function GET(request:NextRequest){
   .select('id',{head:true,count:'exact'}).eq('tenant_id',session.tenantId)
   .eq(field,id).in('status',['pending','confirmed']).gte('start_at',new Date().toISOString())
  if(error)return NextResponse.json({error:'Não foi possível consultar os agendamentos futuros.'},{status:503})
- return NextResponse.json({futureBookings:count??0,resourceActive:resource.is_active},
-  {headers:{'Cache-Control':'no-store'}})
+ // Display only a bounded set of scheduling metadata. No client identity is disclosed.
+ const {data:bookings,error:detailError}=await session.supabase.from('bookings')
+  .select('id,start_at,end_at,status').eq('tenant_id',session.tenantId).eq(field,id)
+  .in('status',['pending','confirmed']).gte('start_at',new Date().toISOString())
+  .order('start_at',{ascending:true}).limit(20)
+ if(detailError)return NextResponse.json({error:'Não foi possível consultar os agendamentos afetados.'},{status:503})
+ return NextResponse.json({futureBookings:count??0,resourceActive:resource.is_active,
+  affectedBookings:(bookings??[]).map(b=>({id:b.id,startAt:b.start_at,endAt:b.end_at,status:b.status})),
+  truncated:(count??0)>20},
+  {headers:{'Cache-Control':'private, no-store'}})
 }
