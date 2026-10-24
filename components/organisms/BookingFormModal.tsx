@@ -1,4 +1,5 @@
 'use client'
+import { SidePanel, BookingSection } from './BookingSection'
 
 /**
  * BookingFormModal — Organismo compartilhado Kyra Atende
@@ -668,10 +669,10 @@ export function BookingFormModal({
 
   return (
     <>
-      <Modal
+      <SidePanel
         open={open}
         onClose={onClose}
-        size="lg"
+        width={680}
         title={isEdit ? 'Editar agendamento' : 'Novo agendamento'}
         footer={
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
@@ -697,7 +698,7 @@ export function BookingFormModal({
           )}
 
           {/* Cliente */}
-          <div>
+          <BookingSection title="Informações do cliente" icon="♙"><div>
             <div style={{ fontSize: '13px', fontWeight: 500, color: 'var(--ink)', marginBottom: '6px' }}>
               Cliente <span style={{ color: 'var(--red)' }} aria-hidden="true">*</span><span className="sr-only"> (obrigatório)</span>
             </div>
@@ -714,10 +715,9 @@ export function BookingFormModal({
             {formErrors.client && (
               <p style={{ margin: '4px 0 0', fontSize: '12px', color: 'var(--red)' }} role="alert">{formErrors.client}</p>
             )}
-          </div>
-
+          </div></BookingSection>
           {/* Serviço + Profissional */}
-          <div className="kyra-booking-form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+          <BookingSection title="Serviço e profissional" icon="✂"><div className="kyra-booking-form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
             <SearchableSelect label="Serviço" required value={form.service_id}
               onChange={v => { setF('service_id', v); setFormErrors(e => ({ ...e, service: undefined })) }}
               options={serviceOptions} error={formErrors.service} />
@@ -725,6 +725,8 @@ export function BookingFormModal({
               onChange={v => setF('professional_id', v)} options={profOptions} />
           </div>
 
+          </BookingSection>
+          <BookingSection title="Data e horário" icon="▦">
           {/* Data/hora de início */}
           <div className="kyra-booking-form-grid" style={{ display: 'grid', gridTemplateColumns: '3fr 2fr', gap: '12px' }}>
             <FormField label="Data de início" required type="date" value={form.start_date}
@@ -740,13 +742,16 @@ export function BookingFormModal({
             <FormField label="Hora de término" type="time" value={form.end_time} onChange={v => setF('end_time', v)} />
           </div>
 
+          </BookingSection>
+          <BookingSection title="Observações" icon="▤">
           {/* Observações */}
           <FormField label="Observações" type="textarea" value={form.notes} onChange={v => setF('notes', v)}
             placeholder="Informações adicionais sobre o agendamento…" />
+          </BookingSection>
         </div>
   
       <style>{`@media (max-width: 640px) { .kyra-booking-form-grid { grid-template-columns: minmax(0, 1fr) !important; } }`}</style>
-    </Modal>
+    </SidePanel>
 
       {/* Modal de criação de cliente (nested) */}
       <ClientCreateModal

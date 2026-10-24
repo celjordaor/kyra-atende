@@ -1,9 +1,9 @@
 'use client'
+import { SidePanel, BookingSection } from '@/components/organisms/BookingSection'
 
 import React, { useState, useCallback } from 'react'
 import { Button }          from '@/components/atoms/Button'
 import { StatusBadge }     from '@/components/atoms/StatusBadge'
-import { Modal }           from '@/components/organisms/Modal'
 import { BookingFormModal, CompleteModal } from '@/components/organisms'
 import type { BookingToEdit, SavedBooking, CompleteModalBooking } from '@/components/organisms'
 import { api }             from '@/lib/api'
@@ -323,11 +323,11 @@ function BookingDetailModal({ booking, loadId, onClose, onAction, onEdit }: {
   const canCancel   = b.status === 'pending' || b.status === 'confirmed'
 
   return (
-    <Modal
+    <SidePanel
       open
       onClose={onClose}
       title="Detalhes do Agendamento"
-      size="sm"
+      width={680}
       footer={
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
           {(canConfirm || canComplete || canCancel) && (
@@ -377,6 +377,7 @@ function BookingDetailModal({ booking, loadId, onClose, onAction, onEdit }: {
       }
     >
       <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <BookingSection title="Informações do atendimento" icon="▦">
         {/* Status */}
         <div>
           <StatusBadge status={b.status as any} />
@@ -415,8 +416,9 @@ function BookingDetailModal({ booking, loadId, onClose, onAction, onEdit }: {
             </div>
           ))}
         </div>
+      </BookingSection>
       </div>
-    </Modal>
+    </SidePanel>
   )
 }
 
