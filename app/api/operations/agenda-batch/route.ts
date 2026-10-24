@@ -16,7 +16,7 @@ export async function POST(request:NextRequest){
  const payload=await request.json().catch(()=>null)
  const ids:unknown=payload?.bookingIds
  if(payload?.operation!=='cancel'||payload?.confirmation!=='CANCELAR RESERVAS'||
-  !Array.isArray(ids)||ids.length<1||ids.length>100||
+  !Array.isArray(ids)||ids.length<1||ids.length>20||
   ids.some(id=>typeof id!=='string'||!uuid.test(id))||new Set(ids).size!==ids.length)
   return NextResponse.json({error:'Confirmação ou seleção inválida.'},{status:400})
  const db=createAdminClient()
@@ -33,12 +33,12 @@ export async function POST(request:NextRequest){
  const company=tenant?.name||'Estabelecimento'
  const reports:{id:string;emailStatus:string}[]=[]
  // Do not roll back cancellations if a provider accepts no email. Each result is explicit.
- for(const booking of canceled){
+ await Promise.all(canceled.map(async booking=>{
   void dispatchPush(session.tenantId,'booking_cancelled',{bookingId:booking.booking_id,scheduledAt:booking.start_at,clientName:booking.client_name||'',professional:''})
   const to=booking.client_email?.trim()||''
   let emailStatus='no_email'
   if(to&&!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(to))emailStatus='no_email'
-  else if(to&&!process.env.RESEND_API_KEY||to&&!process.env.MAIL_FROM)emailStatus='not_configured'
+  else if(to&&(!process.env.RESEND_API_KEY||!process.env.MAIL_FROM))emailStatus='not_configured'
   else if(to){
    try{
     const when=new Date(booking.start_at).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short',timeZone:'America/Sao_Paulo'})
@@ -46,13 +46,13 @@ export async function POST(request:NextRequest){
      method:'POST',headers:{Authorization:'Bearer '+process.env.RESEND_API_KEY,'Content-Type':'application/json','Idempotency-Key':'booking-cancel-'+booking.booking_id},
      body:JSON.stringify({from:process.env.MAIL_FROM,to:[to],subject:'Cancelamento de agendamento — '+company,
       html:'<h2>Agendamento cancelado</h2><p>Olá, '+escapeHtml(booking.client_name||'cliente')+'.</p><p>Seu agendamento de '+escapeHtml(when)+' em '+escapeHtml(company)+' foi cancelado. Entre em contato com o estabelecimento para reagendar.</p>'}),
-     signal:AbortSignal.timeout(12000)
+     signal:AbortSignal.timeout(8000)
     })
     const response=await resp.json().catch(()=>({})) as {id?:string}
     emailStatus=resp.ok&&response.id?'accepted':'failed'
    }catch{emailStatus='unknown'}
   }
   reports.push({id:booking.booking_id,emailStatus})
- }
+ }))
  return NextResponse.json({operationId:canceled[0].operation_id,cancelled:canceled.length,notifications:reports},{headers:{'Cache-Control':'no-store'}})
 }
