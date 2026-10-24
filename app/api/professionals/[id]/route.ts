@@ -5,6 +5,7 @@
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { requireSession } from '@/lib/route-helpers'
+import {blockIfFutureBookings} from '@/lib/deactivation-server-guard'
 
 export async function PATCH(
   request: NextRequest,
@@ -15,6 +16,11 @@ export async function PATCH(
 
   const { tenantId, supabase } = session
   const body = await request.json()
+  if(!body||typeof body!=='object'||Array.isArray(body))return NextResponse.json({error:'Dados inválidos.'},{status:400})
+  if(body.is_active===false){
+    const impact=await blockIfFutureBookings(supabase,tenantId,params.id,'professional')
+    if(impact.blocked)return impact.response
+  }
 
   const { data, error } = await supabase
     .from('professionals')
@@ -38,6 +44,9 @@ export async function DELETE(
   if (!session.ok) return session.response
 
   const { tenantId, supabase } = session
+
+  const impact=await blockIfFutureBookings(supabase,tenantId,params.id,'professional')
+  if(impact.blocked)return impact.response
 
   const { error } = await supabase
     .from('professionals')
