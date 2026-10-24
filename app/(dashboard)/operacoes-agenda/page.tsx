@@ -8,7 +8,7 @@ export default async function AgendaOperationsPage(){
  if(!user)redirect('/login')
  const tenantId=user.app_metadata?.tenant_id
  const {data:profile}=await supabase.from('profiles').select('tenant_id,role').eq('id',user.id).maybeSingle()
- if(!tenantId||profile?.tenant_id!==tenantId||!['owner','admin'].includes(profile.role))
+ if(!tenantId||profile?.tenant_id!==tenantId||!profile||!['owner','admin'].includes(profile.role))
   return <p role="alert">Você não possui permissão para administrar agendas.</p>
  return <AgendaOperationsClient/>
 }
