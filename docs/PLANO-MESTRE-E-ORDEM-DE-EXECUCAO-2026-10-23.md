@@ -196,3 +196,8 @@ Após o ciclo de melhorias do Portal, a continuidade passou a gerar pequenos PRs
 - Corrigido o componente aninhado `ClientCreateModal` em `BookingFormModal`: a ação **Adicionar cliente** na Agenda utiliza o mesmo `SidePanel` de 680 px e os cards `BookingSection` (Informações do cliente, Dados pessoais e Endereço) já adotados no cadastro principal. Removido o modal central legado e o antigo cabeçalho próprio.
 - Mantidos campos, máscaras, consulta CEP, validações, `POST /clients`, callback `onCreated` e seleção imediata do cliente criado no agendamento original. Preservar estado do agendamento pai ao fechar o novo painel.
 - Regressão necessária: Agenda > Novo agendamento > Adicionar cliente > preencher/validar/salvar > retornar ao agendamento; cancelar sem perder dados; campos e busca, select e CEP mobile/desktop. Produção apenas após CI/merge no PR consolidado, sem deploys manuais intermediários.
+
+
+## 26. E1 — continuação da padronização da gestão de pesquisas (24/10/2026)
+- Editor de modelos de pesquisa harmonizado com `BookingSection` existente, cabeçalho lilás, cards de perguntas e modelos cadastrados. Os controles e as APIs de criação, revisão e publicação permanecem inalterados.
+- Último incremento anterior PR #127 teve deploy `READY` confirmado. Este incremento requer CI/merge e publicação de um único commit na produção. Ainda pendem avaliação E2E de telas restantes e documentação consolidada de homologação.
