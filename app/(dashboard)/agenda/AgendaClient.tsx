@@ -4,7 +4,6 @@ import { SidePanel, BookingSection } from '@/components/organisms/BookingSection
 import React, { useState, useCallback } from 'react'
 import { Button }          from '@/components/atoms/Button'
 import { StatusBadge }     from '@/components/atoms/StatusBadge'
-import { Modal }           from '@/components/organisms/Modal'
 import { BookingFormModal, CompleteModal } from '@/components/organisms'
 import type { BookingToEdit, SavedBooking, CompleteModalBooking } from '@/components/organisms'
 import { api }             from '@/lib/api'
