@@ -1,5 +1,5 @@
 'use client'
-import {confirmDeactivation} from '@/lib/deactivation-impact'
+import {DeactivationWizard} from '@/components/organisms/DeactivationWizard'
 import { SidePanel } from '@/components/organisms/SidePanel'
 import { BookingSection } from '@/components/organisms/BookingSection'
 
@@ -102,6 +102,7 @@ const COLUMNS: Column<ProfRow>[] = [
 
 export function ProfissionaisClient({ rows: initialRows }: Props) {
   const [rows,      setRows]      = useState<ProfRow[]>(initialRows)
+  const [deactivationTarget,setDeactivationTarget]=useState<ProfRow|null>(null)
   const [loading,   setLoading]   = useState<Record<string, boolean>>({})
   const [modalOpen, setModal]     = useState(false)
   const [editing,   setEditing]   = useState<ProfRow | null>(null)
@@ -161,7 +162,7 @@ export function ProfissionaisClient({ rows: initialRows }: Props) {
   // ── Toggle ativo/inativo ───────────────────────────────────────────────────
 
   const handleToggleActive = useCallback(async (row: ProfRow) => {
-    if(row.is_active && !(await confirmDeactivation('professional',row.id,row.name)))return
+    if(row.is_active){setDeactivationTarget(row);return}
     setError(null)
     setLoading(prev=>({...prev,[row.id]:true}))
     const next=!row.is_active
@@ -175,12 +176,25 @@ export function ProfissionaisClient({ rows: initialRows }: Props) {
     }
   }, [])
 
+  async function deactivateApproved(target:{id:string;name:string}):Promise<boolean>{
+    setLoading(prev=>({...prev,[target.id]:true}))
+    setError(null)
+    try{
+      await api.patch(`/professionals/${target.id}`,{is_active:false})
+      setRows(prev=>prev.map(r=>r.id===target.id?{...r,is_active:false}:r))
+      return true
+    }catch{
+      setError('A desativação foi bloqueada ou falhou. Verifique os agendamentos futuros.')
+      return false
+    }finally{setLoading(prev=>({...prev,[target.id]:false}))}
+  }
+
   const ROW_ACTIONS: RowAction<ProfRow>[] = [
     { label: 'Editar',    variant: 'ghost',     onClick: openEdit },
     {
       label:    'Desativar',
       variant:  'danger',
-      onClick:  handleToggleActive,
+      onClick:  setDeactivationTarget,
       hidden:   (r) => !r.is_active,
       disabled: (r) => loading[r.id] ?? false,
     },
@@ -242,7 +256,7 @@ export function ProfissionaisClient({ rows: initialRows }: Props) {
             <div style={{ fontSize: 13, color: 'var(--muted)', marginTop: 5 }}>{row.phone || 'Telefone não informado'}</div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 14 }}>
               <Button variant="secondary" size="sm" onClick={() => openEdit(row)}>Editar</Button>
-              <Button variant={row.is_active ? 'danger' : 'secondary'} size="sm" disabled={!!loading[row.id]} onClick={() => void handleToggleActive(row)}>{loading[row.id] ? 'Atualizando…' : row.is_active ? 'Desativar' : 'Reativar'}</Button>
+              <Button variant={row.is_active ? 'danger' : 'secondary'} size="sm" disabled={!!loading[row.id]} onClick={() => row.is_active ? setDeactivationTarget(row) : void handleToggleActive(row)}>{loading[row.id] ? 'Atualizando…' : row.is_active ? 'Desativar' : 'Reativar'}</Button>
             </div>
           </article>
         ))}
@@ -267,7 +281,7 @@ export function ProfissionaisClient({ rows: initialRows }: Props) {
             </div>
             <div style={{display:'flex',gap:8,marginTop:14,flexWrap:'wrap'}}>
               <Button variant="secondary" size="sm" onClick={()=>openEdit(row)}>Editar perfil</Button>
-              <Button variant={row.is_active?'danger':'secondary'} size="sm" disabled={!!loading[row.id]} onClick={()=>void handleToggleActive(row)}>{loading[row.id]?'Atualizando…':row.is_active?'Desativar':'Reativar'}</Button>
+              <Button variant={row.is_active?'danger':'secondary'} size="sm" disabled={!!loading[row.id]} onClick={()=>row.is_active?setDeactivationTarget(row):void handleToggleActive(row)}>{loading[row.id]?'Atualizando…':row.is_active?'Desativar':'Reativar'}</Button>
             </div>
           </article>)}
         </div>
@@ -357,6 +371,7 @@ export function ProfissionaisClient({ rows: initialRows }: Props) {
           </div></BookingSection>
         </div>
       </SidePanel>
+      <DeactivationWizard kind="professional" target={deactivationTarget} onClose={()=>setDeactivationTarget(null)} onDeactivate={deactivateApproved}/>
     </div>
   )
 }

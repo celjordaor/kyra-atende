@@ -1,5 +1,5 @@
 'use client'
-import {confirmDeactivation} from '@/lib/deactivation-impact'
+import {DeactivationWizard} from '@/components/organisms/DeactivationWizard'
 import { SidePanel } from '@/components/organisms/SidePanel'
 import { BookingSection } from '@/components/organisms/BookingSection'
 
@@ -92,6 +92,7 @@ const COLUMNS: Column<ServiceRow>[] = [
 
 export function ServicosClient({ rows: initialRows }: Props) {
   const [rows,      setRows]      = useState<ServiceRow[]>(initialRows)
+  const [deactivationTarget,setDeactivationTarget]=useState<ServiceRow|null>(null)
   const [loading,   setLoading]   = useState<Record<string, boolean>>({})
   const [modalOpen, setModal]     = useState(false)
   const [editing,   setEditing]   = useState<ServiceRow | null>(null)
@@ -155,7 +156,7 @@ export function ServicosClient({ rows: initialRows }: Props) {
 
   // ── Toggle ativo/inativo ───────────────────────────────────
   const handleToggleActive = useCallback(async (row: ServiceRow) => {
-    if(row.is_active && !(await confirmDeactivation('service',row.id,row.name)))return
+    if(row.is_active){setDeactivationTarget(row);return}
     setError(null)
     setLoading(prev=>({...prev,[row.id]:true}))
     const next=!row.is_active
@@ -169,9 +170,22 @@ export function ServicosClient({ rows: initialRows }: Props) {
     }
   }, [])
 
+  async function deactivateApproved(target:{id:string;name:string}):Promise<boolean>{
+    setLoading(prev=>({...prev,[target.id]:true}))
+    setError(null)
+    try{
+      await api.patch(`/services/${target.id}`,{is_active:false})
+      setRows(prev=>prev.map(r=>r.id===target.id?{...r,is_active:false}:r))
+      return true
+    }catch{
+      setError('A desativação foi bloqueada ou falhou. Verifique os agendamentos futuros.')
+      return false
+    }finally{setLoading(prev=>({...prev,[target.id]:false}))}
+  }
+
   const ROW_ACTIONS: RowAction<ServiceRow>[] = [
     { label: 'Editar',    variant: 'ghost',     onClick: openEdit },
-    { label: 'Desativar', variant: 'danger',    onClick: handleToggleActive, hidden: (r) => !r.is_active, disabled: (r) => loading[r.id] ?? false },
+    { label: 'Desativar', variant: 'danger',    onClick: setDeactivationTarget, hidden: (r) => !r.is_active, disabled: (r) => loading[r.id] ?? false },
     { label: 'Reativar',  variant: 'secondary', onClick: handleToggleActive, hidden: (r) => r.is_active,  disabled: (r) => loading[r.id] ?? false },
   ]
 
@@ -212,7 +226,7 @@ export function ServicosClient({ rows: initialRows }: Props) {
             <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--ink)', marginTop: 4 }}>{formatCurrency(row.price)}</div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 14 }}>
               <Button variant="secondary" size="sm" onClick={() => openEdit(row)}>Editar</Button>
-              <Button variant={row.is_active ? 'danger' : 'secondary'} size="sm" disabled={!!loading[row.id]} onClick={() => void handleToggleActive(row)}>{loading[row.id] ? 'Atualizando…' : row.is_active ? 'Desativar' : 'Reativar'}</Button>
+              <Button variant={row.is_active ? 'danger' : 'secondary'} size="sm" disabled={!!loading[row.id]} onClick={() => row.is_active ? setDeactivationTarget(row) : void handleToggleActive(row)}>{loading[row.id] ? 'Atualizando…' : row.is_active ? 'Desativar' : 'Reativar'}</Button>
             </div>
           </article>
         ))}
@@ -238,7 +252,7 @@ export function ServicosClient({ rows: initialRows }: Props) {
             <StatusBadge status={row.is_active?'active':'suspended'}/>
             <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
               <Button variant="secondary" size="sm" onClick={()=>openEdit(row)}>Editar</Button>
-              <Button variant={row.is_active?'danger':'secondary'} size="sm" disabled={!!loading[row.id]} onClick={()=>void handleToggleActive(row)}>{loading[row.id]?'Atualizando…':row.is_active?'Desativar':'Reativar'}</Button>
+              <Button variant={row.is_active?'danger':'secondary'} size="sm" disabled={!!loading[row.id]} onClick={()=>row.is_active?setDeactivationTarget(row):void handleToggleActive(row)}>{loading[row.id]?'Atualizando…':row.is_active?'Desativar':'Reativar'}</Button>
             </div>
           </article>)}
         </div>
@@ -275,6 +289,7 @@ export function ServicosClient({ rows: initialRows }: Props) {
           </div></BookingSection>
         </div>
       </SidePanel>
+      <DeactivationWizard kind="service" target={deactivationTarget} onClose={()=>setDeactivationTarget(null)} onDeactivate={deactivateApproved}/>
     </div>
   )
 }
