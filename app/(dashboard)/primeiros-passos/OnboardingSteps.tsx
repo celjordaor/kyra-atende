@@ -3,7 +3,7 @@ import {useState} from 'react'
 import Link from 'next/link'
 import {Button} from '@/components/atoms/Button'
 import {BookingSection} from '@/components/organisms/BookingSection'
-type Step={id:string;title:string;detail:string;href:string;done:boolean;action:string}
+type Step={id:string;title:string;detail:string;href:string;done:boolean;action:string;signal?:string}
 type State='skipped'|'reviewed'|'pending'
 export function OnboardingSteps({steps,initial,canEdit}:{steps:Step[];initial:Record<string,State>;canEdit:boolean}){
  const [states,setStates]=useState(initial)
@@ -36,7 +36,7 @@ export function OnboardingSteps({steps,initial,canEdit}:{steps:Step[];initial:Re
      return <article key={step.id} style={{display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:12,padding:16,border:'1px solid #e6def0',background:state==='verified'||state==='reviewed'?'#f8f5fc':'var(--surface-2)',borderRadius:10}}>
       <div style={{display:'flex',gap:12,alignItems:'flex-start',flex:'1 1 270px'}}>
        <span aria-hidden="true" style={{width:30,height:30,borderRadius:'50%',display:'grid',placeItems:'center',background:state==='verified'||state==='reviewed'?'#72658E':'#ece5f4',color:state==='verified'||state==='reviewed'?'white':'#4A3F66',fontWeight:700}}>{state==='verified'||state==='reviewed'?'✓':index+1}</span>
-       <div><strong style={{color:'#4A3F66'}}>{step.title}</strong><p style={{fontSize:13,color:'var(--muted)',margin:'5px 0'}}>{step.detail}</p><small style={{color:'#72658E'}}>{state==='verified'?'Cadastro verificado':state==='reviewed'?'Revisada manualmente':state==='skipped'?'Pulada para retomar depois':'Pendente'}</small></div>
+       <div><strong style={{color:'#4A3F66'}}>{step.title}</strong><p style={{fontSize:13,color:'var(--muted)',margin:'5px 0'}}>{step.detail}</p>{step.signal&&<p style={{fontSize:12,color:'#72658E',margin:'5px 0'}}>{step.signal}</p>}<small style={{color:'#72658E'}}>{state==='verified'?'Cadastro verificado':state==='reviewed'?'Revisada manualmente':state==='skipped'?'Pulada para retomar depois':'Pendente'}</small></div>
       </div>
       <div style={{display:'flex',gap:7,flexWrap:'wrap',alignItems:'center'}}>
        <Link href={step.href} style={{fontSize:13,color:'#4A3F66',padding:'9px',fontWeight:600}}>{step.action} →</Link>
