@@ -276,3 +276,11 @@ Após o ciclo de melhorias do Portal, a continuidade passou a gerar pequenos PRs
 - Os assistentes 09/10 oferecem seleção de substituto ativo por empresa e transferência individual no mesmo horário, após confirmação. Novo GET `/api/operations/transfer-options` expõe apenas id, nome e duração do serviço quando aplicável, com escopo tenant.
 - A ação usa `PUT /api/bookings/[id]` e a RPC existente `reschedule_booking_atomic`; ao trocar serviço, ajusta o término conforme duração do destino. A API verifica conflitos e disponibilidade, não permite mover reservas encerradas; a lista de impacto é atualizada após sucesso. Nenhuma comunicação nova ou transferência em lote.
 - Requisitos ainda pendentes: pré-simulação completa de compatibilidade profissional-serviço e alterações financeiras, agenda alternativa quando o slot original não estiver disponível, trilha específica de auditoria e gestão de avisos; telas da E2 11/16. Verificar em ambiente de QA concorrência, isolamento, erros 409, mudança de duração e preço sem modificar reservas reais.
+
+
+## 39. E2 / item 11 — início do onboarding guiado do tenant (24/10/2026)
+- Primeira entrega funcional em `/primeiros-passos`, com acesso pelo menu do dashboard; distinta do provisionamento Superadmin.
+- Checklist de empresa, horários, serviços, profissionais, clientes, primeira reserva, WhatsApp e notificações. Estado de empresa/horários/cadastros consultado por tenant na própria sessão; status de WhatsApp e notificações não é presumido.
+- Atalhos levam às telas existentes. Nenhum disparo de mensagens, migração ou alteração de configurações foi incluído.
+- **Ainda falta para o item 11 completo:** persistência por tenant das opções de pular/retomar, verificação confiável de WhatsApp e notificações, etapa final de teste, autorização e E2E com duas empresas. Manter como parcial até essas entregas e aceite.
+- O incremento exige CI, merge, deploy READY e verificação funcional real para classificação de publicação.

@@ -83,6 +83,7 @@ interface NavItem { href: string; label: string; icon: React.ReactNode }
 
 const ADMIN_NAV: NavItem[] = [
   { href: '/dashboard',    label: 'Dashboard',     icon: <IconHome /> },
+  { href: '/primeiros-passos', label: 'Primeiros passos', icon: <IconClipboard /> },
   { href: '/agenda',       label: 'Agenda',         icon: <IconCalendar /> },
   { href: '/agendamentos', label: 'Agendamentos',   icon: <IconClipboard /> },
   { href: '/clientes',     label: 'Clientes',       icon: <IconUsers /> },
