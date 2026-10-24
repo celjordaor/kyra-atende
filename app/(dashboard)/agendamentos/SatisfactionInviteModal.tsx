@@ -1,6 +1,6 @@
 'use client'
 import {useEffect,useState} from 'react'
-import {Modal} from '@/components/organisms'
+import {SidePanel,BookingSection} from '@/components/organisms/BookingSection'
 import {Button} from '@/components/atoms'
 
 type Template={id:string;title:string;kind:string;status:string;version:number}
@@ -38,13 +38,13 @@ export default function SatisfactionInviteModal({bookingId,onClose}:{bookingId:s
   }catch(e){setError(e instanceof Error?e.message:'Não foi possível gerar o link.')}
   finally{setSaving(false)}
  }
- return <Modal open={!!bookingId} onClose={onClose} title="Pesquisa pós-atendimento" size="md"
+ return <SidePanel open={!!bookingId} onClose={onClose} title="Pesquisa pós-atendimento" width={680}
   footer={<div style={{display:'flex',gap:10,justifyContent:'flex-end'}}>
    <Button variant="secondary" onClick={onClose}>Fechar</Button>
    <Button variant="secondary" onClick={()=>void generate('link')} disabled={!selected||loading||saving||!!link||!!notice}>Copiar link</Button>
    <Button variant="primary" onClick={()=>void generate('email')} loading={saving} disabled={!selected||loading||!!link||!!notice}>Enviar pesquisa por e-mail</Button>
   </div>}>
-  <div style={{display:'grid',gap:14}}>
+  <BookingSection title="Convite de satisfação" icon="✦"><div style={{display:'grid',gap:14}}>
    <p>Escolha um modelo publicado. Enviar por e-mail é uma ação manual e imediata; copiar link não envia mensagem. Cada modelo aceita apenas um convite por atendimento.</p>
    {loading?<p role="status">Carregando modelos…</p>:templates.length===0?<p>Nenhum modelo de satisfação publicado. Cadastre e publique um modelo em Pesquisas.</p>:
    <label style={{display:'grid',gap:6}}>Modelo de satisfação
@@ -60,6 +60,6 @@ export default function SatisfactionInviteModal({bookingId,onClose}:{bookingId:s
     <input aria-label="Link da pesquisa" readOnly value={link} style={{width:'100%',padding:10,border:'1px solid var(--border)',borderRadius:8}}/>
     <Button variant="secondary" onClick={()=>void navigator.clipboard.writeText(link)}>Copiar link</Button>
    </div>}
-  </div>
- </Modal>
+  </div></BookingSection>
+ </SidePanel>
 }
