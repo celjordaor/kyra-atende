@@ -2,10 +2,10 @@ import {NextRequest,NextResponse} from 'next/server'
 import {requireSession} from '@/lib/route-helpers'
 import {createAdminClient} from '@/lib/supabase/admin'
 import {dispatchPush} from '@/lib/push'
+import {cancellationEmail} from '@/lib/email/booking-cancellation'
 export const runtime='nodejs'
 type Canceled={operation_id:string;booking_id:string;client_email:string|null;client_name:string|null;start_at:string}
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-const escapeHtml=(s:string)=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')
 export async function POST(request:NextRequest){
  const session=await requireSession()
  if(!session.ok)return session.response
@@ -41,11 +41,10 @@ export async function POST(request:NextRequest){
   else if(to&&(!process.env.RESEND_API_KEY||!process.env.MAIL_FROM))emailStatus='not_configured'
   else if(to){
    try{
-    const when=new Date(booking.start_at).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short',timeZone:'America/Sao_Paulo'})
+    const message=cancellationEmail({company,clientName:booking.client_name||'cliente',startAt:booking.start_at})
     const resp=await fetch('https://api.resend.com/emails',{
      method:'POST',headers:{Authorization:'Bearer '+process.env.RESEND_API_KEY,'Content-Type':'application/json','Idempotency-Key':'booking-cancel-'+booking.booking_id},
-     body:JSON.stringify({from:process.env.MAIL_FROM,to:[to],subject:'Cancelamento de agendamento — '+company,
-      html:'<h2>Agendamento cancelado</h2><p>Olá, '+escapeHtml(booking.client_name||'cliente')+'.</p><p>Seu agendamento de '+escapeHtml(when)+' em '+escapeHtml(company)+' foi cancelado. Entre em contato com o estabelecimento para reagendar.</p>'}),
+     body:JSON.stringify({from:process.env.MAIL_FROM,to:[to],subject:message.subject,html:message.html,text:message.text}),
      signal:AbortSignal.timeout(8000)
     })
     const response=await resp.json().catch(()=>({})) as {id?:string}
