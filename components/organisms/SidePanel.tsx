@@ -19,7 +19,10 @@ export function SidePanel({open,onClose,title,children,footer,width=680,persiste
   const frame=requestAnimationFrame(()=>{(ref.current?.querySelector<HTMLElement>(FOCUSABLE)??ref.current)?.focus()})
   const overflow=document.body.style.overflow;document.body.style.overflow='hidden'
   function key(e:KeyboardEvent){
-   if(e.key==='Escape'){if(!persistent){e.preventDefault();close()}return}
+   // A nested client modal (or another panel) owns Escape and Tab while it is topmost.
+   const dialogs=document.querySelectorAll<HTMLElement>('[role="dialog"][aria-modal="true"]')
+   if(dialogs.length>0&&dialogs[dialogs.length-1]!==ref.current)return
+   if(e.key==='Escape'){if(!persistent){e.preventDefault();e.stopImmediatePropagation();close()}return}
    if(e.key!=='Tab'||!ref.current)return
    const els=Array.from(ref.current.querySelectorAll<HTMLElement>(FOCUSABLE))
    if(!els.length){e.preventDefault();ref.current.focus();return}
