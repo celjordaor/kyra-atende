@@ -231,3 +231,10 @@ Após o ciclo de melhorias do Portal, a continuidade passou a gerar pequenos PRs
 - Corrigida divergência entre abas Geral, Assinatura, Horários e Notificações: título `Configurações`, descrição e navegação de quatro abas agora são renderizados exclusivamente pelo `configuracoes/layout.tsx` com `ConfiguracoesHeader` reutilizável e indicação acessível da aba ativa (`aria-current`).
 - Removidos títulos, barras de abas e links de retorno redundantes nas páginas filhas. Conteúdo interno alinhado em largura comum, responsivo; seções específicas, dados e botões continuam preservados.
 - Validar transição entre as quatro abas sem salto visual, seleção ativa, desktop/mobile, acesso teclado, formulários e controles de cobrança/notificação. CI, deploy READY e QA separados.
+
+
+## 32. Início E2 — prévia não destrutiva da desativação (24/10/2026)
+- E1 recebeu validação visual positiva em Configurações e deploy `READY` do PR #133. Permanecem pendentes homologações E2E completas em múltiplas resoluções; isso **não** significa encerrar E1 integralmente.
+- E2 avança em bloco conservador: `GET /api/operations/deactivation-impact` faz leitura do recurso e contagem de agendamentos futuros `pending/confirmed` do tenant para profissional ou serviço. No painel de cada recurso, desativar exige confirmação explícita após prévia; falha da consulta bloqueia a ação. Reativar não necessita prévia. Nenhum agendamento é cancelado ou transferido por esse passo.
+- E2 **ainda não está completo ou homologado:** esta verificação de UX não é garantia transacional; chamadas diretas às APIs PATCH, concorrência, autorização de papel, transferências/cancelamentos, notificações e auditoria devem receber regras de backend atômicas, testes multi-tenant e decisão do proprietário antes de liberar desativação segura em escala.
+- Gates: TypeScript/lint/CI, merge único, Vercel READY, confirmação de leitura somente e teste com recursos que tenham zero/vários agendamentos. Não executar testes que alterem dados reais sem autorização explícita.

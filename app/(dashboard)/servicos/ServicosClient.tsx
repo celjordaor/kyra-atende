@@ -1,4 +1,5 @@
 'use client'
+import {confirmDeactivation} from '@/lib/deactivation-impact'
 import { SidePanel } from '@/components/organisms/SidePanel'
 import { BookingSection } from '@/components/organisms/BookingSection'
 
@@ -154,18 +155,17 @@ export function ServicosClient({ rows: initialRows }: Props) {
 
   // ── Toggle ativo/inativo ───────────────────────────────────
   const handleToggleActive = useCallback(async (row: ServiceRow) => {
+    if(row.is_active && !(await confirmDeactivation('service',row.id,row.name)))return
     setError(null)
-    setLoading(prev => ({ ...prev, [row.id]: true }))
-    const next = !row.is_active
-    setRows(prev => prev.map(r => r.id === row.id ? { ...r, is_active: next } : r))
-
+    setLoading(prev=>({...prev,[row.id]:true}))
+    const next=!row.is_active
     try {
-      await api.patch(`/services/${row.id}`, { is_active: next })
+      await api.patch(`/services/${row.id}`,{is_active:next})
+      setRows(prev=>prev.map(r=>r.id===row.id?{...r,is_active:next}:r))
     } catch {
-      setRows(prev => prev.map(r => r.id === row.id ? { ...r, is_active: !next } : r))
-      setError('Erro ao atualizar. Tente novamente.')
+      setError('Não foi possível atualizar o status. Tente novamente.')
     } finally {
-      setLoading(prev => ({ ...prev, [row.id]: false }))
+      setLoading(prev=>({...prev,[row.id]:false}))
     }
   }, [])
 
