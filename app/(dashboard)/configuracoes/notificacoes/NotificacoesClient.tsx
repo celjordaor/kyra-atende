@@ -276,10 +276,11 @@ export default function NotificacoesClient({ subscriptions: initialSubs }: Props
     <>
 
       {/* Navegação de abas de configurações */}
-      <nav style={{ display: 'flex', gap: 4, borderBottom: '1px solid var(--border)', paddingBottom: 0, marginBottom: 8 }}>
+      <nav className="kyra-settings-tabs" aria-label="Seções de configurações" style={{ display: 'flex', gap: 4, borderBottom: '1px solid var(--border)', paddingBottom: 0, marginBottom: 8 }}>
         {[
           { href: '/configuracoes',              label: 'Geral' },
           { href: '/configuracoes/assinatura',   label: 'Assinatura' },
+          { href: '/configuracoes/horarios',     label: 'Horários' },
           { href: '/configuracoes/notificacoes', label: 'Notificações' },
         ].map(tab => (
           <Link key={tab.href} href={tab.href} style={{
@@ -297,7 +298,7 @@ export default function NotificacoesClient({ subscriptions: initialSubs }: Props
         ))}
       </nav>
 
-      <div style={{ maxWidth: 640 }}>
+      <div className="kyra-settings-notifications" style={{ maxWidth: 920 }}>
         {/* Header */}
         <div style={{ marginBottom: 32 }}>
           <h1
@@ -317,7 +318,7 @@ export default function NotificacoesClient({ subscriptions: initialSubs }: Props
         </div>
 
         {/* Status banner */}
-        <div id="push-status-card" style={{ marginBottom: 24 }}>
+        <div className="kyra-settings-card" id="push-status-card" style={{ marginBottom: 24 }}>
           <StatusBanner
             permission={permission}
             isSubscribed={isSubscribed}
@@ -480,7 +481,7 @@ export default function NotificacoesClient({ subscriptions: initialSubs }: Props
         </div>
 
         {/* Lista de dispositivos */}
-        <div id="push-devices">
+        <div className="kyra-settings-card" id="push-devices">
           <div
             style={{
               display: 'flex',

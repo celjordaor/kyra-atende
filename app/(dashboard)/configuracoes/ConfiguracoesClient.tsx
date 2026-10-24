@@ -66,10 +66,10 @@ export default function ConfiguracoesClient({
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+    <div className="kyra-settings-general" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
 
       {/* ── Abas de configurações ─────────────────────────────── */}
-      <nav style={{
+      <nav className="kyra-settings-tabs" aria-label="Seções de configurações" style={{
         display:       'flex',
         gap:           '4px',
         borderBottom:  '1px solid var(--border)',
@@ -94,6 +94,7 @@ export default function ConfiguracoesClient({
 
       {/* ── Formulário ─────────────────────────────────────────── */}
       <form
+        className="kyra-settings-card kyra-settings-general-form"
         id="config-form"
         onSubmit={handleSave}
         style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxWidth: '480px' }}
@@ -141,7 +142,7 @@ export default function ConfiguracoesClient({
 
       {/* ── Link de agendamento ─────────────────────────────────── */}
       {bookingUrl && (
-        <div style={{
+        <div className="kyra-settings-card kyra-settings-booking-link" style={{
           borderTop: '1px solid var(--border)',
           paddingTop: '24px',
           display: 'flex', flexDirection: 'column', gap: '12px',

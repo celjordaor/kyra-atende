@@ -219,3 +219,9 @@ Após o ciclo de melhorias do Portal, a continuidade passou a gerar pequenos PRs
 - `ProfissionaisHorarios` e `BloqueiosClient` passam a reutilizar `BookingSection` com cabeçalhos lilás claros, campos com bordas e alinhamento consistente, controles agrupados e botões `Button` primário, secundário e danger. A agenda de cada profissional mostra as opções de expediente em cards selecionáveis, serviços em lista de opções bem espaçadas e horários específicos por dia em cartões responsivos.
 - Bloqueios gerais/individuais são apresentados em cartão de formulário com grid responsivo, datas/horas e motivo; registros aparecem em cartões com informação legível e ação Remover. Sem modificações nas APIs, nas regras de precedência ou na ativação do motor de disponibilidade.
 - Homologar seleção de profissional, herança/horários específicos, edição e gravação de faixas, vinculação de serviços, criação e remoção de bloqueios, mobile e teclado. Deploy único na `main` após CI; validação de navegador separada.
+
+
+## 30. E1 — Padronização Configurações Geral/Assinatura/Notificações (24/10/2026)
+- Abas comuns roxo-lilás, com Geral/Assinatura/Horários/Notificações acessíveis na navegação de Configurações. Formulário Geral e link público em cards, card do plano e uso mensal na Assinatura; estado do dispositivo e lista de dispositivos em Notificações. Aplicada identidade `#4A3F66`, `#72658E`, `#8E82AA`, cabeçalhos suaves e layout responsivo.
+- **Escopo visual:** funções de salvar empresa, gestão de cobrança/assinatura, permissões push, notificações, dispositivos e limites continuam inalterados. Não realizar pagamentos nem enviar notificações reais como teste.
+- Homologar desktop e mobile, navegação nas quatro abas, foco e edição de campos, copiar link, plano/consumo, status de push e comportamento dos switches, após CI, merge único e deploy `READY` do SHA final.
