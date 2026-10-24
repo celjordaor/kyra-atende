@@ -53,5 +53,9 @@ export async function POST(request:NextRequest){
   }
   reports.push({id:booking.booking_id,emailStatus})
  }))
- return NextResponse.json({operationId:canceled[0].operation_id,cancelled:canceled.length,notifications:reports},{headers:{'Cache-Control':'no-store'}})
+ const {error:auditError}=await db.from('agenda_batch_notification_results').upsert(
+  reports.map(n=>({operation_id:canceled[0].operation_id,tenant_id:session.tenantId,booking_id:n.id,channel:'email',status:n.emailStatus})),
+  {onConflict:'operation_id,booking_id,channel'})
+ if(auditError)console.error('[agenda/batch/cancel/audit]',{code:auditError.code})
+ return NextResponse.json({notificationAuditSaved:!auditError,operationId:canceled[0].operation_id,cancelled:canceled.length,notifications:reports},{headers:{'Cache-Control':'no-store'}})
 }
