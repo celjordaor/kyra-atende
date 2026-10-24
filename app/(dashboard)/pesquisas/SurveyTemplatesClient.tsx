@@ -1,5 +1,6 @@
 'use client'
 import {useEffect,useState} from 'react'
+import {BookingSection} from '@/components/organisms/BookingSection'
 type Question={label:string;answer_type:'rating_1_5'|'yes_no'|'short_text';required:boolean}
 type Template={id:string;kind:string;title:string;version:number;status:string;survey_questions?:{id:string;position:number;label:string;answer_type:string;required:boolean}[]}
 const blank=():Question=>({label:'',answer_type:'rating_1_5',required:true})
@@ -65,8 +66,8 @@ export default function SurveyTemplatesClient(){
  return <main style={{maxWidth:1000,margin:'0 auto',padding:'24px 20px 60px',color:'var(--ink)'}}>
   <h1>Pesquisas</h1>
   <p style={{color:'var(--muted)'}}>Crie modelos de perguntas para feedback após agendamento ou satisfação após atendimento. Nesta etapa, os modelos são apenas rascunhos: não há envios automáticos.</p>
-  <section style={{padding:20,border:'1px solid var(--border)',borderRadius:12,marginTop:20}}>
-   <h2 style={{marginTop:0}}>Novo modelo</h2>
+  <section style={{marginTop:20}}>
+   <BookingSection title="Novo modelo de pesquisa" icon="✦">
    <form onSubmit={save} style={{display:'flex',flexDirection:'column',gap:16}}>
     <label style={{display:'grid',gap:6}}>Finalidade
      <select style={field} value={kind} onChange={e=>setKind(e.target.value)} disabled={saving}>
@@ -77,8 +78,8 @@ export default function SurveyTemplatesClient(){
     <label style={{display:'grid',gap:6}}>Título
      <input style={field} value={title} maxLength={120} required minLength={3} disabled={saving} onChange={e=>setTitle(e.target.value)} placeholder="Ex.: Como foi agendar?" />
     </label>
-    <h3 style={{marginBottom:0}}>Perguntas</h3>
-    {questions.map((q,i)=><div key={i} style={{padding:14,border:'1px solid var(--border)',borderRadius:10,display:'grid',gap:12}}>
+    <h3 style={{marginBottom:0,fontSize:15,color:'#4A3F66'}}>Perguntas do modelo</h3>
+    {questions.map((q,i)=><div key={i} style={{padding:14,border:'1px solid #e5dff0',background:'var(--surface-2)',borderRadius:10,display:'grid',gap:12}}>
      <label style={{display:'grid',gap:6}}>Pergunta {i+1}
       <input style={field} required minLength={3} maxLength={250} value={q.label} disabled={saving} onChange={e=>update(i,{label:e.target.value})}/>
      </label>
@@ -90,17 +91,18 @@ export default function SurveyTemplatesClient(){
      <label><input type="checkbox" checked={q.required} disabled={saving} onChange={e=>update(i,{required:e.target.checked})}/> Resposta obrigatória</label>
      {questions.length>1&&<button type="button" disabled={saving} onClick={()=>setQuestions(items=>items.filter((_,j)=>j!==i))}>Remover pergunta</button>}
     </div>)}
-    <div style={{display:'flex',gap:12,flexWrap:'wrap'}}>
+    <div style={{display:'flex',gap:12,flexWrap:'wrap',justifyContent:'flex-end',paddingTop:8}}>
      <button type="button" disabled={saving||questions.length>=20} onClick={()=>setQuestions(items=>[...items,blank()])}>Adicionar pergunta</button>
      <button type="submit" disabled={saving}>{saving?'Salvando…':'Salvar rascunho'}</button>
     </div>
    </form>
+   </BookingSection>
   </section>
   {message&&<p role="status">{message}</p>}
   {error&&<p role="alert" style={{color:'var(--red)'}}>{error}</p>}
   <section style={{marginTop:28}}>
-   <h2>Modelos cadastrados</h2>
-   {loading?<p role="status">Carregando modelos…</p>:templates.length===0?<p>Nenhum modelo cadastrado.</p>:templates.map(t=><article key={t.id} style={{border:'1px solid var(--border)',borderRadius:10,padding:16,marginBottom:12}}>
+   <h2 style={{fontSize:19,color:'#4A3F66',marginBottom:14}}>Modelos cadastrados</h2>
+   {loading?<p role="status">Carregando modelos…</p>:templates.length===0?<p>Nenhum modelo cadastrado.</p>:templates.map(t=><article key={t.id} style={{border:'1px solid #e5dff0',borderRadius:12,padding:16,marginBottom:12,background:'var(--surface-2)',boxShadow:'0 3px 12px rgba(74,63,102,.05)'}}>
     <strong>{t.title}</strong> <span style={{color:'var(--muted)'}}>· versão {t.version} · {t.status==='draft'?'Rascunho':t.status}</span>
     <p style={{margin:'8px 0',color:'var(--muted)'}}>{t.kind==='booking_experience'?'Experiência de agendamento':'Satisfação com atendimento'}</p>
     <ol>{(t.survey_questions??[]).slice().sort((a,b)=>a.position-b.position).map(q=><li key={q.id}>{q.label}</li>)}</ol>
