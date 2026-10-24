@@ -82,12 +82,13 @@ export default async function AssinaturaPage() {
     : 0
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+    <div className="kyra-settings-subscription" style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
       {/* Navegação de abas de configurações */}
-      <nav style={{ display: 'flex', gap: 4, borderBottom: '1px solid var(--border)', paddingBottom: 0 }}>
+      <nav className="kyra-settings-tabs" aria-label="Seções de configurações" style={{ display: 'flex', gap: 4, borderBottom: '1px solid var(--border)', paddingBottom: 0 }}>
         {[
           { href: '/configuracoes',              label: 'Geral' },
           { href: '/configuracoes/assinatura',   label: 'Assinatura' },
+          { href: '/configuracoes/horarios',     label: 'Horários' },
           { href: '/configuracoes/notificacoes', label: 'Notificações' },
         ].map(tab => (
           <Link key={tab.href} href={tab.href} style={{
@@ -106,7 +107,7 @@ export default async function AssinaturaPage() {
 
       <BillingPendingNotice />
       {/* Plano atual */}
-      <div id="assinatura-header" style={{
+      <div className="kyra-settings-card kyra-settings-plan-card" id="assinatura-header" style={{
         background: 'var(--surface-2)',
         border: '1px solid var(--border)',
         borderRadius: 'var(--r-lg)',
@@ -149,7 +150,7 @@ export default async function AssinaturaPage() {
       </div>
 
       {/* Uso do mês */}
-      <div style={{
+      <div className="kyra-settings-card kyra-settings-usage-card" style={{
         background: 'var(--surface-2)',
         border: '1px solid var(--border)',
         borderRadius: 'var(--r-lg)',
