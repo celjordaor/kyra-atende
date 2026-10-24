@@ -1,4 +1,5 @@
 'use client'
+import {confirmDeactivation} from '@/lib/deactivation-impact'
 import { SidePanel } from '@/components/organisms/SidePanel'
 import { BookingSection } from '@/components/organisms/BookingSection'
 
@@ -160,19 +161,17 @@ export function ProfissionaisClient({ rows: initialRows }: Props) {
   // ── Toggle ativo/inativo ───────────────────────────────────────────────────
 
   const handleToggleActive = useCallback(async (row: ProfRow) => {
+    if(row.is_active && !(await confirmDeactivation('professional',row.id,row.name)))return
     setError(null)
-    setLoading(prev => ({ ...prev, [row.id]: true }))
-    const next = !row.is_active
-
-    setRows(prev => prev.map(r => r.id === row.id ? { ...r, is_active: next } : r))
-
+    setLoading(prev=>({...prev,[row.id]:true}))
+    const next=!row.is_active
     try {
-      await api.patch(`/professionals/${row.id}`, { is_active: next })
+      await api.patch(`/professionals/${row.id}`,{is_active:next})
+      setRows(prev=>prev.map(r=>r.id===row.id?{...r,is_active:next}:r))
     } catch {
-      setRows(prev => prev.map(r => r.id === row.id ? { ...r, is_active: !next } : r))
-      setError('Erro ao atualizar status. Tente novamente.')
+      setError('Não foi possível atualizar o status. Tente novamente.')
     } finally {
-      setLoading(prev => ({ ...prev, [row.id]: false }))
+      setLoading(prev=>({...prev,[row.id]:false}))
     }
   }, [])
 
