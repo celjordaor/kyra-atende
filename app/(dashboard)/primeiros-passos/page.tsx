@@ -16,18 +16,19 @@ export default async function PrimeirosPassosPage(){
  if(!tenantId)return <p role="alert">Não foi possível identificar sua empresa. Entre novamente.</p>
  const {data:profile,error:profileError}=await supabase.from('profiles').select('tenant_id,role').eq('id',user.id).maybeSingle()
  if(profileError||profile?.tenant_id!==tenantId)return <p role="alert">O vínculo com a empresa não pôde ser validado.</p>
- const [tenantResult,servicesResult,professionalsResult,clientsResult,bookingsResult]=await Promise.all([
+ const [tenantResult,servicesResult,professionalsResult,clientsResult,bookingsResult,hoursResult]=await Promise.all([
   supabase.from('tenants').select('id,name,slug').eq('id',tenantId).maybeSingle(),
   supabase.from('services').select('id',{head:true,count:'exact'}).eq('tenant_id',tenantId).eq('is_active',true),
   supabase.from('professionals').select('id',{head:true,count:'exact'}).eq('tenant_id',tenantId).eq('is_active',true),
   supabase.from('clients').select('id',{head:true,count:'exact'}).eq('tenant_id',tenantId),
   supabase.from('bookings').select('id',{head:true,count:'exact'}).eq('tenant_id',tenantId),
+  supabase.from('company_working_hours').select('weekday',{head:true,count:'exact'}).eq('tenant_id',tenantId),
  ])
- if([tenantResult,servicesResult,professionalsResult,clientsResult,bookingsResult].some(result=>result.error))return <p role="alert" style={{color:'var(--red)'}}>Não foi possível verificar as etapas. Atualize a página para tentar novamente.</p>
+ if([tenantResult,servicesResult,professionalsResult,clientsResult,bookingsResult,hoursResult].some(result=>result.error))return <p role="alert" style={{color:'var(--red)'}}>Não foi possível verificar as etapas. Atualize a página para tentar novamente.</p>
  const tenant=tenantResult.data
  const steps:Check[]=[
   {id:'empresa',title:'Configure a empresa',detail:'Confira o nome do estabelecimento e o link de agendamento.',href:'/configuracoes',done:!!tenant?.name?.trim()&&!!tenant?.slug?.trim(),action:'Abrir configurações'},
-  {id:'horarios',title:'Defina os horários',detail:'Organize o expediente, as disponibilidades e os bloqueios de agenda.',href:'/configuracoes/horarios',done:false,action:'Configurar horários'},
+  {id:'horarios',title:'Defina os horários',detail:'Organize o expediente, as disponibilidades e os bloqueios de agenda.',href:'/configuracoes/horarios',done:(hoursResult.count??0)>0,action:'Configurar horários'},
   {id:'servicos',title:'Cadastre os serviços',detail:'Informe os serviços que estarão disponíveis para agendamento.',href:'/servicos',done:(servicesResult.count??0)>0,action:'Gerenciar serviços'},
   {id:'profissionais',title:'Cadastre os profissionais',detail:'Inclua os profissionais que prestarão atendimento.',href:'/profissionais',done:(professionalsResult.count??0)>0,action:'Gerenciar profissionais'},
   {id:'clientes',title:'Organize seus clientes',detail:'Cadastre ou importe clientes conforme sua necessidade.',href:'/clientes',done:(clientsResult.count??0)>0,action:'Gerenciar clientes'},
@@ -39,7 +40,7 @@ export default async function PrimeirosPassosPage(){
  return <div style={{display:'grid',gap:18,maxWidth:1000}}>
   <header style={{background:'#f3eef9',border:'1px solid #e3d9ef',borderRadius:14,padding:'22px 24px'}}>
    <h1 style={{fontSize:24,color:'#4A3F66',margin:'0 0 7px'}}>Primeiros passos</h1>
-   <p style={{margin:0,color:'#615971',lineHeight:1.6}}>Prepare sua empresa para receber agendamentos. As etapas de cadastro são verificadas automaticamente; conexão, horários e notificações exigem conferência manual.</p>
+   <p style={{margin:0,color:'#615971',lineHeight:1.6}}>Prepare sua empresa para receber agendamentos. As etapas de cadastro e os horários são verificados automaticamente; WhatsApp e notificações ainda exigem conferência manual.</p>
    <div role="status" style={{marginTop:16,fontWeight:600,color:'#4A3F66'}}>{done} de {steps.length} etapas identificadas</div>
    <div role="progressbar" aria-label="Etapas verificadas automaticamente" aria-valuemin={0} aria-valuemax={steps.length} aria-valuenow={done} style={{height:10,background:'#e1d8ec',borderRadius:20,overflow:'hidden',marginTop:8}}><div style={{width:(done/steps.length*100)+'%',height:'100%',background:'#72658E'}}/></div>
   </header>
@@ -54,6 +55,6 @@ export default async function PrimeirosPassosPage(){
     </div>)}
    </div>
   </BookingSection>
-  <p style={{fontSize:12,color:'var(--muted)',margin:0}}>Esta primeira versão não marca horários, WhatsApp ou notificações como concluídos sem uma verificação confiável. A opção de pular etapas e o histórico persistente serão incluídos em incremento posterior.</p>
+  <p style={{fontSize:12,color:'var(--muted)',margin:0}}>Esta versão não marca WhatsApp ou notificações como concluídos sem uma verificação confiável. A opção de pular etapas e o histórico persistente serão incluídos em incremento posterior.</p>
  </div>
 }
