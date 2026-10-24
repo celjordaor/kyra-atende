@@ -207,3 +207,9 @@ Após o ciclo de melhorias do Portal, a continuidade passou a gerar pequenos PRs
 - Padronizados todos os botões de ação próprios das quatro seções de Pesquisas com o átomo `Button`: Novo modelo (Adicionar pergunta secundário, Remover pergunta danger, Salvar rascunho primário), Modelos cadastrados (Criar nova versão secundário, Publicar primário, Pausar secundário, Atualizar lista secundário), Automação (Salvar preferências primário), Fila (Atualizar fila secundário) e Resultados (Atualizar resultados secundário).
 - Reaproveitados `loading`, `disabled`, `type`, eventos e contratos existentes. A opção Salvar preferências continua sem ativar a automação. Nenhuma API, migração ou mensagem real alterada.
 - Validar visibilidade e navegação no desktop/mobile, loading e ações de publicação/pausa com contas autorizadas após CI e deploy do SHA final.
+
+
+## 28. E1 — Botões de Configurações > Horários (24/10/2026)
+- Após validação visual da tela Pesquisas (#129), padronizados botões ainda legados da tela Horários e da seção Bloqueios: adicionar faixa (secundário), remover faixa/bloqueio (danger), salvar horários e adicionar bloqueio (primários), com loading e disabled preservados.
+- Utilizado átomo `Button` existente, sem alterar rotas, payloads, limites, disponibilidade de profissionais ou filtros de tenant. Geral e Notificações já têm ações pelo componente; toggles de notificações permanecem switches, não botões CTA.
+- Continuar auditoria funcional/responsiva de Geral, Assinatura, Horários e Notificações e E1/E3; confirmar CI, deploy READY exato e teste em navegador, sem considerar apenas o merge como homologação.

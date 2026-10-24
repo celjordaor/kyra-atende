@@ -1,5 +1,6 @@
 'use client'
 import {useEffect,useState} from 'react'
+import {Button} from '@/components/atoms/Button'
 type Block={id:string;professional_id:string|null;starts_at:string;ends_at:string;category:string;reason:string|null}
 type Prof={id:string;name:string}
 const kinds=[{value:'holiday',label:'Feriado'},{value:'unavailable',label:'Horário indisponível'},{value:'inactivity',label:'Inatividade'},{value:'absence',label:'Ausência'}]
@@ -41,13 +42,13 @@ export default function BloqueiosClient(){
   <label>Início <input type="datetime-local" value={start} onChange={e=>setStart(e.target.value)}/></label>
   <label>Fim <input type="datetime-local" value={end} onChange={e=>setEnd(e.target.value)}/></label>
   <label>Motivo (opcional) <input maxLength={500} value={reason} onChange={e=>setReason(e.target.value)}/></label>
-  <button type="button" disabled={busy} onClick={add}>Adicionar bloqueio</button>
+  <Button type="button" variant="primary" disabled={busy} loading={busy} onClick={add}>Adicionar bloqueio</Button>
   {error&&<p role="alert" style={{color:'var(--red)'}}>{error}</p>}{notice&&<p role="status">{notice}</p>}
   <h3>Bloqueios cadastrados</h3>
   {blocks.length===0&&<p>Nenhum bloqueio cadastrado.</p>}
   {blocks.map(b=><div key={b.id} style={{display:'flex',gap:8,justifyContent:'space-between',border:'1px solid var(--border)',borderRadius:8,padding:10}}>
    <span>{kinds.find(x=>x.value===b.category)?.label??b.category} · {professionals.find(p=>p.id===b.professional_id)?.name??'Empresa'} · {new Date(b.starts_at).toLocaleString('pt-BR')} até {new Date(b.ends_at).toLocaleString('pt-BR')}{b.reason?' — '+b.reason:''}</span>
-   <button type="button" disabled={busy} onClick={()=>remove(b.id)}>Remover</button>
+   <Button type="button" variant="danger" size="sm" disabled={busy} onClick={()=>remove(b.id)}>Remover</Button>
   </div>)}
  </section>
 }
