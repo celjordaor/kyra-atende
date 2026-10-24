@@ -59,7 +59,11 @@ export async function POST(request:NextRequest){
   }
   return {id:booking.booking_id,emailStatus}
  }))
- return NextResponse.json({operationId:changed[0].operation_id,transferred:changed.length,notifications},
+ const {error:auditError}=await db.from('agenda_batch_notification_results').upsert(
+  notifications.map(n=>({operation_id:changed[0].operation_id,tenant_id:session.tenantId,booking_id:n.id,channel:'email',status:n.emailStatus})),
+  {onConflict:'operation_id,booking_id,channel'})
+ if(auditError)console.error('[agenda/batch/transfer/audit]',{code:auditError.code})
+ return NextResponse.json({notificationAuditSaved:!auditError,operationId:changed[0].operation_id,transferred:changed.length,notifications},
   {headers:{'Cache-Control':'no-store'}})
 }
 
