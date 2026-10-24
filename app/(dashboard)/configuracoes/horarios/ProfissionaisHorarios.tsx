@@ -1,5 +1,7 @@
 'use client'
 import {useEffect,useState} from 'react'
+import {Button} from '@/components/atoms/Button'
+import {BookingSection} from '@/components/organisms/BookingSection'
 type Hour={weekday:number;start:string;end:string}
 type Professional={id:string;name:string;is_active:boolean}
 type Service={id:string;name:string;is_active:boolean}
@@ -26,29 +28,54 @@ export default function ProfissionaisHorarios(){
   }catch(e){setError(e instanceof Error?e.message:'Erro ao salvar')}finally{setSaving(false)}
  }
  if(!data)return <p role="status">{error||'Carregando profissionais...'}</p>
+ const inputStyle={width:'100%',minHeight:42,padding:'9px 12px',border:'1px solid var(--border-mid)',borderRadius:9,background:'var(--surface-2)',color:'var(--ink)',font:'inherit'} as const
+ const choiceStyle=(active:boolean)=>({display:'flex',alignItems:'center',gap:10,border:active?'1px solid #8E82AA':'1px solid #e5dff0',background:active?'#f6f1fc':'var(--surface-2)',borderRadius:10,padding:'12px 14px',flex:'1 1 210px',cursor:'pointer'} as const)
  return <div style={{display:'flex',flexDirection:'column',gap:16}}>
-  <h2 style={{fontSize:18}}>Disponibilidade dos profissionais</h2>
-  <label>Profissional <select value={id} onChange={e=>setId(e.target.value)}>{data.professionals.map(p=><option key={p.id} value={p.id}>{p.name}</option>)}</select></label>
-  {!id?<p>Cadastre um profissional para configurar a agenda.</p>:<>
-   <fieldset style={{border:'1px solid var(--border)',borderRadius:8,padding:12}}><legend>Horário de atendimento</legend>
-    <label style={{marginRight:18}}><input type="radio" checked={mode==='inherit'} onChange={()=>setMode('inherit')}/> Seguir expediente da empresa</label>
-    <label><input type="radio" checked={mode==='custom'} onChange={()=>setMode('custom')}/> Horários específicos</label>
-   </fieldset>
-   {mode==='custom'&&days.map((day,d)=><div key={day} style={{padding:10,border:'1px solid var(--border)',borderRadius:8}}>
-    <strong>{day}</strong> <button type="button" onClick={()=>setHours(x=>[...x,{weekday:d,start:'09:00',end:'18:00'}])}>Adicionar faixa</button>
-    {hours.map((h,i)=>h.weekday!==d?null:<div key={i} style={{display:'flex',gap:8,marginTop:8,alignItems:'center'}}>
-     <input aria-label="Início" type="time" value={h.start} onChange={e=>setHours(x=>x.map((z,j)=>j===i?{...z,start:e.target.value}:z))}/>
-     <input aria-label="Fim" type="time" value={h.end} onChange={e=>setHours(x=>x.map((z,j)=>j===i?{...z,end:e.target.value}:z))}/>
-     <button type="button" onClick={()=>setHours(x=>x.filter((_,j)=>j!==i))}>Remover</button>
-    </div>)}
-   </div>)}
-   <fieldset style={{border:'1px solid var(--border)',borderRadius:8,padding:12}}><legend>Serviços realizados pelo profissional</legend>
-    {data.services.map(s=><label key={s.id} style={{display:'block',padding:5}}><input type="checkbox" checked={services.includes(s.id)} onChange={e=>setServices(v=>e.target.checked?[...v,s.id]:v.filter(x=>x!==s.id))}/> {s.name}</label>)}
-    {data.services.length===0&&<p>Cadastre serviços para vinculá-los.</p>}
-   </fieldset>
-   {error&&<p role="alert">{error}</p>}{message&&<p role="status">{message}</p>}
-   <button type="button" disabled={saving} onClick={save}>{saving?'Salvando...':'Salvar configuração do profissional'}</button>
-  </>}
-  <p style={{fontSize:12,color:'var(--muted)'}}>Horários e serviços já podem ser cadastrados, mas ainda não restringem a agenda pública. Bloqueios da empresa prevalecerão sobre agendas particulares quando o motor for ativado.</p>
+  <BookingSection title="Disponibilidade dos profissionais" icon="▦">
+   <div style={{display:'grid',gap:18}}>
+    <label style={{display:'grid',gap:7,fontSize:13,fontWeight:600,color:'var(--ink)'}}>
+     Profissional
+     <select value={id} onChange={e=>setId(e.target.value)} style={{...inputStyle,maxWidth:460}} aria-label="Selecionar profissional">
+      {data.professionals.map(p=><option key={p.id} value={p.id}>{p.name}</option>)}
+     </select>
+    </label>
+    {!id?<p>Cadastre um profissional para configurar a agenda.</p>:<>
+     <div style={{display:'grid',gap:9}}>
+      <strong style={{fontSize:14,color:'#4A3F66'}}>Horário de atendimento</strong>
+      <div style={{display:'flex',gap:10,flexWrap:'wrap'}}>
+       <label style={choiceStyle(mode==='inherit')}><input type="radio" name="professional-mode" checked={mode==='inherit'} onChange={()=>setMode('inherit')} style={{accentColor:'#72658E'}}/><span>Seguir expediente da empresa</span></label>
+       <label style={choiceStyle(mode==='custom')}><input type="radio" name="professional-mode" checked={mode==='custom'} onChange={()=>setMode('custom')} style={{accentColor:'#72658E'}}/><span>Horários específicos</span></label>
+      </div>
+     </div>
+     {mode==='custom'&&<div style={{display:'grid',gap:10}}>
+      <strong style={{fontSize:14,color:'#4A3F66'}}>Faixas de atendimento</strong>
+      {days.map((day,d)=><div key={day} style={{padding:'12px 14px',border:'1px solid #e5dff0',borderRadius:10,background:'var(--surface-2)',display:'grid',gap:10}}>
+       <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',gap:10,flexWrap:'wrap'}}>
+        <strong style={{fontSize:13}}>{day}</strong><Button type="button" variant="secondary" size="sm" disabled={saving} onClick={()=>setHours(x=>[...x,{weekday:d,start:'09:00',end:'18:00'}])}>Adicionar faixa</Button>
+       </div>
+       {hours.map((h,i)=>h.weekday!==d?null:<div key={i} style={{display:'flex',gap:8,alignItems:'end',flexWrap:'wrap'}}>
+        <label style={{display:'grid',gap:5,flex:'1 1 120px',fontSize:12}}>Início<input aria-label={day+' início'} type="time" value={h.start} onChange={e=>setHours(x=>x.map((z,j)=>j===i?{...z,start:e.target.value}:z))} style={inputStyle}/></label>
+        <label style={{display:'grid',gap:5,flex:'1 1 120px',fontSize:12}}>Fim<input aria-label={day+' fim'} type="time" value={h.end} onChange={e=>setHours(x=>x.map((z,j)=>j===i?{...z,end:e.target.value}:z))} style={inputStyle}/></label>
+        <Button type="button" variant="danger" size="sm" disabled={saving} onClick={()=>setHours(x=>x.filter((_,j)=>j!==i))}>Remover</Button>
+       </div>)}
+      </div>)}
+     </div>}
+     <div style={{display:'grid',gap:10}}>
+      <strong style={{fontSize:14,color:'#4A3F66'}}>Serviços realizados pelo profissional</strong>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,220px),1fr))',gap:9}}>
+       {data.services.map(s=><label key={s.id} style={{display:'flex',gap:10,alignItems:'center',padding:'12px 14px',border:'1px solid #e5dff0',background:'var(--surface-2)',borderRadius:10,fontSize:13,cursor:'pointer'}}>
+        <input type="checkbox" checked={services.includes(s.id)} onChange={e=>setServices(v=>e.target.checked?[...v,s.id]:v.filter(x=>x!==s.id))} style={{accentColor:'#72658E'}}/> {s.name}
+       </label>)}
+      </div>
+      {data.services.length===0&&<p>Cadastre serviços para vinculá-los.</p>}
+     </div>
+     {error&&<p role="alert" style={{color:'var(--red)'}}>{error}</p>}{message&&<p role="status">{message}</p>}
+     <div style={{display:'flex',justifyContent:'flex-end',flexWrap:'wrap'}}>
+      <Button type="button" variant="primary" loading={saving} disabled={saving} onClick={save}>Salvar configuração do profissional</Button>
+     </div>
+    </>}
+    <p style={{fontSize:12,color:'var(--muted)',background:'#f7f4fb',border:'1px solid #eee7f7',borderRadius:9,padding:12,margin:0}}>Horários e serviços já podem ser cadastrados, mas ainda não restringem a agenda pública. Bloqueios da empresa prevalecerão sobre agendas particulares quando o motor for ativado.</p>
+   </div>
+  </BookingSection>
  </div>
 }
