@@ -8,5 +8,5 @@ export const metadata={title:'Pesquisas — Kyra Atende'}
 export default async function PesquisasPage(){
  const {data:{user}}=await createClient().auth.getUser()
  if(!user)redirect('/login')
- return <><SurveyTemplatesClient/><SurveyResultsClient/><SurveyAutomationSettings/><SurveyOutboxPanel/></>
+ return <div className="kyra-e1-workspace kyra-e1-surveys"><SurveyTemplatesClient/><SurveyResultsClient/><SurveyAutomationSettings/><SurveyOutboxPanel/></div>
 }
