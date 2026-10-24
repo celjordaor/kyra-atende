@@ -251,3 +251,9 @@ Após o ciclo de melhorias do Portal, a continuidade passou a gerar pequenos PRs
 - Se houver agendamentos futuros pending/confirmed, trigger interrompe a operação (P0001 identificado) e endpoints retornam 409; falhas gerais não expõem mensagem bruta de banco. Registros de outras empresas são ignorados, porque queries sempre filtram `tenant_id`.
 - Ainda há caminhos a auditar antes da homologação E2 definitiva: inserções/atualizações diretas de `bookings` que não passem pela RPC de criação, autorização explícita por papel em rotas legado e política de gestão de reservas afetadas. Sem transferência/cancelamento automático e sem envios.
 - Antes de marcar pronto: migration remota registrada, trigger verificado por consultas SQL de catálogo, TypeScript/CI, deploy READY e testes concorrentes controlados por duas empresas em ambiente de homologação, sem alterar agendamentos reais.
+
+
+## 35. E2 — prévia individual de agendamentos afetados (24/10/2026)
+- O endpoint read-only de impacto agora retorna até 20 agendamentos futuros pendentes/confirmados, com id e período/status (sem nome, telefone ou e-mail do cliente), além da quantidade total e sinalização de lista incompleta. Consultas restritas por empresa e recurso; erros retornam 503 e a desativação é bloqueada.
+- Quando a desativação está bloqueada, a interface enumera os agendamentos com data/hora, situação e prefixo de identificação. O encaminhamento para tratamento é manual pela tela Agendamentos. Nenhuma operação em lote, cancelamento automático, transferência, comunicação ou alteração de dados foi incluída.
+- A experiência de gestão com seleção/transferência/cancelamento transacional, autorização por papel, validação de concorrência e notificações continua pendente de desenho e homologação específicos. Testar com duas empresas e diversos agendamentos, inclusive mais de 20, sem mexer em cadastros reais.

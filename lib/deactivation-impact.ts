@@ -5,11 +5,15 @@ export async function confirmDeactivation(type:ResourceType,id:string,name:strin
   const params=new URLSearchParams({type,id})
   const response=await fetch('/api/operations/deactivation-impact?'+params.toString(),{cache:'no-store'})
   if(!response.ok)throw new Error('Falha na prévia')
-  const data=await response.json() as {futureBookings:number}
+  const data=await response.json() as {futureBookings:number;truncated?:boolean;affectedBookings?:Array<{id:string;startAt:string;endAt:string;status:string}>}
   if(!Number.isInteger(data.futureBookings)||data.futureBookings<0)throw new Error('Resposta inválida')
-  const subject=type==='professional'?'profissional':'serviço'
   if(data.futureBookings>0){
-   window.alert(`A desativação de ${name} está bloqueada: existem ${data.futureBookings} agendamento(s) futuro(s) pendente(s) ou confirmado(s). Resolva-os antes de desativar o ${subject}.`)
+   const details=(data.affectedBookings??[]).map((b,i)=>{
+    const start=new Date(b.startAt)
+    const date=Number.isFinite(start.getTime())?start.toLocaleString('pt-BR'):'Data indisponível'
+    return `${i+1}. ${date} — ${b.status==='confirmed'?'Confirmado':'Pendente'} (${b.id.slice(0,8)})`
+   }).join('\n')
+   window.alert(`A desativação de ${name} está bloqueada: ${data.futureBookings} agendamento(s) futuro(s) pendente(s) ou confirmado(s).\n\n${details}${data.truncated?'\n...e outros agendamentos.':''}\n\nAbra Agendamentos para tratar os registros individualmente. Nada foi cancelado ou transferido.`)
    return false
   }
   return window.confirm(`Desativar ${name}? Nenhum agendamento futuro pendente ou confirmado foi encontrado neste momento.`)
