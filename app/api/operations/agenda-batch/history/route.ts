@@ -10,7 +10,14 @@ export async function GET(request:NextRequest){
  if(profileError||!profile||!['owner','admin'].includes(profile.role))
   return NextResponse.json({error:'Sem permissão para consultar o histórico.'},{status:403})
  const operationId=new URL(request.url).searchParams.get('operationId')
- if(!operationId||!uuid.test(operationId))
+ if(!operationId){
+  const {data:operations,error}=await createAdminClient().from('agenda_batch_operations')
+   .select('id,operation,count_changed,created_at').eq('tenant_id',session.tenantId)
+   .order('created_at',{ascending:false}).limit(25)
+  if(error)return NextResponse.json({error:'Falha ao consultar operações.'},{status:503})
+  return NextResponse.json({operations:operations??[]},{headers:{'Cache-Control':'private, no-store'}})
+ }
+ if(!uuid.test(operationId))
   return NextResponse.json({error:'Identificador inválido.'},{status:400})
  const db=createAdminClient()
  const [operation,results]=await Promise.all([
