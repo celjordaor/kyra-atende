@@ -3,7 +3,7 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Avatar, Button, FormField } from '@/components/atoms'
+import { Avatar, FormField } from '@/components/atoms'
 
 export type SidebarVariant = 'admin' | 'superadmin'
 
