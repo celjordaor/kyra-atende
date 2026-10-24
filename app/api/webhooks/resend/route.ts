@@ -22,12 +22,15 @@ export async function POST(request:NextRequest){
  const payload=await request.text()
  if(payload.length>100000||!validSignature(payload,request,secret))
   return NextResponse.json({error:'Assinatura inválida'},{status:401})
- const event=JSON.parse(payload) as {type?:string;data?:{email_id?:string}}
+ let event:{type?:string;data?:{email_id?:string}}
+ try{event=JSON.parse(payload) as typeof event}
+ catch{return NextResponse.json({error:'JSON inválido'},{status:400})}
  const status=event.type==='email.delivered'?'delivered':event.type==='email.bounced'?'bounced':event.type==='email.complained'?'complained':null
  if(!status)return NextResponse.json({ok:true,ignored:true})
  const message=event.data?.email_id
- if(!message||message.length>256)return NextResponse.json({error:'Evento inválido'},{status:400})
- const {error}=await createAdminClient().rpc('reconcile_agenda_email',{p_message:message,p_status:status})
+ if(typeof message!=='string'||!message||message.length>256)return NextResponse.json({error:'Evento inválido'},{status:400})
+ const {data:affected,error}=await createAdminClient().rpc('reconcile_agenda_email',{p_message:message,p_status:status})
  if(error){console.error('[resend/reconcile]',{code:error.code});return NextResponse.json({error:'Erro ao conciliar'},{status:503})}
+ console.info('[resend/reconcile]',{type:event.type,matched:Number(affected??0)>0})
  return NextResponse.json({ok:true})
 }
