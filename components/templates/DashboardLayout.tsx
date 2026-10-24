@@ -318,40 +318,30 @@ function UserDropdown({ userName, userEmail, userAvatarUrl, onSignOut }: UserDro
               )}
             </div>
 
-            {/* Actions */}
-            <div style={{ padding: '6px' }}>
-              <Link
-                href="/perfil"
-                onClick={() => setOpen(false)}
-                style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '9px 12px', borderRadius: 'var(--r-md)', fontSize: '14px', color: 'var(--ink-soft)', textDecoration: 'none', transition: 'background 150ms' }}
-                onMouseEnter={e => (e.currentTarget.style.background = 'var(--surface)')}
-                onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-              >
-                <span style={{ color: 'var(--muted)', display: 'flex' }}><IconUserEdit /></span>
-                Editar perfil
+            {/* Ações do usuário — linhas com medidas uniformes e ícones alinhados */}
+            <div style={{ padding:'8px', display:'grid', gap:4 }}>
+              <Link href="/perfil" onClick={() => setOpen(false)}
+                style={{display:'flex',alignItems:'center',gap:12,minHeight:42,padding:'0 12px',borderRadius:9,fontSize:13,fontWeight:500,color:'var(--ink-body)',textDecoration:'none',transition:'background .15s'}}
+                onMouseEnter={e=>e.currentTarget.style.background='var(--brand-faint)'}
+                onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
+                <span aria-hidden="true" style={{width:20,height:20,display:'inline-flex',alignItems:'center',justifyContent:'center',flexShrink:0,color:'var(--brand)'}}><IconUserEdit /></span>
+                <span style={{lineHeight:'20px'}}>Editar perfil</span>
               </Link>
-
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => { setOpen(false); setPwdOpen(true) }}
-                style={{ display: 'flex', alignItems: 'center', gap: '10px', width: '100%', justifyContent: 'flex-start', color: 'var(--ink-soft)' }}
-              >
-                <span style={{ color: 'var(--muted)', display: 'flex' }}><IconKey /></span>
-                Trocar senha
-              </Button>
-            </div>
-
-            <div style={{ borderTop: '1px solid var(--border)', padding: '6px' }}>
-              <Button
-                variant="danger"
-                size="sm"
-                onClick={() => { setOpen(false); onSignOut?.() }}
-                style={{ display: 'flex', alignItems: 'center', gap: '10px', width: '100%', justifyContent: 'flex-start' }}
-              >
-                <span style={{ display: 'flex' }}><IconLogOut /></span>
-                Sair
-              </Button>
+              <button type="button" onClick={()=>{setOpen(false);setPwdOpen(true)}}
+                style={{display:'flex',alignItems:'center',gap:12,width:'100%',minHeight:42,padding:'0 12px',border:0,borderRadius:9,background:'transparent',textAlign:'left',fontSize:13,fontWeight:500,color:'var(--ink-body)',cursor:'pointer',fontFamily:'inherit',transition:'background .15s'}}
+                onMouseEnter={e=>e.currentTarget.style.background='var(--brand-faint)'}
+                onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
+                <span aria-hidden="true" style={{width:20,height:20,display:'inline-flex',alignItems:'center',justifyContent:'center',flexShrink:0,color:'var(--brand)'}}><IconKey /></span>
+                <span style={{lineHeight:'20px'}}>Trocar senha</span>
+              </button>
+              <div style={{borderTop:'1px solid var(--border)',margin:'4px 0'}}/>
+              <button type="button" onClick={()=>{setOpen(false);onSignOut?.()}}
+                style={{display:'flex',alignItems:'center',gap:12,width:'100%',minHeight:42,padding:'0 12px',border:'1px solid transparent',borderRadius:9,background:'var(--red-faint)',textAlign:'left',fontSize:13,fontWeight:600,color:'var(--red)',cursor:'pointer',fontFamily:'inherit',transition:'background .15s'}}
+                onMouseEnter={e=>e.currentTarget.style.background='color-mix(in srgb, var(--red) 15%, var(--surface))'}
+                onMouseLeave={e=>e.currentTarget.style.background='var(--red-faint)'}>
+                <span aria-hidden="true" style={{width:20,height:20,display:'inline-flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><IconLogOut /></span>
+                <span style={{lineHeight:'20px'}}>Sair</span>
+              </button>
             </div>
           </div>
         )}
