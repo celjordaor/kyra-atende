@@ -4,6 +4,7 @@ import { SidePanel, BookingSection } from '@/components/organisms/BookingSection
 import React, { useState, useCallback } from 'react'
 import Link from 'next/link'
 import { Button }          from '@/components/atoms/Button'
+import { IconActionButton } from '@/components/atoms/IconActionButton'
 import { StatusBadge }     from '@/components/atoms/StatusBadge'
 import { BookingFormModal, CompleteModal } from '@/components/organisms'
 import type { BookingToEdit, SavedBooking, CompleteModalBooking } from '@/components/organisms'
@@ -158,26 +159,10 @@ function IcoPencil() {
 
 // ── MiniBtn — botão de ação circular compacto ─────────────────
 // Definido fora do componente para evitar remontagem
-function MiniBtn({ title, bg, color, onClick, loading, children }: {
-  title: string; bg: string; color: string
-  onClick: () => void
-  loading?: boolean; children: React.ReactNode
-}) {
-  return (
-    <button
-      type="button" title={title}
-      onClick={e => { e.stopPropagation(); onClick() }}
-      disabled={loading}
-      style={{
-        width: '24px', height: '24px', borderRadius: '50%', border: 'none',
-        cursor: loading ? 'default' : 'pointer',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        background: bg, color, flexShrink: 0, opacity: loading ? 0.6 : 1,
-      }}
-    >
-      {loading ? <IcoSpin /> : children}
-    </button>
-  )
+function MiniBtn({title,onClick,loading}:{title:string;bg:string;color:string;onClick:()=>void;loading?:boolean;children:React.ReactNode}){
+ const icon=title==='Confirmar'?'check':title==='Cancelar'?'x':'complete'
+ const tone=title==='Cancelar'?'danger':title==='Confirmar'?'success':'default'
+ return <span onClick={e=>e.stopPropagation()}><IconActionButton icon={icon} tone={tone} label={title} size="sm" disabled={!!loading} onClick={onClick}/></span>
 }
 
 // ── DayCard — definido FORA do componente principal ────────────
