@@ -42,6 +42,7 @@ export async function POST(request:NextRequest){
   void dispatchPush(session.tenantId,'booking_rescheduled',{bookingId:booking.booking_id,scheduledAt:booking.start_at,clientName:booking.client_name||'',professional:''})
   const recipient=booking.client_email?.trim()||''
   let emailStatus='no_email'
+  let providerMessageId:string|null=null
   if(recipient&&!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(recipient))emailStatus='no_email'
   else if(recipient&&(!process.env.RESEND_API_KEY||!process.env.MAIL_FROM))emailStatus='not_configured'
   else if(recipient){
@@ -55,12 +56,13 @@ export async function POST(request:NextRequest){
     })
     const body=await response.json().catch(()=>({})) as {id?:string}
     emailStatus=response.ok&&body.id?'accepted':'failed'
+    if(emailStatus==='accepted')providerMessageId=body.id||null
    }catch{emailStatus='unknown'}
   }
-  return {id:booking.booking_id,emailStatus}
+  return {id:booking.booking_id,emailStatus,providerMessageId}
  }))
  const {error:auditError}=await db.from('agenda_batch_notification_results').upsert(
-  notifications.map(n=>({operation_id:changed[0].operation_id,tenant_id:session.tenantId,booking_id:n.id,channel:'email',status:n.emailStatus})),
+  notifications.map(n=>({operation_id:changed[0].operation_id,tenant_id:session.tenantId,booking_id:n.id,channel:'email',status:n.emailStatus,provider_message_id:n.providerMessageId})),
   {onConflict:'operation_id,booking_id,channel'})
  if(auditError)console.error('[agenda/batch/transfer/audit]',{code:auditError.code})
  return NextResponse.json({notificationAuditSaved:!auditError,operationId:changed[0].operation_id,transferred:changed.length,notifications},
