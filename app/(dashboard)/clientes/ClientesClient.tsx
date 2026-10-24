@@ -608,8 +608,8 @@ export function ClientesClient({ rows: initialRows }: { rows: ClientRow[] }) {
       />
       </div>
 
-      <Modal open={!!historyClient} onClose={() => setHistoryClient(null)} title={historyClient ? `Histórico de agendamentos — ${historyClient.name}` : 'Histórico'} size="lg">
-        <div style={{display:'flex',flexDirection:'column',gap:12}}>
+      <SidePanel open={!!historyClient} onClose={() => setHistoryClient(null)} title={historyClient ? `Histórico de agendamentos — ${historyClient.name}` : 'Histórico'} width={680}>
+        <BookingSection title="Agendamentos do cliente" icon="▦"><div style={{display:'flex',flexDirection:'column',gap:12}}>
           {historyLoading && <p>Carregando agendamentos…</p>}
           {historyError && <p role="alert" style={{color:'var(--red)'}}>{historyError}</p>}
           {!historyLoading && !historyError && historyRows.length===0 && <p>Nenhum agendamento encontrado para este cliente.</p>}
@@ -624,7 +624,7 @@ export function ClientesClient({ rows: initialRows }: { rows: ClientRow[] }) {
             <Button variant="secondary" disabled={historyLoading||historyPage*20>=historyTotal} onClick={() => historyClient && void loadHistory(historyClient,historyPage+1)}>Próxima</Button>
           </div>
         </div>
-      </Modal>
+      </BookingSection></SidePanel>
       <BookingDetailModal booking={bookingDetail} onClose={() => setBookingDetail(null)}/>
 
       {/* ── Modal criar / editar ─────────────────────────────────────── */}

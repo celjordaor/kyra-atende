@@ -7,7 +7,8 @@
  */
 
 import React, { useState, useEffect } from 'react'
-import { Modal }     from './Modal'
+import { SidePanel } from './SidePanel'
+import { BookingSection } from './BookingSection'
 import { Button }    from '../atoms/Button'
 import { FormField } from '../atoms/FormField'
 import { api, ApiError } from '@/lib/api'
@@ -145,10 +146,10 @@ export function CompleteModal({ open, booking, onClose, onDone }: CompleteModalP
   }
 
   return (
-    <Modal
+    <SidePanel
       open={open}
       onClose={onClose}
-      size="md"
+      width={680}
       title="Concluir serviço"
       footer={
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
@@ -181,14 +182,7 @@ export function CompleteModal({ open, booking, onClose, onDone }: CompleteModalP
 
         {error && <ErrorBox msg={error} />}
 
-        {/* Seção financeira */}
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: '8px',
-          paddingBottom: '10px', borderBottom: '1px solid var(--border)',
-        }}>
-          <span style={{ fontWeight: 600, fontSize: '14px', color: 'var(--ink)' }}>Dados financeiros</span>
-        </div>
-
+        <BookingSection title="Dados financeiros" icon="▤">
         {/* Preço de referência (somente leitura) */}
         {booking?.referencePrice != null && booking.referencePrice > 0 && (
           <div style={{
@@ -247,10 +241,11 @@ export function CompleteModal({ open, booking, onClose, onDone }: CompleteModalP
             {fmtBRL(net())}
           </span>
         </div>
+        </BookingSection>
       </div>
 
       <style>{`@media (max-width: 640px) { .kyra-complete-form-grid { grid-template-columns: minmax(0, 1fr) !important; } }`}</style>
-    </Modal>
+    </SidePanel>
   )
 }
 

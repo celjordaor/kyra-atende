@@ -157,3 +157,9 @@ Após o ciclo de melhorias do Portal, a continuidade passou a gerar pequenos PRs
 - Novo/Editar Cliente, Profissional e Serviço passam a usar `SidePanel` existente de 680 px e `BookingSection` com cabeçalhos lilás claro. Preservadas máscaras, campos, validações, ações, integrações e estado dos formulários; janela de exclusão e histórico mantidos sem mudanças neste PR.
 - Próxima etapa E1: Histórico de agendamentos, Ficha de finalização, Pesquisa pós-agendamento, Pesquisas, Configurações (Geral/Assinatura/Horários/Notificações), revisão dos detalhes e a interface distinta da IA Kyra. E2 só após concluir a revisão visual pactuada.
 - Publicação requer CI, merge e deploy READY; E2E visual/móvel e validações de comportamento permanecem separados.
+
+
+## 20. E1 — Histórico, ficha de conclusão e pesquisa pós-atendimento (23/10/2026)
+- Aplicar `SidePanel` 680 px e cabeçalhos suaves `BookingSection` ao Histórico de agendamentos do cliente, à finalização do serviço na tela Agendamentos e na instância compartilhada `CompleteModal`, e ao convite manual de pesquisa pós-atendimento.
+- Permanecem as validações, filtros por tenant, paginação do histórico, abertura dos detalhes, valores/pagamento e ações explícitas Copiar link/Enviar e-mail. Nenhuma automação nova ou envio de teste nesta etapa.
+- Ainda pendentes no pacote E1: Pesquisas, Configurações (Geral, Assinatura, Horários, Notificações), revisão completa dos demais modais e experiência diferenciada IA Kyra com ícone real. CI e deploy do SHA exato obrigatórios; validação funcional E2E separada.

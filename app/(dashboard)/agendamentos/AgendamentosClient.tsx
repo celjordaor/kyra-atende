@@ -759,7 +759,7 @@ function CompleteModal({ open, booking, services, onClose, onDone }: CompleteMod
   const fmtBRL = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v)
 
   return (
-    <Modal open={open} onClose={onClose} size="md"
+    <SidePanel open={open} onClose={onClose} width={680}
       title="Concluir serviço"
       footer={
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
@@ -784,7 +784,7 @@ function CompleteModal({ open, booking, services, onClose, onDone }: CompleteMod
 
         {error && <ErrorBox msg={error} />}
 
-        <SectionHeader title="Dados financeiros" />
+        <BookingSection title="Dados financeiros" icon="▤">
 
         {/* Preço do serviço — referência apenas leitura */}
         {catalogPrice != null && (
@@ -830,8 +830,9 @@ function CompleteModal({ open, booking, services, onClose, onDone }: CompleteMod
           <span style={{ fontSize: '14px', fontWeight: 500, color: 'var(--green)' }}>Total a receber</span>
           <span style={{ fontSize: '20px', fontWeight: 700, color: 'var(--green)' }}>{fmtBRL(net())}</span>
         </div>
+        </BookingSection>
       </div>
-    </Modal>
+    </SidePanel>
   )
 }
 
