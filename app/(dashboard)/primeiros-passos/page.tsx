@@ -16,22 +16,22 @@ export default async function PrimeirosPassosPage(){
  if(!tenantId)return <p role="alert">Não foi possível identificar sua empresa. Entre novamente.</p>
  const {data:profile,error:profileError}=await supabase.from('profiles').select('tenant_id,role').eq('id',user.id).maybeSingle()
  if(profileError||profile?.tenant_id!==tenantId)return <p role="alert">O vínculo com a empresa não pôde ser validado.</p>
- const checks=await Promise.all([
+ const [tenantResult,servicesResult,professionalsResult,clientsResult,bookingsResult]=await Promise.all([
   supabase.from('tenants').select('id,name,slug').eq('id',tenantId).maybeSingle(),
   supabase.from('services').select('id',{head:true,count:'exact'}).eq('tenant_id',tenantId).eq('is_active',true),
   supabase.from('professionals').select('id',{head:true,count:'exact'}).eq('tenant_id',tenantId).eq('is_active',true),
   supabase.from('clients').select('id',{head:true,count:'exact'}).eq('tenant_id',tenantId),
   supabase.from('bookings').select('id',{head:true,count:'exact'}).eq('tenant_id',tenantId),
  ])
- if(checks.some(result=>result.error))return <p role="alert" style={{color:'var(--red)'}}>Não foi possível verificar as etapas. Atualize a página para tentar novamente.</p>
- const tenant=checks[0].data
+ if([tenantResult,servicesResult,professionalsResult,clientsResult,bookingsResult].some(result=>result.error))return <p role="alert" style={{color:'var(--red)'}}>Não foi possível verificar as etapas. Atualize a página para tentar novamente.</p>
+ const tenant=tenantResult.data
  const steps:Check[]=[
   {id:'empresa',title:'Configure a empresa',detail:'Confira o nome do estabelecimento e o link de agendamento.',href:'/configuracoes',done:!!tenant?.name?.trim()&&!!tenant?.slug?.trim(),action:'Abrir configurações'},
   {id:'horarios',title:'Defina os horários',detail:'Organize o expediente, as disponibilidades e os bloqueios de agenda.',href:'/configuracoes/horarios',done:false,action:'Configurar horários'},
-  {id:'servicos',title:'Cadastre os serviços',detail:'Informe os serviços que estarão disponíveis para agendamento.',href:'/servicos',done:(checks[1].count??0)>0,action:'Gerenciar serviços'},
-  {id:'profissionais',title:'Cadastre os profissionais',detail:'Inclua os profissionais que prestarão atendimento.',href:'/profissionais',done:(checks[2].count??0)>0,action:'Gerenciar profissionais'},
-  {id:'clientes',title:'Organize seus clientes',detail:'Cadastre ou importe clientes conforme sua necessidade.',href:'/clientes',done:(checks[3].count??0)>0,action:'Gerenciar clientes'},
-  {id:'primeira-reserva',title:'Faça o primeiro agendamento',detail:'Teste o fluxo interno e confira as informações da reserva.',href:'/agendamentos',done:(checks[4].count??0)>0,action:'Abrir agendamentos'},
+  {id:'servicos',title:'Cadastre os serviços',detail:'Informe os serviços que estarão disponíveis para agendamento.',href:'/servicos',done:(servicesResult.count??0)>0,action:'Gerenciar serviços'},
+  {id:'profissionais',title:'Cadastre os profissionais',detail:'Inclua os profissionais que prestarão atendimento.',href:'/profissionais',done:(professionalsResult.count??0)>0,action:'Gerenciar profissionais'},
+  {id:'clientes',title:'Organize seus clientes',detail:'Cadastre ou importe clientes conforme sua necessidade.',href:'/clientes',done:(clientsResult.count??0)>0,action:'Gerenciar clientes'},
+  {id:'primeira-reserva',title:'Faça o primeiro agendamento',detail:'Teste o fluxo interno e confira as informações da reserva.',href:'/agendamentos',done:(bookingsResult.count??0)>0,action:'Abrir agendamentos'},
   {id:'whatsapp',title:'Configure o WhatsApp',detail:'Verifique a conexão e as permissões de mensagens antes de usar com clientes.',href:'/whatsapp',done:false,action:'Abrir WhatsApp'},
   {id:'notificacoes',title:'Revise as notificações',detail:'Confira os dispositivos e as preferências de comunicação.',href:'/configuracoes/notificacoes',done:false,action:'Abrir notificações'},
  ]
