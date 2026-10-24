@@ -1,5 +1,5 @@
-import {IconActionButton} from '@/components/atoms/IconActionButton'
 'use client'
+import {IconActionButton} from '@/components/atoms/IconActionButton'
 import {DeactivationWizard} from '@/components/organisms/DeactivationWizard'
 import { SidePanel } from '@/components/organisms/SidePanel'
 import { BookingSection } from '@/components/organisms/BookingSection'
