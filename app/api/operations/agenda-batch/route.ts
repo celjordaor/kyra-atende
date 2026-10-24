@@ -31,12 +31,13 @@ export async function POST(request:NextRequest){
  if(canceled.length!==ids.length)return NextResponse.json({error:'Operação inconclusiva. Consulte o histórico antes de repetir.'},{status:503})
  const {data:tenant}=await db.from('tenants').select('name').eq('id',session.tenantId).maybeSingle()
  const company=tenant?.name||'Estabelecimento'
- const reports:{id:string;emailStatus:string}[]=[]
+ const reports:{id:string;emailStatus:string;providerMessageId:string|null}[]=[]
  // Do not roll back cancellations if a provider accepts no email. Each result is explicit.
  await Promise.all(canceled.map(async booking=>{
   void dispatchPush(session.tenantId,'booking_cancelled',{bookingId:booking.booking_id,scheduledAt:booking.start_at,clientName:booking.client_name||'',professional:''})
   const to=booking.client_email?.trim()||''
   let emailStatus='no_email'
+  let providerMessageId:string|null=null
   if(to&&!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(to))emailStatus='no_email'
   else if(to&&(!process.env.RESEND_API_KEY||!process.env.MAIL_FROM))emailStatus='not_configured'
   else if(to){
@@ -49,12 +50,13 @@ export async function POST(request:NextRequest){
     })
     const response=await resp.json().catch(()=>({})) as {id?:string}
     emailStatus=resp.ok&&response.id?'accepted':'failed'
+    if(emailStatus==='accepted')providerMessageId=response.id||null
    }catch{emailStatus='unknown'}
   }
-  reports.push({id:booking.booking_id,emailStatus})
+  reports.push({id:booking.booking_id,emailStatus,providerMessageId})
  }))
  const {error:auditError}=await db.from('agenda_batch_notification_results').upsert(
-  reports.map(n=>({operation_id:canceled[0].operation_id,tenant_id:session.tenantId,booking_id:n.id,channel:'email',status:n.emailStatus})),
+  reports.map(n=>({operation_id:canceled[0].operation_id,tenant_id:session.tenantId,booking_id:n.id,channel:'email',status:n.emailStatus,provider_message_id:n.providerMessageId})),
   {onConflict:'operation_id,booking_id,channel'})
  if(auditError)console.error('[agenda/batch/cancel/audit]',{code:auditError.code})
  return NextResponse.json({notificationAuditSaved:!auditError,operationId:canceled[0].operation_id,cancelled:canceled.length,notifications:reports},{headers:{'Cache-Control':'no-store'}})
