@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react'
 import ReactMarkdown from 'react-markdown'
+import Image from 'next/image'
 import { Button } from '@/components/atoms/Button'
 import { api, ApiError } from '@/lib/api'
 
@@ -196,16 +197,17 @@ export default function IAChatPage() {
   const isEmpty = messages.length === 0
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 80px)', maxHeight: 800 }}>
+    <div className="kyra-ai-experience" style={{ display: 'flex', flexDirection: 'column', height: 'calc(100dvh - 100px)', minHeight: 460, maxHeight: 870, maxWidth: 1120, margin: '0 auto' }}>
 
       {/* Cabeçalho */}
-      <div id="ia-header" style={{ marginBottom: 20, flexShrink: 0 }}>
-        <h1 style={{ fontSize: 22, fontWeight: 600, color: 'var(--ink)', margin: '0 0 4px', letterSpacing: '-0.3px' }}>
-          IA Kyra ✨
-        </h1>
-        <p style={{ fontSize: 14, color: 'var(--muted)', margin: 0 }}>
-          Assistente inteligente para o seu negócio
-        </p>
+      <div id="ia-header" style={{marginBottom:14,flexShrink:0,padding:'16px 20px',display:'flex',alignItems:'center',gap:14,background:'linear-gradient(110deg,#eee7f9,#faf8fd)',border:'1px solid #ded4ee',borderRadius:16}}>
+        <div style={{width:54,height:54,borderRadius:15,background:'#fff',boxShadow:'0 3px 12px rgba(74,63,102,.10)',display:'grid',placeItems:'center',flexShrink:0}}>
+          <Image src="/kyra-ai.png" alt="Ícone da Kyra IA" width={43} height={43} style={{objectFit:'contain'}}/>
+        </div>
+        <div style={{minWidth:0}}>
+          <h1 style={{fontSize:24,fontWeight:750,color:'#4A3F66',margin:'0 0 3px',letterSpacing:'-.45px'}}>Kyra IA</h1>
+          <p style={{fontSize:13,color:'#72658E',margin:0}}>Sua assistente inteligente para atendimento e gestão do negócio</p>
+        </div>
       </div>
 
       {/* Área de mensagens */}
@@ -213,9 +215,9 @@ export default function IAChatPage() {
         flex: 1,
         overflowY: 'auto',
         padding: '16px',
-        background: 'var(--surface)',
-        borderRadius: 'var(--r-lg)',
-        border: '1px solid var(--border)',
+        background: 'linear-gradient(180deg,#fcfbfe,#f8f6fc)',
+        borderRadius: '16px',
+        border: '1px solid #e2daef',
         marginBottom: 12,
       }}>
         {isEmpty && (
@@ -225,10 +227,7 @@ export default function IAChatPage() {
               background: 'var(--brand-dim)', display: 'flex',
               alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px',
             }}>
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 3v3m0 12v3M3 12h3m12 0h3M5.636 5.636l2.121 2.121m8.486 8.486 2.121 2.121M5.636 18.364l2.121-2.121m8.486-8.486 2.121-2.121" />
-                <circle cx="12" cy="12" r="3" />
-              </svg>
+              <Image src="/kyra-ai.png" alt="" width={34} height={34} style={{objectFit:"contain"}}/>
             </div>
             <p style={{ fontSize: 15, fontWeight: 600, color: 'var(--ink)', margin: '0 0 4px' }}>
               Olá! Sou a Kyra ✨
@@ -280,7 +279,7 @@ export default function IAChatPage() {
       )}
 
       {/* Input */}
-      <div id="ia-input-area" style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+      <div id="ia-input-area" style={{ display: 'flex', gap: 10, flexShrink: 0, background: 'var(--surface-2)', border:'1px solid #e2daef', borderRadius:14,padding:10,boxShadow:'0 3px 14px rgba(74,63,102,.06)' }}>
         <textarea
           ref={textareaRef}
           value={input}
