@@ -183,14 +183,6 @@ export function CompleteModal({ open, booking, onClose, onDone }: CompleteModalP
         {error && <ErrorBox msg={error} />}
 
         <BookingSection title="Dados financeiros" icon="▤">
-        {/* Seção financeira */}
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: '8px',
-          paddingBottom: '10px', borderBottom: '1px solid var(--border)',
-        }}>
-          <span style={{ fontWeight: 600, fontSize: '14px', color: 'var(--ink)' }}>Dados financeiros</span>
-        </div>
-
         {/* Preço de referência (somente leitura) */}
         {booking?.referencePrice != null && booking.referencePrice > 0 && (
           <div style={{
