@@ -1100,6 +1100,14 @@ export default function AgendamentosClient({ initialBookings, professionals, ser
   const svcOpts   = services.map(s => ({ value: s.id, label: s.name }))
   const profOpts2 = professionalsLocal.map(p => ({ value: p.id, label: p.name }))
 
+  const summaryCounts = {
+    total: filtered.length,
+    pending: filtered.filter(b => b.status === 'pending').length,
+    confirmed: filtered.filter(b => b.status === 'confirmed').length,
+    completed: filtered.filter(b => b.status === 'completed').length,
+    cancelled: filtered.filter(b => b.status === 'cancelled').length,
+  }
+
   const STATUS_PILLS: [string, string][] = [
     ['', 'Todos'],
     ['pending', 'Pendente'],
@@ -1129,6 +1137,22 @@ export default function AgendamentosClient({ initialBookings, professionals, ser
       )}
 
       <style>{`@media (max-width: 640px) { .kyra-agendamentos-modal-fields { grid-template-columns: minmax(0, 1fr) !important; } }`}</style>
+
+      <section aria-label="Resumo dos agendamentos" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 10, marginBottom: 20 }}>
+        {([
+          ['total', 'Exibidos'],
+          ['pending', 'Pendentes'],
+          ['confirmed', 'Confirmados'],
+          ['completed', 'Concluídos'],
+          ['cancelled', 'Cancelados'],
+        ] as const).map(([key, label]) => (
+          <div key={key} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '16px 18px', minWidth: 0 }}>
+            <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 7 }}>{label}</div>
+            <strong style={{ fontSize: 26, lineHeight: 1.1, color: 'var(--ink)', fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>{summaryCounts[key]}</strong>
+          </div>
+        ))}
+      </section>
+      <p style={{ fontSize: 12, color: 'var(--muted)', margin: '-10px 0 18px' }}>Resumo dos registros visíveis, atualizado conforme os filtros. Para alterar o período ou status, use os filtros abaixo.</p>
 
       {/* ── Barra de filtros ─────────────────────────────────────────────── */}
       <div style={{ marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
