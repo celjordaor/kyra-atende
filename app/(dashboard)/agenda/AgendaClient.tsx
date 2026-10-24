@@ -2,6 +2,7 @@
 import { SidePanel, BookingSection } from '@/components/organisms/BookingSection'
 
 import React, { useState, useCallback } from 'react'
+import Link from 'next/link'
 import { Button }          from '@/components/atoms/Button'
 import { StatusBadge }     from '@/components/atoms/StatusBadge'
 import { BookingFormModal, CompleteModal } from '@/components/organisms'
@@ -624,6 +625,8 @@ export default function AgendaClient({ bookings, services, hours, blocks, timezo
             background: 'var(--surface-2)', color: 'var(--ink)', fontSize: '13px', outline: 'none',
           }}
         />
+
+        <Link href="/operacoes-agenda" style={{display:'inline-flex',alignItems:'center',justifyContent:'center',padding:'9px 14px',borderRadius:'var(--r-md)',border:'1px solid var(--border)',background:'var(--surface-2)',color:'var(--ink)',fontWeight:600,fontSize:13,textDecoration:'none',whiteSpace:'nowrap'}}>Operações de agenda</Link>
 
         {/* Novo Agendamento */}
         <Button variant="primary" icon={<IcoPlus />} onClick={() => setShowNewModal(true)}>
