@@ -4,6 +4,7 @@ import { SidePanel, BookingSection } from '@/components/organisms/BookingSection
 import React, { useState, useCallback } from 'react'
 import Link from 'next/link'
 import { Button }          from '@/components/atoms/Button'
+import { IconActionButton } from '@/components/atoms/IconActionButton'
 import { StatusBadge }     from '@/components/atoms/StatusBadge'
 import { BookingFormModal, CompleteModal } from '@/components/organisms'
 import type { BookingToEdit, SavedBooking, CompleteModalBooking } from '@/components/organisms'
@@ -139,16 +140,6 @@ function IcoMail() {
 function IcoClock() {
   return <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
 }
-function IcoSpin() {
-  return (
-    <>
-      <style>{`@keyframes ag-spin{to{transform:rotate(360deg)}}`}</style>
-      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ animation: 'ag-spin 0.8s linear infinite', display: 'block' }}>
-        <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
-      </svg>
-    </>
-  )
-}
 function IcoPlus() {
   return <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
 }
@@ -158,26 +149,10 @@ function IcoPencil() {
 
 // ── MiniBtn — botão de ação circular compacto ─────────────────
 // Definido fora do componente para evitar remontagem
-function MiniBtn({ title, bg, color, onClick, loading, children }: {
-  title: string; bg: string; color: string
-  onClick: () => void
-  loading?: boolean; children: React.ReactNode
-}) {
-  return (
-    <button
-      type="button" title={title}
-      onClick={e => { e.stopPropagation(); onClick() }}
-      disabled={loading}
-      style={{
-        width: '24px', height: '24px', borderRadius: '50%', border: 'none',
-        cursor: loading ? 'default' : 'pointer',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        background: bg, color, flexShrink: 0, opacity: loading ? 0.6 : 1,
-      }}
-    >
-      {loading ? <IcoSpin /> : children}
-    </button>
-  )
+function MiniBtn({title,onClick,loading}:{title:string;bg:string;color:string;onClick:()=>void;loading?:boolean;children:React.ReactNode}){
+ const icon=title==='Confirmar'?'check':title==='Cancelar'?'x':'complete'
+ const tone=title==='Cancelar'?'danger':title==='Confirmar'?'success':'default'
+ return <span onClick={e=>e.stopPropagation()}><IconActionButton icon={icon} tone={tone} label={title} size="sm" disabled={!!loading} onClick={onClick}/></span>
 }
 
 // ── DayCard — definido FORA do componente principal ────────────

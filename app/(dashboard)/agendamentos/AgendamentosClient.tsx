@@ -1015,63 +1015,10 @@ export default function AgendamentosClient({ initialBookings, professionals, ser
         <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end', alignItems: 'center' }}>
           {row.status === 'completed' && <IconActionButton icon="eye" label="Visualizar ficha de finalização" onClick={() => setDetailRow(row)} />}
           {row.status === 'completed' && <IconActionButton icon="survey" label={`Enviar pesquisa de satisfação para ${row.client_name}`} onClick={() => setSurveyBookingId(row.id)} />}
-          {/* Editar */}
-          {(row.status === 'pending' || row.status === 'confirmed') && (
-            <button
-              type="button"
-              title="Editar agendamento"
-              onClick={() => openEdit(row)}
-              style={{ width: '32px', height: '32px', borderRadius: '50%', border: 'none', background: 'var(--surface-3)', color: 'var(--ink-soft)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'background .15s' }}
-              onMouseEnter={e => (e.currentTarget.style.background = 'var(--border-mid)')}
-              onMouseLeave={e => (e.currentTarget.style.background = 'var(--surface-3)')}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-              </svg>
-            </button>
-          )}
-          {/* Concluir serviço (só confirmados) */}
-          {row.status === 'confirmed' && (
-            <button
-              type="button"
-              title="Concluir serviço"
-              onClick={() => setCompleteRow(row)}
-              style={{ width: '32px', height: '32px', borderRadius: '50%', border: 'none', background: 'color-mix(in srgb, var(--brand) 12%, transparent)', color: 'var(--brand)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'background .15s' }}
-              onMouseEnter={e => (e.currentTarget.style.background = 'color-mix(in srgb, var(--brand) 22%, transparent)')}
-              onMouseLeave={e => (e.currentTarget.style.background = 'color-mix(in srgb, var(--brand) 12%, transparent)')}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
-              </svg>
-            </button>
-          )}
-          {/* Confirmar */}
-          {row.status === 'pending' && (
-            <button
-              type="button"
-              title="Confirmar agendamento"
-              onClick={() => handleStatusChange(row, 'confirmed')}
-              style={{ width: '32px', height: '32px', borderRadius: '50%', border: 'none', background: 'var(--green-dim)', color: 'var(--green)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'background .15s' }}
-              onMouseEnter={e => (e.currentTarget.style.background = 'var(--green-faint)')}
-              onMouseLeave={e => (e.currentTarget.style.background = 'var(--green-dim)')}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="20 6 9 17 4 12"/>
-              </svg>
-            </button>
-          )}
-          {/* Cancelar */}
-          {(row.status === 'pending' || row.status === 'confirmed') && (
-            <button
-              type="button"
-              title="Cancelar agendamento"
-              onClick={() => handleStatusChange(row, 'cancelled')}
-              style={{ width: '32px', height: '32px', borderRadius: '50%', border: 'none', background: 'color-mix(in srgb, var(--red) 12%, transparent)', color: 'var(--red)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'background .15s' }}
-              onMouseEnter={e => (e.currentTarget.style.background = 'color-mix(in srgb, var(--red) 20%, transparent)')}
-              onMouseLeave={e => (e.currentTarget.style.background = 'color-mix(in srgb, var(--red) 12%, transparent)')}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-              </svg>
-            </button>
-          )}
+          {(row.status === 'pending' || row.status === 'confirmed') && <IconActionButton icon="edit" label="Editar agendamento" onClick={() => openEdit(row)}/>}
+          {row.status === 'confirmed' && <IconActionButton icon="complete" label="Concluir serviço" onClick={() => setCompleteRow(row)}/>}
+          {row.status === 'pending' && <IconActionButton icon="check" tone="success" label="Confirmar agendamento" onClick={() => void handleStatusChange(row, 'confirmed')}/>}
+          {(row.status === 'pending' || row.status === 'confirmed') && <IconActionButton icon="x" tone="danger" label="Cancelar agendamento" onClick={() => void handleStatusChange(row, 'cancelled')}/>}
         </div>
       ),
     },
