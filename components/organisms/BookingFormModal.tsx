@@ -715,8 +715,6 @@ export function BookingFormModal({
             {formErrors.client && (
               <p style={{ margin: '4px 0 0', fontSize: '12px', color: 'var(--red)' }} role="alert">{formErrors.client}</p>
             )}
-          </div>
-
           </div></BookingSection>
           {/* Serviço + Profissional */}
           <BookingSection title="Serviço e profissional" icon="✂"><div className="kyra-booking-form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
